@@ -41,10 +41,17 @@ F_117 =  {
 	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	    -- add model draw args for network transmitting to this draw_args table (32 limit)
     net_animation ={
-        22, 	-- Fuel bay
-        35, 	-- Brake shute
-		36, 	-- Brake shute noise
-		1000, 	-- Lights
+        22, 	-- Refuel Bay
+		25,     -- Hook
+        35, 	-- Drag Chute
+		36,		-- Drag Chute Wind
+		190,    -- Taxi Light
+		191,    -- Wing lights
+		192,    -- Landing Lights
+		193,    -- Beacon Light
+		900,    -- Bomb bay
+		1000, 	-- Meme Light
+		1001,   -- Beacon Rotate
     },
 	--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	M_empty						=	13381, --KG
@@ -52,9 +59,9 @@ F_117 =  {
 	M_max						=	23813, --KG
 	M_fuel_max					=	8391, --KG
 	H_max						=	14000, --Meters
-	average_fuel_consumption	=	0.4,
+	average_fuel_consumption	=	0.81,
 	CAS_min						=	65,
-	V_opt						=	270,
+	V_opt						=	275,
 	V_take_off					=	85,
 	V_land						=	77,
 	has_afteburner				=	false,
@@ -65,8 +72,8 @@ F_117 =  {
 	AOA_take_off				=	0.14,
 	stores_number				=	2,
 	bank_angle_max				=	60,
-	Ny_min						=	-1,
-	Ny_max						=	4.5,
+	Ny_min						=	-3,
+	Ny_max						=	7.3,
 	tand_gear_max				=	0.577,
 	V_max_sea_level				=	292,
 	V_max_h						=	289,
@@ -83,7 +90,7 @@ F_117 =  {
 	Mach_max					=	0.92,
 	range						=	1730,
 	RCS							=	0.003,
-	Ny_max_e					=	4.5,
+	Ny_max_e					=	7.3,
 	detection_range_max			=	0,
 	IR_emission_coeff			=	0.15,
 	IR_emission_coeff_ab		=	0,
@@ -190,6 +197,9 @@ crew_members =
 	Sensors = {
 		OPTIC = "Shkval",
 	},
+	Countermeasures = {
+		IRCM = "Sukhogruz"
+    },
 	HumanRadio = {
 		frequency = 127.5,  -- Radio Freq
 		editable = true,
@@ -212,6 +222,7 @@ crew_members =
 				{ CLSID = "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}" },   --Mk 84
                 { CLSID = "{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}" },	--GBU-10
                 { CLSID = "{DB769D48-67D7-42ED-A2BE-108D566C8B1E}" },   --GBU-12
+				{ CLSID = "{0D33DDAE-524F-4A4E-B5B8-621754FE3ADE}" },   --GBU-16
                 { CLSID = "{EF0A9419-01D6-473B-99A3-BEBDB923B14D}" },	--GBU-27
 				{ CLSID = "F117_GBU31" }, 					            --GBU-31 JDAM
 				{ CLSID = "F117_GBU31_BLU_109" },						--GBU-31 JDAM BLU-109 Penetrator)
@@ -232,6 +243,7 @@ crew_members =
  				{ CLSID = "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}" },   --Mk 84
                 { CLSID = "{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}" },	--GBU-10
                 { CLSID = "{DB769D48-67D7-42ED-A2BE-108D566C8B1E}" },   --GBU-12
+				{ CLSID = "{0D33DDAE-524F-4A4E-B5B8-621754FE3ADE}" },   --GBU-16				
                 { CLSID = "{EF0A9419-01D6-473B-99A3-BEBDB923B14D}" },	--GBU-27
 				{ CLSID = "F117_GBU31" }, 					            --GBU-31 JDAM
 				{ CLSID = "F117_GBU31_BLU_109" },						--GBU-31 JDAM BLU-109 Penetrator (need to write a new script for it)
