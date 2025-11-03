@@ -5,6 +5,7 @@ local function counter()
 end
 -------DEVICE ID----------
 devices = {}
+devices["HELMET_DEVICE"]			= counter()
 devices["LIGHTS"]					= counter()
 devices["MiscFunc"]					= counter()
-devices["HOOK"]						= counter()
+devices["BOMB_BAY"]					= counter()

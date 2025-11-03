@@ -1,70 +1,88 @@
-self_ID = "F-117"
-declare_plugin(self_ID,
-{
-image     	 = "F-117.bmp",
-installed 	 = true, -- if false that will be place holder , or advertising
-dirName	  	 = current_mod_path,
-displayName  = _("F-117"),
-developerName = _("JInxxDCS"),
+self_ID = "F-117-NightHawk"
+declare_plugin(
+    self_ID,
+    {
+        displayName = _("F-117A Nighthawk"),
+        developerName = "HalfManBear",
+        image = "F-117A.png",
+        installed = true,
+        dirName = current_mod_path,
+        fileMenuName = _("F-117A Nighthawk"),
+        shortName = _("F-117A Nighthawk"),
+        version = "2.0",
+        creditsFile  = "credits.txt",
+        state = "installed",
+        info = _(
+            "F-117A, also called Nighthawk, single-seat, twin-engine jet fighter-bomber built by the Lockheed Corporation as a part of the skunk works team(now part of the Lockheed Martin Corporation) for the U.S. Air Force. It was the first stealth aircraft—i.e., an aircraft designed entirely around the concept of evading detection by radar and other sensors."
+        ),
+        binaries = {"F_117_NightHawk.dll"},
+        InputProfiles = {
+            ["F-117-NightHawk"] = current_mod_path .. "/Input/F-117-NightHawk"
+        },
+        Skins = {
+            {
+                name = _("F-117A Nighthawk"),
+                dir = "Theme"
+            }
+        },
+        Missions = {
+            {
+                name = _("F-117A Nighthawk"),
+                dir = "Missions"
+            }
+        },
+        LogBook = {
+            {
+                name = _("F-117A Nighthawk"),
+                type = "F-117-NightHawk"
+            }
+        },
+        Options = {
+            {
+                name = _("F-117A Nighthawk"),
+                nameId = "F-117-NightHawk",
+                dir = "Options"
+            }
+        }
+    }
+)
 
-fileMenuName = _("F-117"),
-update_id        = "F-117",
-version		 = "2.7 Build",
-state		 = "installed",
-info		 = _("F-117, also called Nighthawk, single-seat, twin-engine jet fighter-bomber built by the Lockheed Corporation as a part of the skunk works team(now part of the Lockheed Martin Corporation) for the U.S. Air Force. It was the first stealth aircraft—i.e., an aircraft designed entirely around the concept of evading detection by radar and other sensors."),
-binaries	 = { 'F117', },
+mount_vfs_texture_path(current_mod_path .. "/Theme/ME")
+mount_vfs_model_path(current_mod_path .. "/Shapes")
+mount_vfs_model_path(current_mod_path .. "/Cockpit/Shape")
+mount_vfs_texture_path(current_mod_path .. "/Textures/F-117-NightHawk-TEXTURES")
+mount_vfs_texture_path(current_mod_path .. "/Cockpit/Textures/F-117-NightHawk-CPT-TEXTURES") --
+mount_vfs_liveries_path(current_mod_path .. "/Liveries")
 
-Skins	=
-	{
-		{
-		    name	= _("F-117"),
-			dir		= "Skins/1"
-		},
-	},
-Missions =
-	{
-		{
-			name		    = _("F-117"),
-			dir			    = "Missions",
-		},
-	},
-LogBook =
-	{
-		{
-			name		= _("F-117"),
-			type		= "F-117",
-		},
-	},	
-		
-InputProfiles =
-	{
-		["F-117"] = current_mod_path .. '/Input/F-117',
-	},
-
-})
 ----------------------------------------------------------------------------------------
-mount_vfs_model_path	(current_mod_path.."/Shapes")
-mount_vfs_model_path	(current_mod_path.."/Cockpit/Resources/Shape")
-mount_vfs_texture_path	(current_mod_path.."/Cockpit/Resources/Texture")
-mount_vfs_liveries_path (current_mod_path.."/Liveries")
-mount_vfs_texture_path  (current_mod_path.."/Textures")
-mount_vfs_texture_path	(current_mod_path.."/Skins/1/ME")--for simulator loading window
 
-dofile(current_mod_path.."/Views.lua")
--------------------------------------------------------------------------------------
-make_view_settings('F-117', ViewSettings, SnapViews)
-----------------------------------------------------------------------------------------
-local cfg_path = current_mod_path .."/FM/config.lua"
+local cfg_path = current_mod_path .. "/FM/config.lua"
 dofile(cfg_path)
-FM[1] 		= self_ID
-FM[2] 		= 'F117'
-FM.config_path 	= cfg_path
-FM.old 		= 54
--------------------------------------------------------------------------------
-make_flyable('F-117',current_mod_path..'/Cockpit/Scripts/', FM, current_mod_path..'/comm.lua')--EFM FC3
-------------------------------------------------------------------------------------
-dofile(current_mod_path..'/Weapons/gbu-31.lua')
-dofile(current_mod_path..'/Weapons/gbu-31v3b.lua')
-dofile(current_mod_path..'/F-117.lua')
+FM[1] = self_ID
+FM[2] = "F_117_NightHawk"
+FM.config_path = cfg_path
+FM.old = 37 --37 F-117A --54 SU-27T --6 F-15C --17 A-10A
+
+
 -------------------------------------------------------------------------------------
+
+dofile(current_mod_path .. "/Views.lua")
+make_view_settings("F-117-NightHawk", ViewSettings, SnapViews)
+
+-------------------------------------------------------------------------------
+
+local support_cockpit = current_mod_path .. "/Cockpit/Scripts/"
+MAC_flyable("F-117-NightHawk", support_cockpit, FM, current_mod_path .. "/comm.lua")
+
+-------------------------------------------------------------------------------
+
+dofile(current_mod_path .. "/Weapons/gbu-31.lua")
+dofile(current_mod_path .. "/Weapons/gbu-31v3b.lua")
+dofile(current_mod_path .. "/Weapons/gbu-32.lua")
+dofile(current_mod_path .. "/Weapons/agm-65d.lua")
+dofile(current_mod_path .. "/Weapons/agm-65l.lua")
+dofile(current_mod_path .. "/Weapons/agm-154.lua")
+dofile(current_mod_path .. "/F-117-NightHawk.lua")
+
+----------------------------------------------------------------------------------------
 plugin_done()

@@ -1,19 +1,15 @@
-dofile(LockOn_Options.script_path.."devices.lua")
---dofile(LockOn_Options.script_path.."materials.lua")
+dofile(LockOn_Options.script_path .. "devices.lua")
 
--- Makes the FC3 HUD and CAM work
 attributes = {
-	"support_for_cws",
+    "support_for_cws", --Disabling breaks HUD / instruments, Enabling breaks NVG implementation
 }
---
 
-MainPanel = {"ccMainPanel",LockOn_Options.script_path.."mainpanel_init.lua"}
+MainPanel = {"ccMainPanel", LockOn_Options.script_path .. "mainpanel_init.lua"}
 
-creators  = {}
+creators = {}
+creators[devices.HELMET_DEVICE]          = {"avNightVisionGogglesV2"}
+creators[devices.LIGHTS]                 = {"avLuaDevice", LockOn_Options.script_path .. "Systems/lights_system.lua"}
+creators[devices.MiscFunc]               = {"avLuaDevice", LockOn_Options.script_path .. "Systems/MiscFunc.lua"}
+creators[devices.BOMB_BAY]               = {"avLuaDevice", LockOn_Options.script_path .. "Systems/bomb_bay.lua"}
 
-creators[devices.LIGHTS]            = {"avLuaDevice"                ,LockOn_Options.script_path.."Systems/lights_system.lua"}
-creators[devices.MiscFunc] 			= {"avLuaDevice"				,LockOn_Options.script_path.."Systems/MiscFunc.lua"}
-creators[devices.HOOK]				= {"avLuaDevice"				,LockOn_Options.script_path.."Systems/hook.lua"}
-
--- Indicators
 indicators = {}
