@@ -11,6 +11,7 @@ join(res.keyCommands,{
 -- Systems
 {combos = {{key = 'R', reformers = {'LCtrl'}}}, down = iCommandPlaneAirRefuel, name = _('Refueling Hatch'), category = _('Systems')},
 {combos = {{key = 'P'}},						down = iCommandPlaneParachute, name = _('Dragging Chute'),	category = _('Systems') , features = {"dragchute"}},
+{combos = {{key = 'G', reformers = {'LAlt'}}},  down = iCommandPlaneHook, name = _('Tail Hook'), category = _('Systems')},
 
 -- Flight Control
 {combos = {{key = 'T', reformers = {'LCtrl'}}}, down = iCommandPlaneTrimCancel, name = _('Trim Reset'), category = _('Flight Control')},

@@ -1,12 +1,12 @@
 FM = {
-    center_of_mass = {0.0, 0.1, 0.0}, --{0.35, -0.10, 0.0} 
+    center_of_mass = {0.0, 0.1, 0.0}, --{0.35, -0.10, 0.0} --(+forward/-back,+up/-down,+right/-left)
     moment_of_inertia = {3.0e5, 6.8e5, 9.0e5, 0.0},
     disable_built_in_oxygen_system = true,
     new_FCS = true,
     suspension = {
         {
             mass = 120,
-            pos = {5.0765, -2.150, 0},
+            pos = {5.0765, -2.150, 0}, --(+forward/-back,+up/-down,+right/-left)
             damage_element = 83,
             self_attitude = true,
             wheel_axle_offset = 0.07,
@@ -42,7 +42,7 @@ FM = {
         },
         {
             mass = 220,
-            pos = {-0.292856, -2.055, -2.095716}, -- {-0.292856, -2.055, -2.095716}
+            pos = {-0.292856, -2.055, -2.095716}, -- {-0.292856, -2.055, -2.095716} --(+forward/-back,+up/-down,+right/-left)
             damage_element = 84,
             wheel_axle_offset = 0.38,
             self_attitude = false,
@@ -63,7 +63,7 @@ FM = {
             anti_skid_installed = true,
             wheel_damage_speed = 130,
             wheel_moment_of_inertia = 1.0,
-            wheel_radius = 0.8128, -- 32inch = 0.8128m diameter = 0.4064m radius
+            wheel_radius = 0.4064, -- 32inch = 0.8128m diameter = 0.4064m radius
             wheel_static_friction_factor = 0.75,
             wheel_side_friction_factor = 0.70,
             wheel_roll_friction_factor = 0.035,
@@ -77,7 +77,7 @@ FM = {
         },
         {
             mass = 220,
-            pos = {-0.292856, -2.055, 2.095716}, --{-0.292856, -2.055, 2.095716},
+            pos = {-0.292856, -2.055, 2.095716}, --{-0.292856, -2.055, 2.095716}, --(+forward/-back,+up/-down,+right/-left)
             damage_element = 85,
             wheel_axle_offset = 0.38,
             self_attitude = false,
