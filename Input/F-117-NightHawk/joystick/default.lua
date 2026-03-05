@@ -11,6 +11,8 @@ join(res.keyCommands,{
 -- Systems
 {down = iCommandPlaneAirRefuel, name = _('Refueling Bay'), category = _('Systems')},
 {down = iCommandPlaneParachute,	name = _('Dragging Chute'), category = _('Systems'), features = {"dragchute"}},
+{down = iCommandPlaneHook, 		name = _('Tail Hook'), category = _('Systems')},
+
 -- Flight Control
 {down = iCommandPlaneTrimCancel, name = _('Trim Reset'), category = _('Flight Control')},
 

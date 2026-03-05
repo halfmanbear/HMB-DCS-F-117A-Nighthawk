@@ -7,5 +7,6 @@ end
 devices = {}
 devices["HELMET_DEVICE"]			= counter()
 devices["LIGHTS"]					= counter()
-devices["MiscFunc"]					= counter()
+devices["MISCFUNC"]					= counter()
 devices["BOMB_BAY"]					= counter()
+devices["TAILHOOK"]					= counter()
