@@ -68,7 +68,7 @@ FM = {
             wheel_damage_speedX = 130,
             wheel_moment_of_inertia = 1.0,
             wheel_radius = 0.4064, -- 32inch = 0.8128m diameter = 0.4064m radius
-            wheel_static_friction_factor = 1.0, 
+            wheel_static_friction_factor = 0.80, 
             wheel_side_friction_factor = 0.45,
             wheel_roll_friction_factor = 0.05,
             wheel_glide_friction_factor = 0.5,
@@ -106,7 +106,7 @@ FM = {
             wheel_damage_speedX = 130,
             wheel_moment_of_inertia = 1.0,
             wheel_radius = 0.4064, -- 32inch = 0.8128m diameter = 0.4064m radius
-            wheel_static_friction_factor = 1.0,
+            wheel_static_friction_factor = 0.80,
             wheel_side_friction_factor = 0.45,
             wheel_roll_friction_factor = 0.05,
             wheel_glide_friction_factor = 0.5,

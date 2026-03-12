@@ -9,30 +9,30 @@ join(res.keyCommands,{
 {combos = {{key = '5', reformers = {'LAlt'}}},down = iCommandPlane_EAC_OFF, name = _('EAC Off'), category = _('Autopilot')},
 
 -- Systems
-{combos = {{key = 'R', reformers = {'LCtrl'}}}, down = iCommandPlaneAirRefuel, name = _('Refueling Hatch'), category = _('Systems')},
-{combos = {{key = 'P'}},						down = iCommandPlaneParachute, name = _('Dragging Chute'),	category = _('Systems') , features = {"dragchute"}},
-{combos = {{key = 'G', reformers = {'LAlt'}}},  down = iCommandPlaneHook, name = _('Tail Hook'), category = _('Systems')},
+{combos = {{key = 'R', reformers = {'LCtrl'}}}, down = iCommandPlaneAirRefuel, name = _('Refueling Hatch'), category = {_('Systems'), _('F-117A Essential System Controls')}},
+{combos = {{key = 'P'}},						down = iCommandPlaneParachute, name = _('Drag Chute'),	category = {_('Systems'), _('F-117A Essential System Controls')}, features = {"dragchute"}},
+{combos = {{key = 'G', reformers = {'LAlt'}}},  down = iCommandPlaneHook, name = _('Tail Hook'), category = {_('Systems'), _('F-117A Essential System Controls')}, features = {"tailhook"}},
 
 -- Flight Control
 {combos = {{key = 'T', reformers = {'LCtrl'}}}, down = iCommandPlaneTrimCancel, name = _('Trim Reset'), category = _('Flight Control')},
 
 -- Modes
 {combos = {{key = '6'}}, down = iCommandPlaneModeFI0, name = _('(6) Longitudinal Missile Aiming Mode'), category = _('Modes')},
-{combos = {{key = '7'}}, down = iCommandPlaneModeGround, name = _('(7) Air-To-Ground Mode'), category = _('Modes')},
+{combos = {{key = '7'}}, down = iCommandPlaneModeGround, name = _('(7) Air-To-Ground Mode'), category = {_('Modes'), _('F-117A Essential System Controls')}},
 
 -- Sensors
 {combos = defaultDeviceAssignmentFor("lock_aircraft"), down = iCommandPlaneChangeLock, up = iCommandPlaneChangeLockUp, name = _('Target Lock'), category = _('Sensors')},
 {combos = defaultDeviceAssignmentFor("unlock_target"), down = iCommandSensorReset, name = _('Target Unlock'), category = _('Sensors')},
 {combos = {{key = 'I', reformers = {'RCtrl'}}}, down = iCommandPlaneRadarCenter, name = _('Target Designator To Center'), category = _('Sensors')},
-{combos = {{key = 'O'}}, down = iCommandPlaneEOSOnOff, name = _('Electro-Optical System On/Off'), category = _('Sensors')},
-{combos = {{key = 'O', reformers = {'RShift'}}}, down = iCommandPlaneLaserRangerOnOff, name = _('Laser Ranger On/Off'), category = _('Sensors')},
+{combos = {{key = 'O'}}, down = iCommandPlaneEOSOnOff, name = _('Electro-Optical System On/Off'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
+{combos = {{key = 'O', reformers = {'RShift'}}}, down = iCommandPlaneLaserRangerOnOff, name = _('Laser Ranger On/Off'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
 {combos = {{key = 'O', reformers = {'RCtrl'}}}, down = iCommandPlaneNightTVOnOff, name = _('Night Vision (FLIR or LLTV) On/Off'), category = _('Sensors')},
 {combos = {{key = ';'}}, pressed = iCommandPlaneRadarUp, up = iCommandPlaneRadarStop, name = _('Target Designator Up'), category = _('Sensors')},
 {combos = {{key = '.'}}, pressed = iCommandPlaneRadarDown, up = iCommandPlaneRadarStop, name = _('Target Designator Down'), category = _('Sensors')},
 {combos = {{key = ','}}, pressed = iCommandPlaneRadarLeft, up = iCommandPlaneRadarStop, name = _('Target Designator Left'), category = _('Sensors')},
 {combos = {{key = '/'}}, pressed = iCommandPlaneRadarRight, up = iCommandPlaneRadarStop, name = _('Target Designator Right'), category = _('Sensors')},
-{combos = {{key = '='}}, down = iCommandPlaneZoomIn, name = _('Display Zoom In'), category = _('Sensors')},
-{combos = {{key = '-'}}, down = iCommandPlaneZoomOut, name = _('Display Zoom Out'), category = _('Sensors')},
+{combos = {{key = '='}}, down = iCommandPlaneZoomIn, name = _('Display Zoom In'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
+{combos = {{key = '-'}}, down = iCommandPlaneZoomOut, name = _('Display Zoom Out'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
 
 -- RWR
 {combos = {{key = 'R', reformers = {'RShift'}}}, down = iCommandChangeRWRMode, name = _('RWR/SPO Mode Select'), category = _('Sensors')},
@@ -40,7 +40,7 @@ join(res.keyCommands,{
 {combos = {{key = '.', reformers = {'RAlt'}}}, down = iCommandPlaneThreatWarnSoundVolumeUp, name = _('RWR/SPO Sound Signals Volume Up'), category = _('Sensors')},
 
 -- Weapons                                                                        
-{combos = defaultDeviceAssignmentFor("weapon_release_button"), down = iCommandPlanePickleOn,	up = iCommandPlanePickleOff, name = _('Weapon Release'), category = _('Weapons')},
+{combos = defaultDeviceAssignmentFor("weapon_release_button"), down = iCommandPlanePickleOn,	up = iCommandPlanePickleOff, name = _('Weapon Release'), category = {_('Weapons'), _('F-117A Essential System Controls')}},
 
 --Night Vision Goggles
 {combos = {{key = 'H', reformers = {'LShift'}}}		   , 	down    = iCommandViewNightVisionGogglesOn   , name = _('Night Vision Goggles')   , category = _('Night Vision Goggles')},
@@ -91,7 +91,7 @@ join(res.keyCommands,{
 {down = 10007, name = _('Beacon Light ON/OFF'), category = _('Lighting')},
 
 --Misc
-{combos = {{key = 'T', reformers = {'LShift'}}}, down = 10100, name = _('Bomb Bay Door Toggle'), category = _('EFM Misc')},
+{combos = {{key = 'T', reformers = {'LShift'}}}, down = 10100, name = _('Bomb Bay Door Toggle'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
 
 })
 
