@@ -9,30 +9,30 @@ join(res.keyCommands,{
 {down = iCommandPlane_EAC_OFF, name = _('EAC Off'), category = _('Autopilot')},
 
 -- Systems
-{down = iCommandPlaneAirRefuel, name = _('Refueling Bay'), category = _('Systems')},
-{down = iCommandPlaneParachute,	name = _('Dragging Chute'), category = _('Systems'), features = {"dragchute"}},
-{down = iCommandPlaneHook, 		name = _('Tail Hook'), category = _('Systems')},
+{down = iCommandPlaneAirRefuel, name = _('Refueling Bay'), category = {_('Systems'), _('F-117A Essential System Controls')}},
+{down = iCommandPlaneParachute,	name = _('Drag Chute'), category = {_('Systems'), _('F-117A Essential System Controls')}, features = {"dragchute"}},
+{down = iCommandPlaneHook, 		name = _('Tail Hook'), category = {_('Systems'), _('F-117A Essential System Controls')}, features = {"tailhook"}},
 
 -- Flight Control
 {down = iCommandPlaneTrimCancel, name = _('Trim Reset'), category = _('Flight Control')},
 
 -- Modes
 {down = iCommandPlaneModeFI0, name = _('(6) Longitudinal Missile Aiming Mode'), category = _('Modes')},
-{down = iCommandPlaneModeGround, name = _('(7) Air-To-Ground Mode'), category = _('Modes')},
+{down = iCommandPlaneModeGround, name = _('(7) Air-To-Ground Mode'), category = {_('Modes'), _('F-117A Essential System Controls')}},
 
 -- Sensors
 {combos = defaultDeviceAssignmentFor("lock_aircraft"), down = iCommandPlaneChangeLock, up = iCommandPlaneChangeLockUp, name = _('Target Lock'), category = _('Sensors')},
 {combos = defaultDeviceAssignmentFor("unlock_target"), down = iCommandSensorReset, name = _('Target Unlock'), category = _('Sensors')},
 {down = iCommandPlaneRadarCenter, name = _('Target Designator To Center'), category = _('Sensors')},
-{down = iCommandPlaneEOSOnOff, name = _('Electro-Optical System On/Off'), category = _('Sensors')},
-{down = iCommandPlaneLaserRangerOnOff, name = _('Laser Ranger On/Off'), category = _('Sensors')},
+{down = iCommandPlaneEOSOnOff, name = _('Electro-Optical System On/Off'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
+{down = iCommandPlaneLaserRangerOnOff, name = _('Laser Ranger On/Off'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
 {down = iCommandPlaneNightTVOnOff, name = _('Night Vision (FLIR or LLTV) On/Off'), category = _('Sensors')},
 {pressed = iCommandPlaneRadarUp, up = iCommandPlaneRadarStop, name = _('Target Designator Up'), category = _('Sensors')},
 {pressed = iCommandPlaneRadarDown, up = iCommandPlaneRadarStop, name = _('Target Designator Down'), category = _('Sensors')},
 {pressed = iCommandPlaneRadarLeft, up = iCommandPlaneRadarStop, name = _('Target Designator Left'), category = _('Sensors')},
 {pressed = iCommandPlaneRadarRight, up = iCommandPlaneRadarStop, name = _('Target Designator Right'), category = _('Sensors')},
-{down = iCommandPlaneZoomIn, name = _('Display Zoom In'), category = _('Sensors')},
-{down = iCommandPlaneZoomOut, name = _('Display Zoom Out'), category = _('Sensors')},
+{down = iCommandPlaneZoomIn, name = _('Display Zoom In'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
+{down = iCommandPlaneZoomOut, name = _('Display Zoom Out'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
 
 -- RWR
 {down = iCommandChangeRWRMode, name = _('RWR/SPO Mode Select'), category = _('Sensors')},
@@ -40,7 +40,7 @@ join(res.keyCommands,{
 {down = iCommandPlaneThreatWarnSoundVolumeUp, name = _('RWR/SPO Sound Signals Volume Up'), category = _('Sensors')},
 
 -- Weapons                                                                        
-{combos = defaultDeviceAssignmentFor("weapon_release_button"), down = iCommandPlanePickleOn,	up = iCommandPlanePickleOff, name = _('Weapon Release'), category = _('Weapons')},
+{combos = defaultDeviceAssignmentFor("weapon_release_button"), down = iCommandPlanePickleOn,	up = iCommandPlanePickleOff, name = _('Weapon Release'), category = {_('Weapons'), _('F-117A Essential System Controls')}},
 
 --Night Vision Goggles
 {down    = iCommandViewNightVisionGogglesOn   , name = _('Night Vision Goggles')   , category = _('Night Vision Goggles')},
@@ -91,15 +91,15 @@ join(res.keyCommands,{
 {down = 10007, name = _('Beacon Light ON/OFF'), category = _('Lighting')},
 
 -- Misc
-{down = 10100, name = _('Bomb Bay Door Toggle'), category = _('EFM Misc')},
+{down = 10100, name = _('Bomb Bay Door Toggle'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
 
 })
 -- joystick axes 
 join(res.axisCommands,{
-{action = iCommandPlaneSelecterHorizontalAbs, name = _('TDC Slew Horizontal')},
-{action = iCommandPlaneSelecterVerticalAbs	, name = _('TDC Slew Vertical')},
-{action = iCommandPlaneMFDZoomAbs 			, name = _('MFD Zoom')},
-{action = iCommandPlaneBase_DistanceAbs 	, name = _('Target Box Size')},
+{action = iCommandPlaneSelecterHorizontalAbs, name = _('TDC Slew Horizontal'), category = _('F-117A Essential System Controls')},
+{action = iCommandPlaneSelecterVerticalAbs	, name = _('TDC Slew Vertical'), category = _('F-117A Essential System Controls')},
+{action = iCommandPlaneMFDZoomAbs 			, name = _('MFD Zoom'), category = _('F-117A Essential System Controls')},
+{action = iCommandPlaneBase_DistanceAbs 	, name = _('Target Box Size'), category = _('F-117A Essential System Controls')},
 })
 
 return res
