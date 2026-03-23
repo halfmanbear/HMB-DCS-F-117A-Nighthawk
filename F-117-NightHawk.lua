@@ -109,6 +109,8 @@ F_117_NightHawk = {
         --1015,-- right elevon damage (outer)
     },
     --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    effects_presets =   {{effect = "OVERWING_VAPOR", file = current_mod_path.."/Effects/f-117-nighthawk_overwingVapor.lua"}},
+    
     -- SOURCES - internet: 
     -- https://www.lockheedmartin.com/content/dam/lockheed-martin/aero/documents/F-117/F117%20Fast%20Facts_FINAL.pdf
     -- http://www.f-117a.com/Specs.html
@@ -133,20 +135,20 @@ F_117_NightHawk = {
     M_empty = 13381, --kg : 29500 lb
     M_nominal = 19278, --kg : =(M_empty + ((M_fuel_max/2) + typical_combat_payload)
     M_max = 23814, --kg : 52500 lb
-    M_fuel_max = 8255, --kg : M_max - M_empty - M_payload  NOTE: public info suggests 18200 lb / 8255 kg
+    M_fuel_max = 8255, --kg : M_max - M_empty - M_payload  NOTE: public info suggests 18200 lb / 8255 kg (~19000lbs referenced in Paul Crickmore's book)
     H_max = 13716, --m : 45000ft 
     average_fuel_consumption = 0.59, --0.184
     bigParkingRamp = false,
     CAS_min = 64, -- Min speed that is shwon in hud in m/s
     V_opt = 230, -- cruise speed in m/s
-    V_take_off = 84.9,--m/s : Take-off speed (165 knots) 
+    V_take_off = 84.9,--m/s : Take-off speed (165 knots) [170kts unstuck referenced in Paul Crickmore's book]
     V_land = 77.2,--m/s : Landing Speed (150 knots)
     has_afteburner = false,
     has_speedbrake = false,
     main_gear_pos = {-0.292856, -2.055, 2.095716}, --(+forward/-back,+up/-down,+right/-left)
     radar_can_see_ground = false,
     nose_gear_pos = {5.0765, -2.020, 0}, --(+forward/-back,+up/-down,+right/-left)
-    AOA_take_off = 0.14, -- AoA for take-off
+    AOA_take_off = 0.14, -- rad (= 8 deg) AoA for take-off (sources mention 9 deg landing AoA))
     AmmoWeight = 0, -- no gun
     stores_number = 2, --number of pylons (for Ai)
     bank_angle_max = 60,
@@ -164,14 +166,14 @@ F_117_NightHawk = {
     _file_flyable = current_mod_path .. "/entry.lua",
     swapped_names = true,
     WorldID =  WSTYPE_PLACEHOLDER,
-    thrust_sum_max = 8200, -- thrust in kgf N = 9.80665 * 8200 = 80415N
-    thrust_sum_ab = 8200, --thrust in kgf (with afterburner)
+    thrust_sum_max = 8200,--8668.2, -- combined thrust in kgf (2x engines) (N = 9.80665 * 8200 = 80415 N / lbs = 2.20462 * 8200 = 18077.884 lbs [9040 lbs per engine] 10800lbs referenced in Paul Crickmore's book [note possible losses in airframe / platapus])
+    thrust_sum_ab = 8200,--8668.2, -- combined thrust in kgf (2x engines) thrust (with afterburner)
     Vy_max = 14.3, --m/s : Max climb speed
     length = 20.09, --m : 65ft11in (20.09 m)
     height = 3.78, --m : 12ft5in (3.78 m)
     flaps_maneuver = 0,
     wing_type = 0, -- FIXED_WING = 0 / VARIABLE_GEOMETRY = 1 / FOLDED_WING = 2 / VARIABLE_GEOMETRY_FOLDED = 3
-    Mach_max = 0.92, --Mach : 684 mph (1,100 km/h; Mach 0.92 at 35000 ft (10668 meters))
+    Mach_max = 0.92, --Mach : 684 mph (1,100 km/h; Mach 0.92 at 35000 ft (10668 meters)) [562KEAS 0.90mach noted in Paul Crickmore's book]
     Rate = "70", --RewardPoint in Multiplayer
     WingSpan = 13.21, --m : 43ft4in (13.21 m)
     EmptyWeight = 13381, --kg : 29500 lb
@@ -181,8 +183,8 @@ F_117_NightHawk = {
     MaxTakeOffWeight = 23814, --kg : 52500 lb
     country_of_origin = "USA",
     range = 1720, --km : ~930 nmi (1,720 km; 1,070 mi) combat radius
-    RCS = 0.003, --m^2 : Radar Cross Section
-    Ny_max_e = 5.5, --Max G (for AI)
+    RCS = 0.003, --m^2 : Radar Cross Section (0.001-0.01 referenced in various sources)
+    Ny_max_e = 6.0, --Max G (for AI)
     detection_range_max = 0, --nmi : Maximum distance in meters at which (AI) sensors can detect target
     IR_emission_coeff = 0.15, --IR_emission_coeff = 1 for reference aircraft Su-27
     IR_emission_coeff_ab = 0, --IR emmision coefficient when afterburner active
@@ -244,9 +246,6 @@ F_117_NightHawk = {
         { -4.45, 0.08, -1.7 },
         { 2, -0.56, -1 },
         { -4.08, 0.22, 0 },
-    },
-    effects_presets = {
-        {effect = "OVERWING_VAPOR", file = current_mod_path.."/Effects/f-117-nighthawk_overwingVapor.lua"},
     },
     CanopyGeometry = {
         azimuth = {-160.0, 160.0}, -- pilot view horizontal (AI)
@@ -366,55 +365,93 @@ F_117_NightHawk = {
     -- Aldop - Alfadop Max AOA at current M - departure threshold
     -- Cymax - Coefficient, lift, maximum possible (ignores other calculations if current Cy > Cymax)
     SFM_Data = {
-      aerodynamics = {
-        Cy0       = 0.0,
-        Czbe      = -0.012,  
-        Mzalfa    = 6.6,    
-        Mzalfadt  = 1.0,
-        --cx_brk    = 0.025, -- No speed brake 
-        cx_gear   = 0.006, -- Landing gear drag  
-        kjx       = 2.85,    
-        kjz       = 0.00125,  
-        --  { Mach,  Cx0,   Cya,   B2,     B4,    Omxmax,  Aldop,  Cymax }
-        table_data = {
-          {0.00, 0.0240, 0.065, 0.075, 0.120, 0.55, 30.0, 1.20},
-          {0.20, 0.0240, 0.065, 0.075, 0.120, 1.50, 30.0, 1.20},
-          {0.40, 0.0240, 0.067, 0.075, 0.120, 2.50, 30.0, 1.20},
-          {0.60, 0.0245, 0.070, 0.075, 0.120, 3.30, 29.0, 1.18},
-          {0.70, 0.0255, 0.073, 0.075, 0.120, 3.30, 28.0, 1.16},
-          {0.80, 0.0275, 0.077, 0.075, 0.120, 3.30, 27.0, 1.14},
-          {0.85, 0.0300, 0.079, 0.090, 0.125, 3.20, 26.0, 1.12},
-          {0.90, 0.0335, 0.082, 0.120, 0.135, 3.00, 25.0, 1.10},
-          {0.92, 0.0370, 0.083, 0.145, 0.140, 2.90, 24.5, 1.08},
-          {0.95, 0.0415, 0.083, 0.170, 0.150, 2.70, 24.0, 1.06},
-          {1.00, 0.0480, 0.085, 0.200, 0.160, 2.50, 23.5, 1.04},
-        },
-      },
+            aerodynamics = {
+                Cy0       = 0.0,     -- Lift at 0° AoA
+                Czbe      = -0.012,  -- Side-force per deg sideslip
+                Mzalfa    = 6.6,     -- Pitch stiffness
+                Mzalfadt  = 1.0,     -- Pitch damping
+                cx_gear   = 0.006,   -- Landing gear drag increment
+                kjx       = 2.85,    -- Roll inertia
+                kjz       = 0.00125, -- Yaw inertia
+                -- table_data format:
+                -- Mach   = Mach number (speed relative to sound) where this aerodynamic set applies
+                -- Cx0    = Zero-lift drag coefficient (baseline aircraft drag)
+                -- Cya    = Lift coefficient slope vs angle of attack (lift produced per degree of AoA)
+                -- B2     = Induced drag coefficient (drag increase from lift, Cy² term)
+                -- B4     = High-AoA drag coefficient (Cy⁴ term, models stall / nonlinear drag)
+                -- Omxmax = Maximum roll rate factor (controls max roll rate capability)
+                -- Aldop  = Maximum effective angle of attack before strong stall behavior (degrees)
+                -- Cymax  = Maximum lift coefficient (peak lift before stall)
+                --{Mach, Cx0,    Cya,   B2,    B4,     Omxmax, Aldop, Cymax }
+                table_data = {
+                  {0.00, 0.0090, 0.065, 0.230, 0.0001, 0.55,   30.0,  1.20},
+                  {0.20, 0.0090, 0.065, 0.230, 0.0001, 1.50,   30.0,  1.20},
+                  {0.40, 0.0090, 0.067, 0.230, 0.0001, 2.50,   30.0,  1.20},
+                  {0.60, 0.0090, 0.070, 0.230, 0.0001, 3.30,   29.0,  1.18},
+                  {0.70, 0.0090, 0.073, 0.230, 0.0001, 3.30,   28.0,  1.16},
+                  {0.80, 0.0110, 0.077, 0.240, 0.0001, 3.30,   27.0,  1.14},
+                  {0.85, 0.0120, 0.079, 0.250, 0.0001, 3.20,   26.0,  1.12},
+                  {0.90, 0.0135, 0.081, 0.255, 0.0001, 3.00,   25.0,  1.10},
+                  {0.92, 0.0154, 0.082, 0.260, 0.0001, 3.00,   24.0,  1.09},
+                },
+            },
 
-      engine = {
-        ForsRUD = 1, MaksRUD = 1, MaxRUD = 1, MinRUD = 0, --ForsRUD = 0
-        Nmg     = 60.00001,      
-        type    = "TurboFan",
-        dcx_eng = 0.0085,    
-        dpdh_m  = 4200, --8000     
-        dpdh_f  = 4200, --8000      
-        hMaxEng = 19.5,         
-        cemax   = 1.24,
-        cefor   = 2.56,
-        table_data = {
-          {0.00, 94200, 94200}, 
-          {0.20, 92000, 92000},
-          {0.40, 90000, 90000},
-          {0.60, 87000, 87000},
-          {0.70, 85000, 85000},
-          {0.80, 82000, 82000},
-          {0.85, 80500, 80500},
-          {0.90, 79000, 79000},
-          {0.92, 77500, 77500},
-          {0.95, 75000, 75000},
-          {1.00, 70500, 70500},
-        },
-      },
+            engine = {
+              ForsRUD = 1,
+              MaksRUD = 1,
+              MaxRUD  = 1,
+              MinRUD  = 0,
+              Nmg     = 62.0,
+              type    = "TurboFan",
+              typeng  = 0,
+              dcx_eng = 0.0085,
+              hMaxEng = 19.5,
+              cemax   = 1.24,
+              cefor   = 1.24,
+              -- dpdh kept as fallback for altitudes outside extended table range
+              dpdh_m  = 8000,
+              dpdh_f  = 8000,
+
+              extended = {
+                thrust_max = {
+                  -- H in metres: SL, 15kft, 20kft, 30kft, 32kft, 40kft, 46kft
+                  H = { 0, 4572, 6096, 9144, 9754, 12192, 14000 },
+                  -- Mach breakpoints matching table_data below
+                  M = { 0.00, 0.20, 0.40, 0.60, 0.70, 0.80, 0.85, 0.90, 0.92 },
+                  -- thrust[h_index] = { thrust_at_each_Mach } in Newtons
+                  -- Lapse factors (P/P0)^0.82: 1.000, 0.625, 0.535, 0.370, 0.343, 0.251, 0.199
+                  thrust = {
+                    -- H=0 (SL) — your existing SL values
+                    { 80415, 76404, 75268, 77007, 78995, 81621, 83224, 84806, 85006 },
+                    -- H=4572m (15kft)
+                    { 50259, 47753, 47043, 48129, 49372, 51013, 52015, 53004, 53129 },
+                    -- H=6096m (20kft)
+                    { 43022, 40876, 40268, 41219, 42262, 43667, 44525, 45371, 45478 },
+                    -- H=9144m (30kft)
+                    { 29753, 28269, 27849, 28493, 29228, 30200, 30793, 31378, 31452 },
+                    -- H=9754m (32kft) *** CALIBRATION POINT: tune [9] (M0.92) vs EFM ***
+                    { 27582, 26207, 25817, 26413, 27095, 27976, 28546, 29088, 29157 },
+                    -- H=12192m (40kft)
+                    { 20184, 19178, 18892, 19340, 19828, 20487, 20889, 21286, 21337 },
+                    -- H=14000m (~46kft)
+                    { 16003, 15204, 14978, 15324, 15720, 16242, 16562, 16876, 16926 },
+                  }
+                }
+              },
+              -- table_data: 2-column for no-AB (extended supersedes this for alt scaling,
+              -- but the engine still needs it — these are your existing SL values)
+              table_data = {
+                { 0.00, 80415 },
+                { 0.20, 76404 },
+                { 0.40, 75268 },
+                { 0.60, 77007 },
+                { 0.70, 78995 },
+                { 0.80, 81621 },
+                { 0.85, 83224 },
+                { 0.90, 84806 },
+                { 0.92, 85006 },
+              },
+            },
     },
 
     --damage_cells , index meaning see in  Scripts\Aircrafts\_Common\Damage.lua
