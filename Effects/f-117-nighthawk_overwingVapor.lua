@@ -23,7 +23,7 @@ Presets =
             AlbedoSRGB = 0.86,
             
             OpacityMax = 0.25,
-            OpacityOverPower = {
+            OpacityOverPower = {-- vapor power -> normalized opacity. In this case opacity = sqrt(vapor power)
                 {0.0,   0.0},
                 {0.125, 0.35355339059327376220042218105242},
                 {0.25,  0.5},
