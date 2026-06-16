@@ -1,3 +1,6 @@
+local cockpit = folder.."../../../Cockpit/Scripts/"
+dofile(cockpit.."command_defs.lua")
+
 local res = external_profile("Config/Input/Aircrafts/base_joystick_binding.lua")
 join(res.keyCommands,{
 
@@ -39,7 +42,17 @@ join(res.keyCommands,{
 {down = iCommandPlaneThreatWarnSoundVolumeDown, name = _('RWR/SPO Sound Signals Volume Down'), category = _('Sensors')},
 {down = iCommandPlaneThreatWarnSoundVolumeUp, name = _('RWR/SPO Sound Signals Volume Up'), category = _('Sensors')},
 
--- Weapons                                                                        
+-- F-117A IRADS
+{down = iCommandTVSensor,    name = _('IRADS On/Off'),  category = {_('Sensors'), _('F-117A IRADS')}},
+{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Up'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Down'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Left'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_RIGHT, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_RIGHT, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Right'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Depress / Slew Stop'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = Keys.IRADSZoomIn,  value_down = 1.0, name = _('IRADS FOV - Narrow'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = Keys.IRADSZoomOut, value_down = 1.0, name = _('IRADS FOV - Wide'),   category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+
+-- Weapons
 {combos = defaultDeviceAssignmentFor("weapon_release_button"), down = iCommandPlanePickleOn,	up = iCommandPlanePickleOff, name = _('Weapon Release'), category = {_('Weapons'), _('F-117A Essential System Controls')}},
 
 --Night Vision Goggles

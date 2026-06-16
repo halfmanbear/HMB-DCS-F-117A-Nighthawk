@@ -27,11 +27,11 @@ CanopyPos.output = {0, 100}
 CanopyPos.controller = controllers.base_gauge_CanopyPos
 
 ------------------------------------------------------------------------------	Attitude
-ADIPitch = CreateGauge()
+ADIPitch = CreateGauge("parameter")
 ADIPitch.arg_number = 1004
 ADIPitch.input = {-140, 140}
 ADIPitch.output = {-100, 100}
-ADIPitch.controller = controllers.base_gauge_Pitch
+ADIPitch.parameter_name = "PANEL_PITCH"
 
 FloodLight = CreateGauge("parameter")
 FloodLight.arg_number = 180
@@ -51,18 +51,17 @@ RadarAlt.input = {0, 30.48, 60.96, 91.44, 121.92, 182.88, 243.84, 304.8, 609.6, 
 RadarAlt.output = {0, 0.095, 0.206, 0.317, 0.46, 0.572, 0.683, 0.746, 0.841, 0.920, 1}
 RadarAlt.controller = controllers.base_gauge_RadarAltitude
 
-BaroAlt = CreateGauge("cycled")
+BaroAlt = CreateGauge("parameter")
 BaroAlt.arg_number = 1005
-BaroAlt.cycle_value = 304.8
-BaroAlt.input = {0, 304.8} -- 0 to 1000 FT (or M?)
+BaroAlt.input = {0, 304.8}
 BaroAlt.output = {0, 1}
-BaroAlt.controller = controllers.base_gauge_BarometricAltitude
+BaroAlt.parameter_name = "PANEL_BARO_ALT"  -- Gauges.lua pre-cycles with baro % 304.8
 
-indispeed = CreateGauge()
+indispeed = CreateGauge("parameter")
 indispeed.arg_number = 1006
 indispeed.input = {0.0, 102.889, 205.778, 308.667}
 indispeed.output = {0, 0.333, 0.6666, 1}
-indispeed.controller = controllers.base_gauge_IndicatedAirSpeed
+indispeed.parameter_name = "PANEL_IAS"
 
 --VertAccel							= CreateGauge()
 --VertAccel.arg_number				= 24
@@ -70,11 +69,17 @@ indispeed.controller = controllers.base_gauge_IndicatedAirSpeed
 --VertAccel.output					= {-0.5, -0.375, -0.250, -0.142, 0, 0.111, 0.26245, 0.381, 0.5152, 0.651, 0.767, 0.937, 1}
 --VertAccel.controller				= controllers.base_gauge_VerticalAcceleration
 
-AoAGauge = CreateGauge()
+AoAGauge = CreateGauge("parameter")
 AoAGauge.arg_number = 1007
 AoAGauge.input = {-10 / RAD_TO_DEG, 10 / RAD_TO_DEG, 20 / RAD_TO_DEG}
 AoAGauge.output = {-1, 0.5, 1}
-AoAGauge.controller = controllers.base_gauge_AngleOfAttack
+AoAGauge.parameter_name = "PANEL_AOA"
+
+FuelGauge = CreateGauge("parameter")
+FuelGauge.arg_number = 22
+FuelGauge.input = {0, 8255}
+FuelGauge.output = {0, 1}
+FuelGauge.parameter_name = "PANEL_FUEL"
 
 need_to_be_closed = true --false
 --livery = find_custom_livery("F-117","default")
