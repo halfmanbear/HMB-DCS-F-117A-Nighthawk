@@ -6,7 +6,8 @@ F_117_NightHawk = {
     HumanCommPanelPath = current_mod_path .. "/comm.lua", --exp
     Picture = "F-117A.png",
     Shape = "f-117-nighthawk", --mods shape file
-    shape_table_data = {
+    shape_table_data = 
+    {
         {
             file = "f-117-nighthawk", -- mods main .edm shape file
             life = 12,
@@ -26,7 +27,8 @@ F_117_NightHawk = {
             positioning = "BYNORMAL";
         },
     },
-    DamageParts = { --exp
+    DamageParts = 
+    { --exp
         [1] = "f-117-nighthawk-oblomok-wing-r", --using Mods destruction file
         [2] = "f-117-nighthawk-oblomok-wing-l", --using Mods destruction file
     },
@@ -35,7 +37,8 @@ F_117_NightHawk = {
     attribute = {wsType_Air, wsType_Airplane, wsType_Fighter, WSTYPE_PLACEHOLDER, "Bombers", "Refuelable", "All", "NonAndLightArmoredUnits", "NonArmoredUnits", "Air", "Planes", "Battle airplanes"}, --from DCS F-117A required for Ai Bombing
     Categories = {},
     InheriteCommonCallnames = false,
-    SpecificCallnames = {
+    SpecificCallnames = 
+    {
         ["USA"] = {
                     {_('Knight'),           'Knight'},
                     {_('Vega'),             'Vega'},           
@@ -66,7 +69,8 @@ F_117_NightHawk = {
     },
     -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     -- add model draw args for network transmitting to this draw_args table (32 limit) - Note: 8 animations too many
-    net_animation = {
+    net_animation = 
+    {
         0,  -- nose gear
         1,  -- nose gear strut
         2,  -- nose wheel steering
@@ -110,7 +114,12 @@ F_117_NightHawk = {
     },
     --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     effects_presets =   {{effect = "OVERWING_VAPOR", file = current_mod_path.."/Effects/f-117-nighthawk_overwingVapor.lua"}},
-    
+    Tasks = {
+        aircraft_task(GroundAttack),
+        aircraft_task(PinpointStrike),
+        aircraft_task(RunwayAttack),
+    },
+    DefaultTask = aircraft_task(PinpointStrike),
     -- SOURCES - internet: 
     -- https://www.lockheedmartin.com/content/dam/lockheed-martin/aero/documents/F-117/F117%20Fast%20Facts_FINAL.pdf
     -- http://www.f-117a.com/Specs.html
@@ -154,6 +163,7 @@ F_117_NightHawk = {
     bank_angle_max = 60,
     Ny_min = -3, -- Min G
     Ny_max = 6, -- Max G
+    Ny_max_e = 6, --Max G ?
     tand_gear_max = math.rad(45), --0.785
     V_max_sea_level = 292, --m/s : Max speed at sea level
     V_max_h = 273, --m/s : Max speed at max altitude (45000ft)
@@ -161,7 +171,7 @@ F_117_NightHawk = {
     tanker_type = 1, --Boom type
     wing_area = 84.8, --m2 : 912.7 sq ft (84.8 m2), Lockheed state 780 sq ft (72 m2) - Research paper suggests 105.9 m2
     wing_span = 13.21, --m : 43ft4in (13.21 m)
-    _MAC_compatible = true,
+    --_MAC_compatible = true,
     _file = current_mod_path .. "/F-117NightHawk.lua",
     _file_flyable = current_mod_path .. "/entry.lua",
     swapped_names = true,
@@ -171,7 +181,7 @@ F_117_NightHawk = {
     Vy_max = 14.3, --m/s : Max climb speed
     length = 20.09, --m : 65ft11in (20.09 m)
     height = 3.78, --m : 12ft5in (3.78 m)
-    flaps_maneuver = 0,
+    flaps_maneuver = 1, -- ? exp was 0
     wing_type = 0, -- FIXED_WING = 0 / VARIABLE_GEOMETRY = 1 / FOLDED_WING = 2 / VARIABLE_GEOMETRY_FOLDED = 3
     Mach_max = 0.92, --Mach : 684 mph (1,100 km/h; Mach 0.92 at 35000 ft (10668 meters)) [562KEAS 0.90mach noted in Paul Crickmore's book]
     Rate = "70", --RewardPoint in Multiplayer
@@ -184,7 +194,6 @@ F_117_NightHawk = {
     country_of_origin = "USA",
     range = 1720, --km : ~930 nmi (1,720 km; 1,070 mi) combat radius
     RCS = 0.003, --m^2 : Radar Cross Section (0.001-0.01 referenced in various sources)
-    Ny_max_e = 6.0, --Max G (for AI)
     detection_range_max = 0, --nmi : Maximum distance in meters at which (AI) sensors can detect target
     IR_emission_coeff = 0.15, --IR_emission_coeff = 1 for reference aircraft Su-27
     IR_emission_coeff_ab = 0, --IR emmision coefficient when afterburner active
@@ -192,46 +201,51 @@ F_117_NightHawk = {
     nose_gear_wheel_diameter = 0.5588, --m : 22in = 0.5588m 
     main_gear_wheel_diameter = 0.8128, --m : 32in = 0.8128m 
     brakeshute_name = 3, --type of drag chute
+    crew_size = 1,
     air_refuel_receptacle_pos = {2.356, 1.119, 0.0}, --(+forward/-back,+up/-down,+right/-left)
     engines_count = 2,
     engines_nozzles = { 
         [1] = { --Left exhaust nozzle
             pos = {-4.604, 0.039, -1.427}, --For Visual Effects (+forward/-back,height,+right/-left)
-            elevation = 5, --vertical rotation in degrees
-            azimuth= 15, -- horizontal rotation in degrees
+            orientation = { 0.962, 0.087, 0.258 },
+            --elevation = 5, --vertical rotation in degrees
+            --azimuth= 15, -- horizontal rotation in degrees
             diameter = 0.585,
             exhaust_length_ab = 0.76,
             exhaust_length_ab_K = 0.76,
-            smokiness_level = 0.02
+            smokiness_level = 0.02,
         },
         [2] = { --Right exhaust nozzle
             pos = {-4.604, 0.039, 1.427}, --For Visual Effects (+forward/-back,height,+right/-left)
-            elevation = 5, --vertical rotation in degree
-            azimuth= -15, -- horizontal rotation in degrees
+            orientation = { 0.962, 0.087, -0.258 },
+            --elevation = 5, --vertical rotation in degree
+            --azimuth= -15, -- horizontal rotation in degrees
             diameter = 0.585,
             exhaust_length_ab = 0.76,
             exhaust_length_ab_K = 0.76,
-            smokiness_level = 0.02
+            smokiness_level = 0.02,
         },
     },
-    crew_size = 1, --exp
-    crew_members = {
-        [1] = {
+    crew_members = 
+    {
+        [1] = 
+        {
             ejection_seat_name = 17, --ejection seat model 
             drop_canopy_name = "f-117-nighthawk_canopy", --name of .edm file for canopy jettison
             pos = {5.213, 0.744, 0}, --(+forward/-back,+up/-down,+right/-left)
-            canopy_pos = {4.5, 1, 0}, --(+forward/-back,+up/-down,+right/-left)
+            --canopy_pos = {4.5, 1, 0}, --(+forward/-back,+up/-down,+right/-left)
             g_suit =  5.0, --pilot g-suit type was 2.0
-            --can_be_playable = true,
-            --canopy_arg = 38, --Animation argument for canopy jettison arg=50 is pilot and seat arg=114 is dash
-            --ejection_order = 1,
-            --role = "pilot",
-            --role_display_name = "Pilot",
-            --ejection_added_speed = {-5, 15, 0},
+            can_be_playable = true,
+            canopy_arg = 38, --Animation argument for canopy jettison arg=50 is pilot and seat arg=114 is dash
+            ejection_order = 1,
+            role = "pilot",
+            role_display_name    = _("Pilot"),
+            ejection_added_speed = {-5, 15, 0},
         },
-        [2] = { --required to prevent player ejection crash (although causes ai to eject two pilots)
-            can_be_playable = false,
-            ejection_seat_name = 17, --ejection seat model 
+        [2] = 
+        { --required to prevent player ejection crash (although causes ai to eject two pilots)
+          --  can_be_playable = false,
+          --  ejection_seat_name = 17, --ejection seat model 
         },
     },
     fires_pos = { 
@@ -252,7 +266,7 @@ F_117_NightHawk = {
         elevation = {-50.0, 90.0} -- pilot view vertical (AI)
     },
     Sensors = {
-        OPTIC = {"IRADS"}, --Targeting sensors (used by AI) was set to "Shkval"
+        OPTIC = {"IRADS"}, --Targeting sensors (used by AI)
     },
     laserEquipment = {
         laserDesignator = true,
@@ -331,25 +345,7 @@ F_117_NightHawk = {
                 {CLSID = "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}"}, --Mk 84
             }
         ),
-        pylon(
-            3, --Pylon Order
-            2, --Types: 0=direct,1=delayed, 2=invisible
-            0, --X
-            0, --Y
-            0, --Z
-            {},
-            {
-              --{CLSID = "{0519A264-0AB6-11d6-9193-00A0249B6F00}"}, --L-081 Fantasmagoria ELINT pod (unrealistic in this aircraft)
-                {CLSID = "{B1EF6B0E-3D91-4047-A7A5-A99E7D8B4A8B}"}, --Mercury LLTV Pod (only required for IR / Night TGP view)
-            }
-        )
     },
-    Tasks = {
-        aircraft_task(GroundAttack),
-        aircraft_task(PinpointStrike),
-        aircraft_task(RunwayAttack),
-    },
-    DefaultTask = aircraft_task(PinpointStrike),
     -- F-117A Nighthawk — Simple Flight Model (SFM)
     --  • Max climb ≈ 2,800 fpm (~14.3 m/s) at typical combat weight (~44–48k lb)
     --  • Service ceiling ≈ 45,000 ft (~13.7 km) as climb rate → ~0–300 fpm
@@ -365,82 +361,94 @@ F_117_NightHawk = {
     -- Aldop - Alfadop Max AOA at current M - departure threshold
     -- Cymax - Coefficient, lift, maximum possible (ignores other calculations if current Cy > Cymax)
     SFM_Data = {
-            aerodynamics = {
-                Cy0       = 0.0,     -- Lift at 0° AoA
-                Czbe      = -0.012,  -- Side-force per deg sideslip
-                Mzalfa    = 6.6,     -- Pitch stiffness
-                Mzalfadt  = 1.0,     -- Pitch damping
-                cx_gear   = 0.006,   -- Landing gear drag increment
-                kjx       = 2.85,    -- Roll inertia
-                kjz       = 0.00125, -- Yaw inertia
-                -- table_data format:
-                -- Mach   = Mach number (speed relative to sound) where this aerodynamic set applies
-                -- Cx0    = Zero-lift drag coefficient (baseline aircraft drag)
-                -- Cya    = Lift coefficient slope vs angle of attack (lift produced per degree of AoA)
-                -- B2     = Induced drag coefficient (drag increase from lift, Cy² term)
-                -- B4     = High-AoA drag coefficient (Cy⁴ term, models stall / nonlinear drag)
-                -- Omxmax = Maximum roll rate factor (controls max roll rate capability)
-                -- Aldop  = Maximum effective angle of attack before strong stall behavior (degrees)
-                -- Cymax  = Maximum lift coefficient (peak lift before stall)
-                --{Mach, Cx0,    Cya,   B2,    B4,     Omxmax, Aldop, Cymax }
-                table_data = {
-                  {0.00, 0.0090, 0.065, 0.230, 0.0001, 0.55,   30.0,  1.20},
-                  {0.20, 0.0090, 0.065, 0.230, 0.0001, 1.50,   30.0,  1.20},
-                  {0.40, 0.0090, 0.067, 0.230, 0.0001, 2.50,   30.0,  1.20},
-                  {0.60, 0.0090, 0.070, 0.230, 0.0001, 3.30,   29.0,  1.18},
-                  {0.70, 0.0090, 0.073, 0.230, 0.0001, 3.30,   28.0,  1.16},
-                  {0.80, 0.0110, 0.077, 0.240, 0.0001, 3.30,   27.0,  1.14},
-                  {0.85, 0.0120, 0.079, 0.250, 0.0001, 3.20,   26.0,  1.12},
-                  {0.90, 0.0135, 0.081, 0.255, 0.0001, 3.00,   25.0,  1.10},
-                  {0.92, 0.0154, 0.082, 0.260, 0.0001, 3.00,   24.0,  1.09},
-                },
+        aerodynamics = 
+        {
+            Cy0       = 0.0,     -- Lift at 0° AoA
+            Czbe      = -0.012,  -- Side-force per deg sideslip
+            Mzalfa    = 6.6,     -- Pitch stiffness
+            Mzalfadt  = 1.0,     -- Pitch damping
+            cx_gear   = 0.006,   -- Landing gear drag increment
+            kjx       = 2.85,    -- Roll inertia
+            kjz       = 0.00125, -- Yaw inertia
+            -- table_data format:
+            -- Mach   = Mach number (speed relative to sound) where this aerodynamic set applies
+            -- Cx0    = Zero-lift drag coefficient (baseline aircraft drag)
+            -- Cya    = Lift coefficient slope vs angle of attack (lift produced per degree of AoA)
+            -- B2     = Induced drag coefficient (drag increase from lift, Cy² term)
+            -- B4     = High-AoA drag coefficient (Cy⁴ term, models stall / nonlinear drag)
+            -- Omxmax = Maximum roll rate factor (controls max roll rate capability)
+            -- Aldop  = Maximum effective angle of attack before strong stall behavior (degrees)
+            -- Cymax  = Maximum lift coefficient (peak lift before stall)
+            --{Mach, Cx0,    Cya,   B2,    B4,     Omxmax, Aldop, Cymax }
+            table_data = 
+            {
+              {0.00, 0.0090, 0.065, 0.230, 0.0001, 0.55,   30.0,  1.20},
+              {0.20, 0.0090, 0.065, 0.230, 0.0001, 1.50,   30.0,  1.20},
+              {0.40, 0.0090, 0.067, 0.230, 0.0001, 2.50,   30.0,  1.20},
+              {0.60, 0.0090, 0.070, 0.230, 0.0001, 3.30,   29.0,  1.18},
+              {0.70, 0.0090, 0.073, 0.230, 0.0001, 3.30,   28.0,  1.16},
+              {0.80, 0.0110, 0.077, 0.240, 0.0001, 3.30,   27.0,  1.14},
+              {0.85, 0.0120, 0.079, 0.250, 0.0001, 3.20,   26.0,  1.12},
+              {0.90, 0.0135, 0.081, 0.255, 0.0001, 3.00,   25.0,  1.10},
+              {0.92, 0.0154, 0.082, 0.260, 0.0001, 3.00,   24.0,  1.09},
             },
+        },
 
-            engine = {
-              ForsRUD = 1,
-              MaksRUD = 1,
-              MaxRUD  = 1,
-              MinRUD  = 0,
-              Nmg     = 62.0,
-              type    = "TurboFan",
-              typeng  = 0,
-              dcx_eng = 0.0085,
-              hMaxEng = 19.5,
-              cemax   = 1.24,
-              cefor   = 1.24,
-              -- dpdh kept as fallback for altitudes outside extended table range
-              dpdh_m  = 8000,
-              dpdh_f  = 8000,
+        engine = 
+        {
+            ForsRUD = 1,
+            MaksRUD = 1,
+            MaxRUD  = 1,
+            MinRUD  = 0,
+            Nmg     = 62.0,
+            Nominal_RPM = 14000.0,
+            Nominal_Fan_RPM = 10000.0,
+            Startup_Prework = 10.0,
+            Startup_Duration = 40.0,
+            Shutdown_Duration = 35.0,
+            type    = "TurboFan",
+            --typeng  = 4,
+            dcx_eng = 0.0085,
+            hMaxEng = 19.5,
+            cemax   = 1.24,
+            cefor   = 1.24,
+            -- dpdh kept as fallback for altitudes outside extended table range
+            dpdh_m  = 8000,
+            dpdh_f  = 8000,
 
-              extended = {
-                thrust_max = {
+            extended = 
+            {
+                thrust_max = 
+                {
                   -- H in metres: SL, 15kft, 20kft, 30kft, 32kft, 40kft, 46kft
                   H = { 0, 4572, 6096, 9144, 9754, 12192, 14000 },
                   -- Mach breakpoints matching table_data below
                   M = { 0.00, 0.20, 0.40, 0.60, 0.70, 0.80, 0.85, 0.90, 0.92 },
                   -- thrust[h_index] = { thrust_at_each_Mach } in Newtons
                   -- Lapse factors (P/P0)^0.82: 1.000, 0.625, 0.535, 0.370, 0.343, 0.251, 0.199
-                  thrust = {
-                    -- H=0 (SL) — your existing SL values
-                    { 80415, 76404, 75268, 77007, 78995, 81621, 83224, 84806, 85006 },
-                    -- H=4572m (15kft)
-                    { 50259, 47753, 47043, 48129, 49372, 51013, 52015, 53004, 53129 },
-                    -- H=6096m (20kft)
-                    { 43022, 40876, 40268, 41219, 42262, 43667, 44525, 45371, 45478 },
-                    -- H=9144m (30kft)
-                    { 29753, 28269, 27849, 28493, 29228, 30200, 30793, 31378, 31452 },
-                    -- H=9754m (32kft) *** CALIBRATION POINT: tune [9] (M0.92) vs EFM ***
-                    { 27582, 26207, 25817, 26413, 27095, 27976, 28546, 29088, 29157 },
-                    -- H=12192m (40kft)
-                    { 20184, 19178, 18892, 19340, 19828, 20487, 20889, 21286, 21337 },
-                    -- H=14000m (~46kft)
-                    { 16003, 15204, 14978, 15324, 15720, 16242, 16562, 16876, 16926 },
-                  }
+                  thrust = 
+                    {
+                        -- H=0 (SL) — your existing SL values
+                        { 80415, 76404, 75268, 77007, 78995, 81621, 83224, 84806, 85006 },
+                        -- H=4572m (15kft)
+                        { 50259, 47753, 47043, 48129, 49372, 51013, 52015, 53004, 53129 },
+                        -- H=6096m (20kft)
+                        { 43022, 40876, 40268, 41219, 42262, 43667, 44525, 45371, 45478 },
+                        -- H=9144m (30kft)
+                        { 29753, 28269, 27849, 28493, 29228, 30200, 30793, 31378, 31452 },
+                        -- H=9754m (32kft) *** CALIBRATION POINT: tune [9] (M0.92) vs EFM ***
+                        { 27582, 26207, 25817, 26413, 27095, 27976, 28546, 29088, 29157 },
+                        -- H=12192m (40kft)
+                        { 20184, 19178, 18892, 19340, 19828, 20487, 20889, 21286, 21337 },
+                        -- H=14000m (~46kft)
+                        { 16003, 15204, 14978, 15324, 15720, 16242, 16562, 16876, 16926 },
+                    }
                 }
-              },
-              -- table_data: 2-column for no-AB (extended supersedes this for alt scaling,
-              -- but the engine still needs it — these are your existing SL values)
-              table_data = {
+            },
+            -- table_data: 2-column for no-AB (extended supersedes this for alt scaling,
+            -- but the engine still needs it — these are your existing SL values)
+            table_data = 
+            {
                 { 0.00, 80415 },
                 { 0.20, 76404 },
                 { 0.40, 75268 },
@@ -450,10 +458,9 @@ F_117_NightHawk = {
                 { 0.85, 83224 },
                 { 0.90, 84806 },
                 { 0.92, 85006 },
-              },
             },
+        },
     },
-
     --damage_cells , index meaning see in  Scripts\Aircrafts\_Common\Damage.lua
     -- args {} = main EDM Animation args that show damaged parts
     Damage = verbose_to_dmg_properties(

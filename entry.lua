@@ -9,7 +9,7 @@ declare_plugin(
         dirName = current_mod_path,
         fileMenuName = _("F-117A Nighthawk"),
         shortName = _("F-117A Nighthawk"),
-        version = "1.9.9",
+        version = "2.0.0",
         creditsFile  = "credits.txt",
         state = "installed",
         info = _(
@@ -61,7 +61,7 @@ dofile(cfg_path)
 FM[1] = self_ID
 FM[2] = "F_117_NightHawk"
 FM.config_path = cfg_path
-FM.old = 54 --37 F-117A --54 SU-27T --6 F-15C --17 A-10A
+-- FM.old not needed for make_flyable (was FC3 profile inheritance for MAC_flyable)
 
 
 -------------------------------------------------------------------------------------
@@ -72,9 +72,17 @@ make_view_settings("F-117-NightHawk", ViewSettings, SnapViews)
 -------------------------------------------------------------------------------
 
 local support_cockpit = current_mod_path .. "/Cockpit/Scripts/"
-MAC_flyable("F-117-NightHawk", support_cockpit, FM, current_mod_path .. "/comm.lua")
+make_flyable("F-117-NightHawk", support_cockpit, FM, current_mod_path .. "/comm.lua")
+
+-- IRADS sensor registration not possible from entry.lua: the environment has no pcall,
+-- no _G["db"], and declare_sensor() is unavailable. Registration is skipped.
+-- The DLIR camera uses a body-mounted camera indicator instead (DLIR_Camera_init.lua).
 
 -------------------------------------------------------------------------------
+
+-- NOTE: entry.lua runs in a restricted DCS Lua state that has no pcall, no _G["db"],
+-- and declare_sensor() is unavailable here. Sensor declaration must be handled
+-- by referencing an already-declared DCS-core sensor in the aircraft Sensors table.
 
 dofile(current_mod_path .. "/Weapons/gbu-31.lua")
 dofile(current_mod_path .. "/Weapons/gbu-31v3b.lua")
