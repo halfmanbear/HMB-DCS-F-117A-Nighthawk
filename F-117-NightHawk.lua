@@ -27,11 +27,9 @@ F_117_NightHawk = {
             positioning = "BYNORMAL";
         },
     },
-    DamageParts = 
-    { --exp
-        [1] = "f-117-nighthawk-oblomok-wing-r", --using Mods destruction file
-        [2] = "f-117-nighthawk-oblomok-wing-l", --using Mods destruction file
-    },
+    -- No matching detached control-surface assets are authored yet.
+    -- Whole-wing oblomoks are unsuitable for the six small moving surfaces.
+    DamageParts = {},
     Countries = {"USA"},
     mapclasskey = "P0091000027", --from DCS F-117A
     attribute = {wsType_Air, wsType_Airplane, wsType_Fighter, WSTYPE_PLACEHOLDER, "Bombers", "Refuelable", "All", "NonAndLightArmoredUnits", "NonArmoredUnits", "Air", "Planes", "Battle airplanes"}, --from DCS F-117A required for Ai Bombing
@@ -465,9 +463,19 @@ F_117_NightHawk = {
     -- args {} = main EDM Animation args that show damaged parts
     Damage = verbose_to_dmg_properties(
         {
-          ["COCKPIT"]  = {critical_damage = 3}, --["COCKPIT"] [3]
-          ["ENGINE"] = {critical_damage = 10}, --["ENGINE"] [10]
-          ["MAIN"] = {critical_damage = 3}, --["MAIN"] [11]
+            -- Names match embedded ShellNodes/SegmentsNodes; IDs follow DCS Damage.lua.
+            -- DCS alone owns these visibility arguments; the EFM consumes integrity callbacks.
+            ["COCKPIT"] = {critical_damage = 5, droppable = false}, -- 3
+            ["MAIN"] = {critical_damage = 12, droppable = false},  -- 10: fixed wings + fuselage
+            ["ENGINE"] = {critical_damage = 8, droppable = false}, -- 11: no separate engine shell yet
+
+            -- Left_Wing / Right_Wing are outer elevons, not entire wing structures.
+            ["AILERON_L"] = {critical_damage = 3, args = {1010}, droppable = false}, -- 25
+            ["AILERON_R"] = {critical_damage = 3, args = {1015}, droppable = false}, -- 26
+            ["FLAP_L"] = {critical_damage = 3, args = {1011}, droppable = false},    -- 37
+            ["FLAP_R"] = {critical_damage = 3, args = {1014}, droppable = false},    -- 38
+            ["RUDDER_L"] = {critical_damage = 4, args = {247}, droppable = false},  -- 53
+            ["RUDDER_R"] = {critical_damage = 4, args = {248}, droppable = false},  -- 54
         }
     ),
 
