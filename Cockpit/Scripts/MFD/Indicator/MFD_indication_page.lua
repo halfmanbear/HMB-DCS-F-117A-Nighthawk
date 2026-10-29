@@ -19,8 +19,8 @@ local GH  = 0.04    -- tracking gate half-height
 local ROOT              = CreateElement "ceSimple"
 ROOT.name               = create_guid_string()
 ROOT.init_pos           = {0, 0}
-ROOT.element_params     = {"mainpower", "MFD_OVERLAY"}
-ROOT.controllers        = {{"parameter_in_range", 0, 0.9, 1.1}, {"parameter_in_range", 1, 0.9, 1.1}}
+ROOT.element_params     = {"mainpower", "MFD_OVERLAY", "F117_IRADS_POWER"}
+ROOT.controllers        = {{"parameter_in_range", 0, 0.9, 1.1}, {"parameter_in_range", 1, 0.9, 1.1}, {"parameter_in_range", 2, 0.9, 1.1}}
 ROOT.h_clip_relation    = h_clip_relations.COMPARE
 ROOT.level              = MFD_LEVEL
 ROOT.collimated         = false
@@ -81,8 +81,8 @@ mfdProps(dot)
 
 -- ── Tracking gate ───────────────────────────────────────────────────────────
 -- Square box visible only when SRCH_TRCK_MODE == 2 (TRACK).
-local TK_P = {"SRCH_TRCK_MODE"}
-local TK_C = {{"parameter_in_range", 0, 1.9, 2.1}}
+local TK_P = {"F117_IRADS_LOCK_VALID"}
+local TK_C = {{"parameter_in_range", 0, 0.9, 1.1}}
 line(-GW * S,  GH * S,   GW * S,  GH * S,  TK_P, TK_C)   -- top
 line(-GW * S, -GH * S,   GW * S, -GH * S,  TK_P, TK_C)   -- bottom
 line(-GW * S, -GH * S,  -GW * S,  GH * S,  TK_P, TK_C)   -- left
@@ -91,9 +91,9 @@ line( GW * S, -GH * S,   GW * S,  GH * S,  TK_P, TK_C)   -- right
 -- ── Mode text (bottom-left) ─────────────────────────────────────────────────
 -- "SRCH" when mode 1, "TRCK" when mode 2.
 text("SRCH", -0.070, -0.060, MFD_SD_XS, "LeftCenter",
-    {"SRCH_TRCK_MODE"}, {{"parameter_in_range", 0, 0.9, 1.1}})
-text("TRCK", -0.070, -0.060, MFD_SD_XS, "LeftCenter",
-    {"SRCH_TRCK_MODE"}, {{"parameter_in_range", 0, 1.9, 2.1}})
+    {"F117_IRADS_LOCK_VALID"}, {{"parameter_in_range", 0, -0.1, 0.1}})
+text("POINT", -0.070, -0.060, MFD_SD_XS, "LeftCenter",
+    {"F117_IRADS_LOCK_VALID"}, {{"parameter_in_range", 0, 0.9, 1.1}})
 
 -- ── IR polarity (top-left) ──────────────────────────────────────────────────
 -- "W-HOT" when WHOT_TOGGLE == 1, "B-HOT" when 0.
@@ -115,9 +115,12 @@ text("CCRP: GBU-27", 0.0, 0.070, MFD_SD_XS, "CenterCenter",
     {"F117_CCRP_PROFILE"}, {{"parameter_in_range", 0, 3.9, 4.1}})
 
 -- ── Laser status (top-right) ────────────────────────────────────────────────
--- "LAS" when MLAS_TOGGLE == 1 (laser armed/firing).
-text("LAS",  0.070,  0.060, MFD_SD_XS, "RightCenter",
-    {"MLAS_TOGGLE"}, {{"parameter_in_range", 0, 0.9, 1.1}})
+-- ARM is permission to lase; LASE requires a live native laser spot.
+text("ARM",  0.070,  0.060, MFD_SD_XS, "RightCenter",
+    {"F117_LASER_ARMED"}, {{"parameter_in_range", 0, 0.9, 1.1}})
+
+text("LASE", 0.070, 0.045, MFD_SD_XS, "RightCenter",
+    {"F117_LASER_FIRING"}, {{"parameter_in_range", 0, 0.9, 1.1}})
 
 -- ── Boost indicator (bottom-right) ──────────────────────────────────────────
 -- "BOST" when brightness boost is active.
@@ -132,3 +135,35 @@ text("MED",  0, -0.060, MFD_SD_XS, "CenterCenter",
     {"IRADS_ZOOM"}, {{"parameter_in_range", 0, 1.9, 2.1}})
 text("NAR",  0, -0.060, MFD_SD_XS, "CenterCenter",
     {"IRADS_ZOOM"}, {{"parameter_in_range", 0, 2.9, 3.1}})
+
+-- Actual EFM release-inhibit state, independent of decorative display modes.
+local delivery_status = {
+    [1]="MASTER SAFE", [2]="IRADS OFF", [3]="NO TARGET", [4]="NO STORE",
+    [5]="LASER NOT READY", [6]="BAY CLOSED", [7]="NO SOLUTION",
+    [8]="OUT OF RANGE", [9]="RELEASE READY", [10]="RELEASED",
+    [11]="LAUNCH RETRY", [12]="ON GROUND", [13]="LAUNCH UNAVAILABLE", [14]="ALIGN TARGET"
+}
+for code,label in pairs(delivery_status) do
+    text(label,0,0.040,MFD_SD_XS,"CenterCenter",{"F117_RELEASE_STATUS"},
+        {{"parameter_in_range",0,code-0.1,code+0.1}})
+end
+text("M ARM",-0.070,0.045,MFD_SD_XS,"LeftCenter",{"F117_MASTER_ARM"},
+    {{"parameter_in_range",0,0.9,1.1}})
+local range=text("",0,-0.045,MFD_SD_XS,"CenterCenter",{"F117_IRADS_LOCK_RANGE","F117_IRADS_LOCK_VALID"},
+    {{"text_using_parameter",0,0},{"parameter_in_range",1,0.9,1.1}})
+range.formats={"RNG %.0f M"}
+-- Flight time is predicted remaining time, not confirmed weapon impact/telemetry.
+local flight=text("",0,-0.030,MFD_SD_XS,"CenterCenter",{"F117_STORE_FLIGHT_TIME"},
+    {{"text_using_parameter",0,0},{"parameter_in_range",0,0.01,200.0}})
+flight.formats={"EST TOF %.0f S"}
+
+local station=text("",0,0.055,MFD_SD_XS,"CenterCenter",{"F117_WEAPON_STATION"},{{"text_using_parameter",0,0}})
+station.formats={"STN %.0f"}
+
+-- Estimated release limits in horizontal metres; RNG above is slant range.
+local minimum=text("",-0.070,0.020,MFD_SD_XS,"LeftCenter",{"F117_RELEASE_MIN_RANGE","F117_RELEASE_CUE_VALID"},
+    {{"text_using_parameter",0,0},{"parameter_in_range",1,0.9,1.1}})
+minimum.formats={"MIN %.0f M"}
+local maximum=text("",0.070,0.020,MFD_SD_XS,"RightCenter",{"F117_RELEASE_MAX_RANGE","F117_RELEASE_CUE_VALID"},
+    {{"text_using_parameter",0,0},{"parameter_in_range",1,0.9,1.1}})
+maximum.formats={"MAX %.0f M"}

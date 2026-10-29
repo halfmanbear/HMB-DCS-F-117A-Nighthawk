@@ -19,4 +19,6 @@ picture.tex_coords      = {{0, 0},
                             {0, 1}}
 picture.material        = "render_target_1"
 picture.use_mipfilter   = false
+picture.element_params = {"F117_IRADS_POWER"}
+picture.controllers = {{"parameter_in_range", 0, 0.9, 1.1}}
 Add(picture)

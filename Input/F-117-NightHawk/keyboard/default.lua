@@ -3,6 +3,10 @@ dofile(cockpit.."command_defs.lua")
 
 local res = external_profile("Config/Input/Aircrafts/base_keyboard_binding.lua")
 join(res.keyCommands,{
+{down = f117_commands.MASTER_ARM_TOGGLE, name = _('Master Arm / Safe'), category = _('F-117A Essential System Controls')},
+{down = f117_commands.WEAPON_STATION_NEXT, name = _('Weapon Station Next'), category = _('F-117A Essential System Controls')},
+{down = f117_commands.WEAPON_STATION_PREV, name = _('Weapon Station Previous'), category = _('F-117A Essential System Controls')},
+
 
 -- Autopilot
 {combos = {{key = 'A'}}, down = iCommandPlaneAutopilot, name = _('Autopilot'), category = _('Autopilot')},
@@ -28,10 +32,7 @@ join(res.keyCommands,{
 {combos = defaultDeviceAssignmentFor("unlock_target"), down = iCommandSensorReset, name = _('Target Unlock'), category = _('Sensors')},
 {combos = {{key = 'I', reformers = {'RCtrl'}}}, down = iCommandPlaneRadarCenter, name = _('Target Designator To Center'), category = _('Sensors')},
 {combos = {{key = 'O'}}, down = iCommandPlaneEOSOnOff, name = _('Electro-Optical System On/Off'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
-{combos = {{key = 'O', reformers = {'RShift'}}}, down = iCommandPlaneLaserRangerOnOff, name = _('Laser Ranger On/Off'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
 {combos = {{key = 'O', reformers = {'RCtrl'}}}, down = iCommandPlaneNightTVOnOff, name = _('Night Vision (FLIR or LLTV) On/Off'), category = _('Sensors')},
-{combos = {{key = '='}}, down = iCommandPlaneZoomIn, name = _('Display Zoom In'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
-{combos = {{key = '-'}}, down = iCommandPlaneZoomOut, name = _('Display Zoom Out'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
 
 -- RWR
 {combos = {{key = 'R', reformers = {'RShift'}}}, down = iCommandChangeRWRMode, name = _('RWR/SPO Mode Select'), category = _('Sensors')},
@@ -39,18 +40,20 @@ join(res.keyCommands,{
 {combos = {{key = '.', reformers = {'RAlt'}}}, down = iCommandPlaneThreatWarnSoundVolumeUp, name = _('RWR/SPO Sound Signals Volume Up'), category = _('Sensors')},
 
 -- F-117A IRADS
-{combos = {{key = 'I', reformers = {'LCtrl'}}}, down = iCommandTVSensor, name = _('IRADS On/Off'),  category = {_('Sensors'), _('F-117A IRADS')}},
+{combos = {{key = 'I', reformers = {'LCtrl'}}}, down = 87, name = _('IRADS On/Off'),  category = {_('Sensors'), _('F-117A IRADS')}},
 {combos = {{key = ';'}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Up'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {combos = {{key = '.'}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Down'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {combos = {{key = ','}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Left'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {combos = {{key = '/'}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_RIGHT, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_RIGHT, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Right'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {combos = {{key = 'Enter'}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Depress / Slew Stop'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
-{combos = {{key = ']'}}, down = Keys.IRADSZoomIn,  name = _('IRADS FOV - Narrow'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
-{combos = {{key = '['}}, down = Keys.IRADSZoomOut, name = _('IRADS FOV - Wide'),   category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
-{down = 10010, name = _('DLIR MFD Overlay Toggle'), category = {_('Sensors'), _('F-117A IRADS')}},
+{combos = {{key = ']'}}, down = Keys.IRADSZoomIn,  name = _('IRADS FOV - Narrow'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
+{combos = {{key = '['}}, down = Keys.IRADSZoomOut, name = _('IRADS FOV - Wide'),   category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
+{combos = {{key = 'Back'}}, down = f117_commands.IRADS_DESIGNATION_CLEAR, name = _('IRADS Designation Clear'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{combos = {{key = 'L', reformers = {'LShift'}}}, down = f117_commands.IRADS_LASER_ARM_TOGGLE, name = _('IRADS Laser Arm/Safe'), category = {_('Weapons'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
+{down = Keys.MFDOverlayToggle, name = _('DLIR MFD Overlay Toggle'), category = {_('Sensors'), _('F-117A IRADS')}},
 
 -- Weapons
-{combos = defaultDeviceAssignmentFor("weapon_release_button"), down = iCommandPlanePickleOn,	up = iCommandPlanePickleOff, name = _('Weapon Release'), category = {_('Weapons'), _('F-117A Essential System Controls')}},
+{combos = {{key = 'Space', reformers = {'RAlt'}}}, down = 350, up = 351, name = _('Weapon Release (Pickle)'), category = {_('Weapons'), _('F-117A Essential System Controls')}},
 
 --Night Vision Goggles
 {combos = {{key = 'H', reformers = {'LShift'}}}		   , 	down    = iCommandViewNightVisionGogglesOn   , name = _('Night Vision Goggles')   , category = _('Night Vision Goggles')},

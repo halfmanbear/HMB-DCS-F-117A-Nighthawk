@@ -2,6 +2,8 @@ dofile(LockOn_Options.script_path.."command_defs.lua")
 local update_time_step = 0.05 
 make_default_activity(update_time_step)
 local dev = GetSelf()
+local irads_terrain = dofile(LockOn_Options.script_path.."Systems/IRADS_Terrain.lua")
+local check_irads_terrain = dofile(LockOn_Options.script_path.."Systems/IRADS_Diagnostics.lua")
 -- Local variables ==================
 local Page_changed = 0
 
@@ -224,21 +226,13 @@ dev:listen_command(110)
 dev:listen_command(111)
 
 dev:listen_command(keys.CannonMode) -- Cannon
-dev:listen_command(Keys.IRADSZoomIn)
-dev:listen_command(Keys.IRADSZoomOut)
 dev:listen_command(Keys.MFDOverlayToggle)
-dev:listen_command(hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP)
-dev:listen_command(hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN)
-dev:listen_command(hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT)
-dev:listen_command(hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_RIGHT)
-dev:listen_command(hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS)
 
 local masterMode = get_param_handle("masterMode")
 masterMode:set(1)
 local HMDMode = get_param_handle("HMDMode")
 HMDMode:set(1)
 local RedHUD = 0
-local IRADS_EFM_FORWARDING = false
 
 dev:listen_command(87)	-- TGP on
 
@@ -301,7 +295,6 @@ function post_initialize()	-- modes / toggle default settings
 	BrightnessAtSpawn()
 	HideFc3Hud()
 	ChangeHudColor()
-	dispatch_action(nil, 87)   -- activate IRADS (avTVSensor) so MFD shows feed at spawn
 	
 	local birth = LockOn_Options.init_conditions.birth_place
     if birth=="GROUND_HOT" then
@@ -318,7 +311,22 @@ function post_initialize()	-- modes / toggle default settings
     end
 end
 
+-- Device-targeted axes enter SetCommand directly; listen also supports explicit dispatch.
+dev:listen_command(irads_axis_commands.HORIZONTAL)
+dev:listen_command(irads_axis_commands.VERTICAL)
+dev:listen_command(irads_axis_commands.ZOOM)
+
 function SetCommand(command,value) 
+    -- Forward exactly once. The EFM owns deadzone, rate, power and motion.
+    local efm_axis = nil
+    if command == irads_axis_commands.HORIZONTAL then efm_axis = f117_commands.IRADS_SLEW_HORIZONTAL
+    elseif command == irads_axis_commands.VERTICAL then efm_axis = f117_commands.IRADS_SLEW_VERTICAL
+    elseif command == irads_axis_commands.ZOOM then efm_axis = f117_commands.IRADS_ZOOM_AXIS end
+    if efm_axis then
+        dispatch_action(nil, efm_axis, value)
+        return
+    end
+
 
 if get_param_handle("mainpower"):get() == 1 then
 
@@ -632,13 +640,7 @@ if get_param_handle("mainpower"):get() == 1 then
 -- Laser Designator Pod Page
 		elseif LD_UPPER:get() == 4 then
 			if (command == keys.LDSK_2) or (command == deviceCommands.LDSK_2) then			-- toggle laser
-				if MLAS_TOGGLE:get() == 1 then
-					MLAS_TOGGLE:set(0) 
-					dispatch_action(nil,392)	-- toggle su25 laser ranger
-				else
-					MLAS_TOGGLE:set(1) 			-- toggle mfd indication
-					dispatch_action(nil,392)
-				end
+				dispatch_action(nil, f117_commands.IRADS_LASER_ARM_TOGGLE) -- EFM owns laser arm state
 			
 			elseif (command == keys.LDSK_3) or (command == deviceCommands.LDSK_3) then		-- toggle crosshair (?)
 				if SYMB_TOGGLE:get() == 1 then
@@ -672,7 +674,6 @@ if get_param_handle("mainpower"):get() == 1 then
 					WHOT_TOGGLE:set(0) 
 					dispatch_action(nil,393)	-- toggle IR imaging ldp
 					dispatch_action(nil,10117) 	-- clear designation when changing sensor mode
-					dispatch_action(nil,87) 	-- LDP on off. Going from ir back to tv turns the pod off, this turns is back on
 					SRCH_TRCK_MODE:set(1)
 
 				else
@@ -977,30 +978,9 @@ if get_param_handle("mainpower"):get() == 1 then
 		end
 	end
 
--- IRADS Zoom ===================
-	if command == Keys.IRADSZoomIn then
-		local z = IRADS_ZOOM:get()
-		if z < 3 then
-			IRADS_ZOOM:set(z + 1)
-		end
-		dispatch_action(nil, 103, 1.0)   -- iCommandTVSensorZoomIn / EFM TVSensorZoomIn
-	elseif command == Keys.IRADSZoomOut then
-		local z = IRADS_ZOOM:get()
-		if z > 1 then
-			IRADS_ZOOM:set(z - 1)
-		end
-		dispatch_action(nil, 104, 1.0)   -- iCommandTVSensorZoomOut / EFM TVSensorZoomOut
-	elseif command == hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP
-		or command == hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN
-		or command == hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT
-		or command == hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_RIGHT
-		or command == hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS then
-		if not IRADS_EFM_FORWARDING then
-			IRADS_EFM_FORWARDING = true
-			dispatch_action(nil, command, value)
-			IRADS_EFM_FORWARDING = false
-		end
-	end
+-- IRADS motion, designation and zoom are handled directly by the EFM.
+-- Do not redispatch them here: each input event must reach the sensor once.
+-- IRADS_ZOOM is published by the EFM for both button and analog zoom.
 
 end
 end -- end of function
@@ -1116,6 +1096,8 @@ function BrightnessAtSpawn()
 end
 
 function update()
+    irads_terrain.update()
+    check_irads_terrain()
 
 	DigitalClock()
 	
