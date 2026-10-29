@@ -23,3 +23,14 @@
 # Local release packaging and Python caches
 /dist/
 __pycache__/
+
+# Keep only the Blender sources for currently referenced models
+/blender_files/*
+!/blender_files/README.md
+!/blender_files/f-117-nighthawk_canopy.blend
+!/blender_files/f-117-nighthawk-oblomok.blend
+!/blender_files/integrated_collision/
+/blender_files/integrated_collision/*
+!/blender_files/integrated_collision/exposed_controls/
+/blender_files/integrated_collision/exposed_controls/*
+!/blender_files/integrated_collision/exposed_controls/f-117-nighthawk-exposed-controls.blend
