@@ -23,7 +23,7 @@ indicators = {}
 -- Center MFD DLIR camera background (COMMON type renders 3D camera feed)
 -- Must be listed BEFORE the overlay so it renders underneath.
 indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/Indicator/DLIR_Camera_init.lua",
- devices.IRADS,
+ devices.DISPLAYS,
     {
         {"MFD-PLASHKA-CENTER", "MFD-PLASHKA-DOWN", "MFD-PLASHKA-RIGHT"},
         {sx_l =  0,
@@ -38,7 +38,7 @@ indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/I
 }
 
 indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/Indicator/MFD_indication_init.lua",
- devices.IRADS,
+ devices.DISPLAYS,
     {
         {"MFD-PLASHKA-CENTER", "MFD-PLASHKA-DOWN", "MFD-PLASHKA-RIGHT"},
         {sx_l =  0,

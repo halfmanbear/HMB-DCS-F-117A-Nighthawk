@@ -1,5 +1,5 @@
 start_custom_command = 10000
-local __count_custom = start_custom_command - 1
+local __count_custom = start_custom_command
 local function __custom_counter()
     __count_custom = __count_custom + 1
     return __count_custom
@@ -38,6 +38,23 @@ hotas_commands =
     THROTTLE_FLIR_FOV_WIDE                 = 104,
 }
 
+-- F-117A weapons delivery commands, handled by the EFM (Inputs.h).
+-- Weapon release deliberately does NOT use iCommandPlanePickleOn (350): that
+-- command makes avSimpleWeaponSystem release immediately, bypassing CCRP.
+f117_commands =
+{
+    WEAPON_RELEASE_ON      = 10103, -- weaponReleaseHoldOn
+    WEAPON_RELEASE_OFF     = 10104, -- weaponReleaseHoldOff
+    IRADS_DESIGNATION_CLEAR = 10117,
+    IRADS_LASER_ARM_TOGGLE = 10118,
+    IRADS_SLEW_HORIZONTAL = 10119, -- absolute axis: negative left, positive right
+    IRADS_SLEW_VERTICAL   = 10120, -- absolute axis: negative down, positive up
+    MASTER_ARM_TOGGLE    = 10122,
+    WEAPON_STATION_NEXT   = 10123,
+    WEAPON_STATION_PREV   = 10124,
+    IRADS_ZOOM_AXIS       = 10121, -- absolute axis: -1 wide, 0 medium, +1 narrow
+}
+
 
 --Incremental click commands from 5000
 start_command = 5000
@@ -72,3 +89,7 @@ deviceCommands = deviceCommands or setmetatable({}, {
         return __dev_count
     end
 })
+
+-- Device-local axis actions; input profiles explicitly target DISPLAYS.
+-- Displays forwards signed values on custom EFM commands, avoiding stock axes.
+irads_axis_commands = { HORIZONTAL = 3001, VERTICAL = 3002, ZOOM = 3003 }

@@ -1,9 +1,8 @@
 dofile(LockOn_Options.common_script_path.."devices_defs.lua")
 dofile(LockOn_Options.common_script_path.."ViewportHandling.lua")
 
--- COMMON renders the 3D camera scene via avTVSensor into an off-screen render target.
--- The sensor's camera position, FOV, and gimbal are controlled by the avTVSensor device
--- (driven by the IRADS sensor database entry), not by this Lua file.
+-- The EFM camera bridge supplies the standalone IRADS sensor pose and optical FOV.
+-- The controller is a real Lua avDevice; avTVSensor is never a device creator.
 indicator_type = indicator_types.COMMON
 
 -- Page that renders the camera's off-screen image onto the MFD surface.
