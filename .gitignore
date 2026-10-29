@@ -1,0 +1,25 @@
+# Local backups and development scratch folders
+/_backup_*/
+/_input_irads_fix_*/
+/_irads_*/
+
+# Superseded model copies
+/Cockpit/Shape/old-*.edm
+/Shapes/old-*.edm
+/Shapes/v1-f-117-nighthawk.edm
+
+# Runtime logs and machine-specific proxy configuration
+/bin/*.log
+/bin/efm.proxy.ini
+
+# Generated Blender development outputs
+/blender_files/**/build/
+/blender_files/**/obj/
+/blender_files/**/*.log
+/blender_files/**/*.exe
+/blender_files/**/*.obj
+*.blend[0-9]*
+
+# Local release packaging and Python caches
+/dist/
+__pycache__/
