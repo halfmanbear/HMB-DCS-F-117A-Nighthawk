@@ -15,6 +15,10 @@ join(res.keyCommands,{
 {down = iCommandPlaneStabHbarHeading, name 		= _('Autopilot Altitude/Heading Hold'), category = _('Autopilot')},
 {down = iCommandPlane_EAC_ARM, name = _('EAC Arm'), category = _('Autopilot')},
 {down = iCommandPlane_EAC_OFF, name = _('EAC Off'), category = _('Autopilot')},
+{down = iCommandPlaneStabCancel, name = _('A/P - A/T Disengage Paddle'), category = {_('Autopilot'), _('HOTAS')}},
+{down = f117_commands.PAARS_TOGGLE, name = _('PAARS Automatic Recovery (ARS Switch)'), category = {_('Autopilot'), _('HOTAS'), _('F-117A Essential System Controls')}},
+{down = f117_commands.AUTOTHROTTLE_ENGAGE, name = _('Autothrottle Engage / Disengage'), category = _('Autopilot')},
+{down = f117_commands.AUTOTHROTTLE_DISCONNECT, name = _('Autothrottle Disengage Button'), category = {_('Autopilot'), _('Throttle Grip'), _('HOTAS')}},
 
 -- Systems
 {down = iCommandPlaneAirRefuel, name = _('Refueling Bay'), category = {_('Systems'), _('F-117A Essential System Controls')}},

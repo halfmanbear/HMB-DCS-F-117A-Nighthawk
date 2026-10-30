@@ -1,4 +1,5 @@
 dofile(LockOn_Options.script_path .. "devices.lua")
+dofile(LockOn_Options.script_path.."materials.lua")
 
 attributes = {
     "avNightVisionGogglesV2",
@@ -68,3 +69,54 @@ indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."HUD/I
          ry_l =  0}
     }   
 }
+
+-- Left colour VSD, using the calibrated left screen connector frame.
+indicators[#indicators + 1] = {
+    "ccIndicator", LockOn_Options.script_path.."MFD/Indicator/Left/Left_init.lua",
+    devices.DISPLAYS,
+    {
+        {"MFD-PLASHKA-CENTER1", "MFD-PLASHKA-DOWN1", "MFD-PLASHKA-RIGHT1"},
+        {sx_l=0,sy_l=0,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0}
+    }
+}
+
+-- Right basic HSD on the calibrated right screen connector frame.
+indicators[#indicators + 1] = {
+    "ccIndicator", LockOn_Options.script_path.."MFD/Indicator/Right/Right_init.lua",
+    devices.DISPLAYS,
+    {
+        {"RADAR-PLASHKA-CENTER", "RADAR-PLASHKA-DOWN", "RADAR-PLASHKA-RIGHT"},
+        {sx_l=0,sy_l=0,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0}
+    }
+}
+
+-- Holders stay invisible until the native compositor commits all three bakes.
+-- Source indicators retain GENERAL drawing if the module cannot initialize.
+local display_config=dofile(LockOn_Options.script_path.."MFD/Indicator/render_config.lua")
+if display_config.enabled then
+    local function holder(kind,connectors)
+        indicators[#indicators+1]={"ccIndicator",
+            LockOn_Options.script_path.."MFD/Indicator/LCD/"..kind.."_init.lua",
+            devices.DISPLAYS,{connectors,{sx_l=0,sy_l=0,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0}}}
+    end
+    holder("centre",{"MFD-PLASHKA-CENTER","MFD-PLASHKA-DOWN","MFD-PLASHKA-RIGHT"})
+    holder("left",{"MFD-PLASHKA-CENTER1","MFD-PLASHKA-DOWN1","MFD-PLASHKA-RIGHT1"})
+    holder("right",{"RADAR-PLASHKA-CENTER","RADAR-PLASHKA-DOWN","RADAR-PLASHKA-RIGHT"})
+end
+
+-- Temporary independent calibration pages, drawn after the normal displays.
+-- Side calibration is disabled by default now that VSD/HSD are registered.
+local calibration = dofile(LockOn_Options.script_path.."Calibration/config.lua")
+if calibration.enabled then
+    local function add_calibration(kind, connectors, device, mount)
+        if not calibration[kind].enabled then return end
+        indicators[#indicators+1] = {
+            "ccIndicator", LockOn_Options.script_path.."Calibration/"..kind.."_init.lua",
+            device, {connectors, mount or {sx_l=0,sy_l=0,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0}}
+        }
+    end
+    add_calibration("centre", {"MFD-PLASHKA-CENTER","MFD-PLASHKA-DOWN","MFD-PLASHKA-RIGHT"}, devices.DISPLAYS)
+    add_calibration("left", {"MFD-PLASHKA-CENTER1","MFD-PLASHKA-DOWN1","MFD-PLASHKA-RIGHT1"}, devices.DISPLAYS)
+    add_calibration("right", {"RADAR-PLASHKA-CENTER","RADAR-PLASHKA-DOWN","RADAR-PLASHKA-RIGHT"}, devices.DISPLAYS)
+    add_calibration("hud", {"ILS-PLASHKA-CENTER","ILS-PLASHKA-DOWN","ILS-PLASHKA-RIGHT"}, nil, calibration.hud.mount)
+end

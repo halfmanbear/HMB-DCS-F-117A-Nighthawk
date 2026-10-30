@@ -6,6 +6,19 @@ local HUD_IND_TEX_PATH        = LockOn_Options.script_path .. "Resources/"
 
 SetScale(FOV)
 
+-- Capture the engine's actual legacy-FOV / milliradian conversion for Layout
+-- Studio. Never infer this from mesh metres or the old pitch controller gain.
+-- This runs before creating elements and restores the production scale.
+if log and log.write and not F117_LAYOUT_SCALE_LOGGED then
+    local fov_scale = GetScale()
+    SetScale(MILLYRADIANS)
+    local mrad_scale = GetScale()
+    SetScale(FOV)
+    log.write("F117_HUD_LAYOUT", log.INFO,
+        string.format("v1 fov_scale=%.12g mrad_scale=%.12g",fov_scale,mrad_scale))
+    F117_LAYOUT_SCALE_LOGGED = true
+end
+
 stringdefs = {0.012,0.75 * 0.012, 0, 0}
 HUD_strdefs_text  = {0.007,0.007, 0, 0}
 HUD_strdefs_digit = {0.007,0.007, 0, 0}
