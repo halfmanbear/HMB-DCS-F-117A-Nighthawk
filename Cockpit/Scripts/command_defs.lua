@@ -53,6 +53,9 @@ f117_commands =
     WEAPON_STATION_NEXT   = 10123,
     WEAPON_STATION_PREV   = 10124,
     IRADS_ZOOM_AXIS       = 10121, -- absolute axis: -1 wide, 0 medium, +1 narrow
+    AUTOTHROTTLE_ENGAGE     = 10125, -- A/T engage switch: CAS hold at current CAS
+    AUTOTHROTTLE_DISCONNECT = 10126, -- inboard throttle A/T disengage button
+    PAARS_TOGGLE            = 10127, -- stick ARS switch: automatic recovery on/off
 }
 
 

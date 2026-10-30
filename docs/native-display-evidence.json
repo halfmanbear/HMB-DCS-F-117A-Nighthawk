@@ -1,0 +1,1212 @@
+{
+  "scope": "Read-only IDA inspection of existing GUI databases; no patches, renaming or runtime execution.",
+  "identities": {
+    "f16": {
+      "path": "C:\\Users\\Fraser\\Desktop\\DCS IDA Decomp\\F16C.dll.i64",
+      "module": "F16C.dll",
+      "arch": "64",
+      "base_address": "0x180000000",
+      "image_size": "0x1701000",
+      "md5": "92f7595e5b1e99575779d790610516c4",
+      "sha256": "e5e706fc18f3c279b4a14d681bc3a0021d944462cd9123e553688e4c09d5aec1"
+    },
+    "cockpit": {
+      "path": "C:\\Users\\Fraser\\Desktop\\DCS IDA Decomp\\CockpitBase.dll.i64",
+      "module": "CockpitBase.dll",
+      "arch": "64",
+      "base_address": "0x180000000",
+      "image_size": "0x577000",
+      "md5": "f83edf34ecbd16cdb2c5a11be50d15ad",
+      "sha256": "fb0a09be70627c7790dea1527cedfee43082bb8b112484d5c85be1d99d33de95"
+    }
+  },
+  "results": {
+    "cockpit_strings": {
+      "n": 23,
+      "matches": [
+        {
+          "addr": "0x18044c900",
+          "string": "render_target"
+        },
+        {
+          "addr": "0x18044c910",
+          "string": "render_target_%d"
+        },
+        {
+          "addr": "0x18044c948",
+          "string": "indicator_type"
+        },
+        {
+          "addr": "0x18044c9a8",
+          "string": "render_target_always"
+        },
+        {
+          "addr": "0x18044cb90",
+          "string": "shaderLineUseSpecularPass"
+        },
+        {
+          "addr": "0x18044cd98",
+          "string": "increase_render_target_counter"
+        },
+        {
+          "addr": "0x18044d340",
+          "string": "MakeFont"
+        },
+        {
+          "addr": "0x180454b90",
+          "string": "render_target_resolution"
+        },
+        {
+          "addr": "0x1804de0c9",
+          "string": "?assign_as_render_target_source@ccDrawable@cockpit@@IEAAXH@Z"
+        },
+        {
+          "addr": "0x1804e8290",
+          "string": "?draw_to_render_target@ccDrawable@cockpit@@UEAAXXZ"
+        },
+        {
+          "addr": "0x1804e82c3",
+          "string": "?draw_to_render_target@ccKneeboard@cockpit@@UEAAXXZ"
+        },
+        {
+          "addr": "0x1804f9f4c",
+          "string": "?get_render_target@ccIndicator@cockpit@@UEBA?BHXZ"
+        },
+        {
+          "addr": "0x1804f9f7e",
+          "string": "?get_render_target_always@ccIndicator@cockpit@@UEBA_NXZ"
+        },
+        {
+          "addr": "0x1804fda22",
+          "string": "?increase_render_target_counter@ccIndicationRenderParser@cockpit@@QEAAXXZ"
+        },
+        {
+          "addr": "0x1804fda6c",
+          "string": "?increase_render_target_counter@ccIndicator@cockpit@@SAXPEAVElement@2@PEAVccDrawable@2@AEBV?$HeapVector@UDynamicParam@Graphics@@@@@Z"
+        },
+        {
+          "addr": "0x18050f45e",
+          "string": "?release_render_target_source@ccDrawable@cockpit@@IEAAXH@Z"
+        },
+        {
+          "addr": "0x18050f960",
+          "string": "?render_targets@ccDrawable@cockpit@@2V?$vector@PEAVccDrawable@cockpit@@V?$allocator@PEAVccDrawable@cockpit@@@ed@@@ed@@A"
+        },
+        {
+          "addr": "0x18051acb9",
+          "string": "?set_render_target_always@ccIndicator@cockpit@@QEAAX_N@Z"
+        },
+        {
+          "addr": "0x18051ebfb",
+          "string": "?to_render_target@ccKneeboard@cockpit@@KAXPEAVElement@2@PEAVccDrawable@2@AEBV?$HeapVector@UDynamicParam@Graphics@@@@@Z"
+        },
+        {
+          "addr": "0x180536ef8",
+          "string": ".?AVceUITTF@cockpit@@"
+        },
+        {
+          "addr": "0x180542e68",
+          "string": ".?AU?$fontCreator@VceUITTF@cockpit@@@cockpit@@"
+        },
+        {
+          "addr": "0x180542eb0",
+          "string": ".?AV?$FakeUnknown@V?$StandardFactory@VceUITTF@cockpit@@@Common@@@Common@@"
+        },
+        {
+          "addr": "0x180542f10",
+          "string": ".?AV?$StandardFactory@VceUITTF@cockpit@@@Common@@"
+        }
+      ],
+      "cursor": {
+        "done": true
+      }
+    },
+    "f16_imports": {
+      "result": [
+        {
+          "data": [
+            {
+              "addr": "0x180c6bb98",
+              "imported_name": "?update@ccStreamingHelp@cockpit@@QEAAXPEAVccIndicator@2@_N@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bba8",
+              "imported_name": "?get_render_purpose@ccIndicator@cockpit@@IEBAH_N@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bbb0",
+              "imported_name": "?check_purpose@ccIndicator@cockpit@@QEBA_NH@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bbd0",
+              "imported_name": "?set_draw_boolean@ccIndicator@cockpit@@SAXPEAVElement@2@AEBV?$HeapVector@UDynamicParam@Graphics@@@@_N@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bbd8",
+              "imported_name": "?set_draw_by_enum@ccIndicator@cockpit@@SAXPEAVElement@2@AEBV?$HeapVector@UDynamicParam@Graphics@@@@I@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bbe0",
+              "imported_name": "?blinking@ccIndicator@cockpit@@SAXPEAVElement@2@PEAVccDrawable@2@AEBV?$HeapVector@UDynamicParam@Graphics@@@@@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bc08",
+              "imported_name": "?initialize@ccCachedElementsBuffer@cockpit@@UEAAXPEAVccIndicator@2@PEAUlua_State@@PEBD@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bc20",
+              "imported_name": "?on_change_mode@ccIndicationTemplateBuffer@cockpit@@UEAAXPEAVccIndicator@2@PEAUlua_State@@@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bc50",
+              "imported_name": "?setPosteffectParams@ccIndicatorBake@cockpit@@QEAAXHMMMM@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bc58",
+              "imported_name": "?addSource@ccIndicatorBake@cockpit@@QEAAXHHH@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bc60",
+              "imported_name": "?init@ccIndicatorBake@cockpit@@QEAA_NPEAVccCockpitContext@2@PEBD1W4IndBakePostEff@2@H@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bc68",
+              "imported_name": "??1ccIndicatorBake@cockpit@@UEAA@XZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bc70",
+              "imported_name": "??0ccIndicatorBake@cockpit@@QEAA@XZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd38",
+              "imported_name": "?control@ccIndicator@cockpit@@UEAAXXZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd60",
+              "imported_name": "?check_page@ccIndicator@cockpit@@UEAAXUDevice_Mode@2@@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd68",
+              "imported_name": "?draw@ccIndicator@cockpit@@UEAAXE@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd70",
+              "imported_name": "?draw@ccIndicator@cockpit@@UEAAXXZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd78",
+              "imported_name": "?draw_screenspace@ccIndicator@cockpit@@UEAAX_N@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd80",
+              "imported_name": "?draw_to_viewport@ccIndicator@cockpit@@UEAAXAEBUindicator_viewport@2@@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd88",
+              "imported_name": "?is_draw_screenspace@ccIndicator@cockpit@@UEBA_NXZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd90",
+              "imported_name": "?update@ccIndicator@cockpit@@UEAAXE@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd98",
+              "imported_name": "?update@ccIndicator@cockpit@@UEAAXXZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bda8",
+              "imported_name": "?push_purpose@ccIndicator@cockpit@@UEAAXH@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bdb0",
+              "imported_name": "?pop_purpose@ccIndicator@cockpit@@UEAAXXZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bdb8",
+              "imported_name": "?remove_purpose@ccIndicator@cockpit@@UEAAXH@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bdc0",
+              "imported_name": "?set_geometry@ccIndicator@cockpit@@UEAAXAEBUindicator_geometry@2@@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bdc8",
+              "imported_name": "?get_camera@ccIndicator@cockpit@@UEAAAEBVCamera@Graphics@@XZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bdd0",
+              "imported_name": "?get_camera_point@ccIndicator@cockpit@@UEAA?AVVec3d@osg@@XZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bdd8",
+              "imported_name": "?get_screen_condition@ccIndicator@cockpit@@UEAA?AW4TVScreenCondition@@XZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bde0",
+              "imported_name": "?get_element_on_current_page@ccIndicator@cockpit@@UEAAPEAVElement@2@PEBD@Z",
+              "module": "CockpitBase"
+            }
+          ],
+          "next_offset": 30
+        },
+        {
+          "data": [],
+          "next_offset": null
+        },
+        {
+          "data": [
+            {
+              "addr": "0x180c6bd08",
+              "imported_name": "?set_strcat_by_predefined_format@ceStringPoly@cockpit@@QEAAXHZZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd10",
+              "imported_name": "?set_string_by_predefined_format@ceStringPoly@cockpit@@QEAAXHZZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd18",
+              "imported_name": "?set_formatted_string@ceStringPoly@cockpit@@QEAAXPEBDZZ",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd20",
+              "imported_name": "?set_string@ceStringPoly@cockpit@@QEAAXPEBD@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6bd28",
+              "imported_name": "?set_string@ceStringPoly@cockpit@@QEAAXAEBV?$basic_string@D@ed@@@Z",
+              "module": "CockpitBase"
+            },
+            {
+              "addr": "0x180c6be80",
+              "imported_name": "?set_strcat@ceStringPoly@cockpit@@QEAAXPEBDZZ",
+              "module": "CockpitBase"
+            }
+          ],
+          "next_offset": null
+        }
+      ]
+    },
+    "postfx_xrefs": {
+      "result": [
+        {
+          "addr": "0x18054b308",
+          "xrefs": [
+            {
+              "addr": "0x1803721aa",
+              "type": "data",
+              "fn": {
+                "addr": "0x1803721a0",
+                "name": "?get_render_purpose@ccIndicator@cockpit@@IEBAH_N@Z",
+                "size": "0x120"
+              }
+            },
+            {
+              "addr": "0x18040b83d",
+              "type": "data",
+              "fn": {
+                "addr": "0x18040b830",
+                "name": "sub_18040B830",
+                "size": "0x68"
+              }
+            },
+            {
+              "addr": "0x18040b88b",
+              "type": "data",
+              "fn": {
+                "addr": "0x18040b830",
+                "name": "sub_18040B830",
+                "size": "0x68"
+              }
+            }
+          ],
+          "more": false
+        }
+      ]
+    },
+    "postfx_callback": {
+      "addr": "0x18040b830",
+      "code": "void __fastcall sub_18040B830(cockpit *a1)\n{\n  cockpit::ccCockpitContext *v2; // rax\n  cockpit::ccCockpitContext *v3; // rbx\n  cockpit::ccMouseHandler *v4; // rcx\n\n  byte_18054B308 = 1; /*0x18040b83d*/\n  v2 = cockpit::binding_context(a1); /*0x18040b844*/\n  v3 = v2; /*0x18040b849*/\n  if ( v2 ) /*0x18040b84f*/\n  {\n    cockpit::ccCockpitContext::draw(v2); /*0x18040b854*/\n    if ( *((_BYTE *)v3 + 272) ) /*0x18040b859*/\n    {\n      if ( (unsigned __int8)sub_180405400() ) /*0x18040b862*/\n      {\n        if ( (unsigned __int8)HMD::isActive() ) /*0x18040b86b*/\n        {\n          v4 = (cockpit::ccMouseHandler *)*((_QWORD *)a1 + 19); /*0x18040b875*/\n          if ( v4 ) /*0x18040b87f*/\n            cockpit::ccMouseHandler::drawTooltipVR(v4); /*0x18040b881*/\n        }\n      }\n    }\n  }\n  byte_18054B308 = 0; /*0x18040b88b*/\n}",
+      "refs": [
+        {
+          "addr": "0x18054b308",
+          "name": "byte_18054B308"
+        },
+        {
+          "addr": "0x1801efd70",
+          "name": "?binding_context@cockpit@@YAPEAVccCockpitContext@1@XZ"
+        },
+        {
+          "addr": "0x1801f24f0",
+          "name": "?draw@ccCockpitContext@cockpit@@QEAAXXZ"
+        },
+        {
+          "addr": "0x180208da0",
+          "name": "?drawTooltipVR@ccMouseHandler@cockpit@@QEAAXXZ"
+        },
+        {
+          "addr": "0x18042dcf8",
+          "name": "?isActive@HMD@@SA_NXZ"
+        },
+        {
+          "addr": "0x180405400",
+          "name": "sub_180405400"
+        }
+      ]
+    },
+    "render_resolution": {
+      "addr": "0x1803d6b80",
+      "code": "// Hidden C++ exception states: #wind=3\nvoid __fastcall cockpit::ccLuaLoader::bind_options(struct lua_State *a1)\n{\n  int v2; // r12d\n  unsigned int v3; // r15d\n  unsigned int v4; // ebx\n  unsigned int v5; // ebx\n  unsigned __int8 v6; // al\n  unsigned __int8 *v7; // r14\n  unsigned int v8; // ebx\n  _QWORD *v9; // rdx\n  unsigned int v10; // ebx\n  __int64 v11; // r13\n  __int64 v12; // rax\n  __m128i si128; // xmm6\n  int v14; // edx\n  __int64 v15; // rcx\n  unsigned __int64 v16; // rsi\n  void *v17; // r14\n  void **v18; // rax\n  void **v19; // rax\n  void **v20; // rax\n  size_t v21; // rbx\n  void **v22; // rax\n  void **v23; // rax\n  unsigned __int64 v24; // r15\n  _BYTE *v25; // rax\n  unsigned __int64 v26; // r8\n  double AbsoluteModelTime; // xmm0_8\n  double v28; // xmm6_8\n  double v29; // xmm7_8\n  unsigned int v30; // ebx\n  unsigned int v31; // ebx\n  cockpit *v32; // rcx\n  cockpit *v33; // rcx\n  char *v34; // rdx\n  void **v35; // rdx\n  void *v36; // rbx\n  unsigned __int64 v37; // r8\n  unsigned __int64 v38; // rsi\n  _BYTE *v39; // rbx\n  unsigned __int64 v40; // rcx\n  _WORD *v41; // rbx\n  unsigned __int64 v42; // r8\n  void **v43; // rdx\n  unsigned __int8 *v44; // rbx\n  unsigned __int8 *v45; // rdx\n  unsigned __int64 v46; // r8\n  __int64 v47; // rcx\n  unsigned __int8 v48; // al\n  const char *v49; // rdx\n  _QWORD *v50; // rdx\n  unsigned int v51; // [rsp+20h] [rbp-E0h] BYREF\n  unsigned int v52; // [rsp+24h] [rbp-DCh] BYREF\n  _BYTE *v53; // [rsp+28h] [rbp-D8h] BYREF\n  unsigned __int8 *v54; // [rsp+30h] [rbp-D0h]\n  void *v55; // [rsp+38h] [rbp-C8h]\n  void *v56[2]; // [rsp+40h] [rbp-C0h] BYREF\n  __int64 v57; // [rsp+50h] [rbp-B0h]\n  unsigned __int64 v58; // [rsp+58h] [rbp-A8h]\n  __int128 v59; // [rsp+60h] [rbp-A0h] BYREF\n  __m128i v60; // [rsp+70h] [rbp-90h]\n  void *Src[2]; // [rsp+80h] [rbp-80h] BYREF\n  size_t Size; // [rsp+90h] [rbp-70h]\n  unsigned __int64 v63; // [rsp+98h] [rbp-68h]\n  void *Block[2]; // [rsp+A0h] [rbp-60h]\n  __m128i v65; // [rsp+B0h] [rbp-50h]\n\n  if ( a1 )\n  {\n    v2 = 0; /*0x1803d6bcf*/\n    lua_createtable(a1, 0, 0); /*0x1803d6bd7*/\n    v3 = lua_gettop(a1); /*0x1803d6be4*/\n    v52 = v3; /*0x1803d6be7*/\n    lua_pushstring(a1, \"screen\"); /*0x1803d6bf5*/\n    lua_createtable(a1, 0, 0); /*0x1803d6c02*/\n    v4 = lua_gettop(a1); /*0x1803d6c0f*/\n    gui::Application::get(); /*0x1803d6c11*/\n    gui::Application::get(); /*0x1803d6c1a*/\n    if ( (unsigned __int8)HMD::isActive() ) /*0x1803d6c24*/\n    {\n      lua_pushstring(a1, \"oculus_rift\"); /*0x1803d6c43*/\n      lua_pushboolean(a1, 1); /*0x1803d6c50*/\n      lua_settable(a1, v4); /*0x1803d6c5a*/\n    }\n    lua_pushstring(a1, \"width\"); /*0x1803d6c69*/\n    lua_pushnumber(a1); /*0x1803d6c79*/\n    lua_settable(a1, v4); /*0x1803d6c83*/\n    lua_pushstring(a1, \"height\"); /*0x1803d6c92*/\n    lua_pushnumber(a1); /*0x1803d6ca3*/\n    lua_settable(a1, v4); /*0x1803d6cad*/\n    lua_pushstring(a1, \"aspect\"); /*0x1803d6cbc*/\n    lua_pushnumber(a1); /*0x1803d6cda*/\n    lua_settable(a1, v4); /*0x1803d6ce4*/\n    lua_settable(a1, v3); /*0x1803d6cef*/\n    lua_pushstring(a1, \"cockpit\"); /*0x1803d6cfe*/\n    lua_createtable(a1, 0, 0); /*0x1803d6d0b*/\n    v5 = lua_gettop(a1); /*0x1803d6d18*/\n    lua_pushstring(a1, \"mirrors\"); /*0x1803d6d24*/\n    v6 = (*(__int64 (__fastcall **)(struct IOptions *))(*(_QWORD *)globalOptions + 72LL))(globalOptions); /*0x1803d6d3d*/\n    lua_pushboolean(a1, v6); /*0x1803d6d45*/\n    lua_settable(a1, v5); /*0x1803d6d4f*/\n    lua_pushstring(a1, \"render_target_resolution\"); /*0x1803d6d5e*/\n    (*(__int64 (__fastcall **)(struct IOptions *))(*(_QWORD *)globalOptions + 96LL))(globalOptions); /*0x1803d6d70*/\n    lua_pushnumber(a1); /*0x1803d6d7f*/\n    lua_settable(a1, v5); /*0x1803d6d89*/\n    lua_pushstring(a1, \"use_nightvision_googles\"); /*0x1803d6d98*/\n    lua_pushboolean(a1, 0); /*0x1803d6da2*/\n    lua_settable(a1, v5); /*0x1803d6dac*/\n    lua_settable(a1, v3); /*0x1803d6db7*/\n    v7 = (unsigned __int8 *)(*(__int64 (__fastcall **)(struct IOptions *))(*(_QWORD *)globalOptions + 104LL))(globalOptions); /*0x1803d6dcc*/\n    v54 = v7; /*0x1803d6dcf*/\n    lua_pushstring(a1, \"flight\"); /*0x1803d6dde*/\n    lua_createtable(a1, 0, 0); /*0x1803d6deb*/\n    v8 = lua_gettop(a1); /*0x1803d6df8*/\n    lua_pushstring(a1, \"immortal\"); /*0x1803d6e04*/\n    lua_pushboolean(a1, v7[3]); /*0x1803d6e11*/\n    lua_settable(a1, v8); /*0x1803d6e1b*/\n    lua_pushstring(a1, \"crash_recovery\"); /*0x1803d6e2a*/\n    lua_pushboolean(a1, v7[6]); /*0x1803d6e37*/\n    lua_settable(a1, v8); /*0x1803d6e41*/\n    lua_pushstring(a1, \"unlimited_fuel\"); /*0x1803d6e50*/\n    lua_pushboolean(a1, v7[9]); /*0x1803d6e5d*/\n    lua_settable(a1, v8); /*0x1803d6e67*/\n    lua_pushstring(a1, \"unlimited_weapons\"); /*0x1803d6e76*/\n    lua_pushboolean(a1, v7[14]); /*0x1803d6e83*/\n    lua_settable(a1, v8); /*0x1803d6e8d*/\n    lua_pushstring(a1, \"easy_flight\"); /*0x1803d6e9c*/\n    lua_pushboolean(a1, v7[5]); /*0x1803d6ea9*/\n    lua_settable(a1, v8); /*0x1803d6eb3*/\n    lua_pushstring(a1, \"easy_radar\"); /*0x1803d6ec2*/\n    lua_pushboolean(a1, 0); /*0x1803d6ecc*/\n    lua_settable(a1, v8); /*0x1803d6ed6*/\n    lua_pushstring(a1, \"radio_assist\"); /*0x1803d6ee5*/\n    lua_pushboolean(a1, v7[7]); /*0x1803d6ef2*/\n    lua_settable(a1, v8); /*0x1803d6efc*/\n    lua_pushstring(a1, \"external_labels\"); /*0x1803d6f0b*/\n    lua_pushboolean(a1, *((_DWORD *)v7 + 4) > 0); /*0x1803d6f1d*/\n    lua_settable(a1, v8); /*0x1803d6f27*/\n    lua_pushstring(a1, &qword_18044CD18); /*0x1803d6f36*/\n    lua_pushboolean(a1, v7[35]); /*0x1803d6f43*/\n    lua_settable(a1, v8); /*0x1803d6f4d*/\n    lua_pushstring(a1, \"aircraft_switching\"); /*0x1803d6f5c*/\n    lua_pushboolean(a1, v7[10]); /*0x1803d6f69*/\n    lua_settable(a1, v8); /*0x1803d6f73*/\n    lua_pushstring(a1, \"padlock\"); /*0x1803d6f82*/\n    lua_pushboolean(a1, *v7); /*0x1803d6f8e*/\n    lua_settable(a1, v8); /*0x1803d6f98*/\n    lua_pushstring(a1, \"g_effects\"); /*0x1803d6fa7*/\n    v9 = v7 + 56; /*0x1803d6fac*/\n    if ( *((_QWORD *)v7 + 10) > 0xFu ) /*0x1803d6fb5*/\n      v9 = (_QWORD *)*v9; /*0x1803d6fb7*/\n    lua_pushstring(a1, v9); /*0x1803d6fbd*/\n    lua_settable(a1, v8); /*0x1803d6fc7*/\n    lua_pushstring(a1, \"tool_tips_enable\"); /*0x1803d6fd6*/\n    lua_pushboolean(a1, v7[8]); /*0x1803d6fe3*/\n    lua_settable(a1, v8); /*0x1803d6fed*/\n    cockpit::avDevice::EasyFlight = v7[5]; /*0x1803d6ff7*/\n    cockpit::avDevice::EasyRadar = 0; /*0x1803d6ffd*/\n    lua_settable(a1, v3); /*0x1803d700a*/\n    lua_pushstring(a1, \"mission\"); /*0x1803d7019*/\n    lua_createtable(a1, 0, 0); /*0x1803d7026*/\n    v10 = lua_gettop(a1); /*0x1803d7033*/\n    v51 = v10; /*0x1803d7035*/\n    v11 = 0x7FFFFFFFFFFFFFFFLL; /*0x1803d7052*/\n    if ( (*(__int64 (__fastcall **)(struct IDispatcher *))(*(_QWORD *)globalDispatcher + 256LL))(globalDispatcher) ) /*0x1803d7050*/\n    {\n      v12 = (*(__int64 (__fastcall **)(struct IDispatcher *))(*(_QWORD *)globalDispatcher + 256LL))(globalDispatcher); /*0x1803d7072*/\n      sub_1801DB8B0(Src, v12 + 24); /*0x1803d7080*/\n      *(_OWORD *)Block = 0; /*0x1803d7089*/\n      si128 = _mm_load_si128((const __m128i *)&xmmword_180435C60); /*0x1803d708d*/\n      v65 = si128; /*0x1803d7095*/\n      LOBYTE(Block[0]) = 0; /*0x1803d709a*/\n      v14 = Size - 1; /*0x1803d70a2*/\n      v15 = (int)Size - 1; /*0x1803d70a6*/\n      v16 = v63; /*0x1803d70a9*/\n      v17 = Src[0]; /*0x1803d70ad*/\n      if ( (int)Size - 1 >= 0 ) /*0x1803d70b3*/\n      {\n        do /*0x1803d70ea*/\n        {\n          v18 = Src; /*0x1803d70c0*/\n          if ( v63 > 0xF ) /*0x1803d70c8*/\n            v18 = (void **)Src[0]; /*0x1803d70c8*/\n          if ( *((_BYTE *)v18 + v15) == 92 ) /*0x1803d70d0*/\n            break; /*0x1803d70d0*/\n          v19 = Src; /*0x1803d70d2*/\n          if ( v63 > 0xF ) /*0x1803d70da*/\n            v19 = (void **)Src[0]; /*0x1803d70da*/\n          if ( *((_BYTE *)v19 + v15) == 58 ) /*0x1803d70e2*/\n            break; /*0x1803d70e2*/\n          --v14; /*0x1803d70e4*/\n          --v15; /*0x1803d70e6*/\n        }\n        while ( v15 >= 0 ); /*0x1803d70ea*/\n        if ( v14 >= 0 ) /*0x1803d70ee*/\n        {\n          v20 = Src; /*0x1803d70f4*/\n          if ( v63 > 0xF ) /*0x1803d70fc*/\n            v20 = (void **)Src[0]; /*0x1803d70fc*/\n          v21 = v14; /*0x1803d7100*/\n          if ( *((_BYTE *)v20 + v14) == 92 ) /*0x1803d7107*/\n            goto LABEL_22; /*0x1803d7107*/\n          v22 = Src; /*0x1803d7109*/\n          if ( v63 > 0xF ) /*0x1803d7111*/\n            v22 = (void **)Src[0]; /*0x1803d7111*/\n          if ( *((_BYTE *)v22 + v14) == 58 ) /*0x1803d7119*/\n          {\nLABEL_22:\n            v59 = 0; /*0x1803d7122*/\n            if ( Size < v14 ) /*0x1803d712a*/\n              v21 = Size; /*0x1803d712a*/\n            v23 = Src; /*0x1803d712e*/\n            if ( v63 > 0xF ) /*0x1803d7136*/\n              v23 = (void **)Src[0]; /*0x1803d7136*/\n            v55 = v23; /*0x1803d713a*/\n            if ( v21 > 0x7FFFFFFFFFFFFFFFLL ) /*0x1803d7142*/\n              std::vector<void *>::_Xlen(); /*0x1803d789d*/\n            if ( v21 > 0xF ) /*0x1803d714c*/\n            {\n              v24 = v21 | 0xF; /*0x1803d7176*/\n              if ( (v21 | 0xF) <= 0x7FFFFFFFFFFFFFFFLL ) /*0x1803d717d*/\n              {\n                if ( v24 < 0x16 ) /*0x1803d718c*/\n                  v24 = 22; /*0x1803d718c*/\n              }\n              else\n              {\n                v24 = 0x7FFFFFFFFFFFFFFFLL; /*0x1803d717f*/\n              }\n              v25 = malloc(v24 + 1); /*0x1803d7194*/\n              v53 = v25; /*0x1803d719a*/\n              if ( !v25 ) /*0x1803d71a2*/\n              {\n                ed::fatal_out_of_memory((ed *)\"ed_malloc\", (const char *)(v24 + 1), v26); /*0x1803d71af*/\n                v25 = 0; /*0x1803d71b5*/\n              }\n              *(_QWORD *)&v59 = v25; /*0x1803d71ba*/\n              v60.m128i_i64[0] = v21; /*0x1803d71bf*/\n              v60.m128i_i64[1] = v24; /*0x1803d71c4*/\n              memcpy(v25, v55, v21); /*0x1803d71d4*/\n              v53[v21] = 0; /*0x1803d71de*/\n              v3 = v52; /*0x1803d71e2*/\n            }\n            else\n            {\n              v60.m128i_i64[0] = v21; /*0x1803d714e*/\n              v60.m128i_i64[1] = 15; /*0x1803d7153*/\n              memcpy(&v59, v23, v21); /*0x1803d7167*/\n              *((_BYTE *)&v59 + v21) = 0; /*0x1803d716c*/\n            }\n            *(_OWORD *)Block = v59; /*0x1803d71ec*/\n            si128 = v60; /*0x1803d71f0*/\n          }\n          v10 = v51; /*0x1803d71f5*/\n        }\n      }\n      lua_pushstring(a1, \"campaign\"); /*0x1803d7203*/\n      lua_pushstring(a1, &unk_180434A98); /*0x1803d7212*/\n      lua_settable(a1, v10); /*0x1803d721c*/\n      lua_pushstring(a1, \"title\"); /*0x1803d722b*/\n      lua_pushstring(a1, \"stub\"); /*0x1803d723a*/\n      lua_settable(a1, v10); /*0x1803d7244*/\n      lua_pushstring(a1, \"description\"); /*0x1803d7253*/\n      lua_pushstring(a1, \"stub\"); /*0x1803d7262*/\n      lua_settable(a1, v10); /*0x1803d726c*/\n      lua_pushstring(a1, \"file_path\"); /*0x1803d727b*/\n      lua_pushstring(a1, \"stub\"); /*0x1803d728a*/\n      lua_settable(a1, v10); /*0x1803d7294*/\n      if ( _mm_srli_si128(si128, 8).m128i_u64[0] > 0xF ) /*0x1803d72a8*/\n        free(Block[0]); /*0x1803d72ae*/\n      if ( v16 > 0xF ) /*0x1803d72b9*/\n        free(v17); /*0x1803d72be*/\n      v7 = v54; /*0x1803d72c4*/\n    }\n    lua_settable(a1, v3); /*0x1803d72cf*/\n    lua_pushstring(a1, \"time\"); /*0x1803d72de*/\n    AbsoluteModelTime = wTime::GetAbsoluteModelTime(); /*0x1803d72e3*/\n    v28 = fmod(AbsoluteModelTime, 86400.0) / 3600.0; /*0x1803d72f9*/\n    v29 = fmod(v28, 1.0) * 60.0; /*0x1803d7314*/\n    lua_createtable(a1, 0, 0); /*0x1803d7324*/\n    v30 = lua_gettop(a1); /*0x1803d7331*/\n    lua_pushstring(a1, \"hours\"); /*0x1803d733d*/\n    lua_pushnumber(a1); /*0x1803d7351*/\n    lua_settable(a1, v30); /*0x1803d735b*/\n    lua_pushstring(a1, \"minutes\"); /*0x1803d736a*/\n    lua_pushnumber(a1); /*0x1803d737e*/\n    lua_settable(a1, v30); /*0x1803d7388*/\n    lua_pushstring(a1, \"seconds\"); /*0x1803d7397*/\n    fmod(v29, 1.0); /*0x1803d73a7*/\n    lua_pushnumber(a1); /*0x1803d73c3*/\n    lua_settable(a1, v30); /*0x1803d73cd*/\n    lua_settable(a1, v3); /*0x1803d73d8*/\n    lua_pushstring(a1, \"date\"); /*0x1803d73e7*/\n    WorldManager::GetMissionCurrentDate(globalWorldManager, (int *)&v53, (int *)&v51, (int *)&v52); /*0x1803d7405*/\n    lua_createtable(a1, 0, 0); /*0x1803d7413*/\n    v31 = lua_gettop(a1); /*0x1803d7420*/\n    lua_pushstring(a1, &unk_180453F6C); /*0x1803d742c*/\n    lua_pushnumber(a1); /*0x1803d743e*/\n    lua_settable(a1, v31); /*0x1803d7448*/\n    lua_pushstring(a1, \"month\"); /*0x1803d7457*/\n    lua_pushnumber(a1); /*0x1803d7469*/\n    lua_settable(a1, v31); /*0x1803d7473*/\n    lua_pushstring(a1, \"year\"); /*0x1803d7482*/\n    lua_pushnumber(a1); /*0x1803d7494*/\n    lua_settable(a1, v31); /*0x1803d749e*/\n    lua_settable(a1, v3); /*0x1803d74a9*/\n    lua_pushstring(a1, \"init_conditions\"); /*0x1803d74b8*/\n    cockpit::avInitData::save_in_state( /*0x1803d74ce*/\n      (cockpit::ccCockpitContext *)((char *)cockpit::ccCockpitContext::contexts_ptr + 200),\n      a1);\n    lua_settable(a1, v3); /*0x1803d74d9*/\n    lua_pushstring(a1, \"script_path\"); /*0x1803d74e8*/\n    if ( cockpit::binding_context(v32) ) /*0x1803d74ed*/\n      v34 = (char *)cockpit::binding_context(v33) + 328; /*0x1803d74fc*/\n    else\n      v34 = (char *)cockpit::ccCockpitContext::contexts_ptr + 328; /*0x1803d750c*/\n    if ( *((_QWORD *)v34 + 3) > 0xFu ) /*0x1803d7518*/\n      v34 = *(char **)v34; /*0x1803d751a*/\n    lua_pushstring(a1, v34); /*0x1803d7520*/\n    lua_settable(a1, v3); /*0x1803d752b*/\n    lua_pushstring(a1, \"common_script_path\"); /*0x1803d753a*/\n    v35 = &cockpit::avDevice::common_path; /*0x1803d753f*/\n    if ( *(&xmmword_180546C30 + 1) > 0xF ) /*0x1803d754e*/\n      v35 = (void **)cockpit::avDevice::common_path; /*0x1803d754e*/\n    lua_pushstring(a1, v35); /*0x1803d7559*/\n    lua_settable(a1, v3); /*0x1803d7564*/\n    lua_pushstring(a1, \"common_ground_script_path\"); /*0x1803d7573*/\n    *(_OWORD *)v56 = 0; /*0x1803d757b*/\n    v57 = 0; /*0x1803d7580*/\n    v58 = 0; /*0x1803d7585*/\n    v36 = malloc(0x20u); /*0x1803d7595*/\n    if ( !v36 ) /*0x1803d759b*/\n      ed::fatal_out_of_memory((ed *)\"ed_malloc\", (const char *)0x20, v37); /*0x1803d75a9*/\n    v56[0] = v36; /*0x1803d75af*/\n    v57 = 23; /*0x1803d75b4*/\n    v58 = 31; /*0x1803d75bd*/\n    strcpy((char *)v36, \"Mods/tech/CombinedArms/\"); /*0x1803d75cd*/\n    if ( !(unsigned int)VFS_exists(v36) ) /*0x1803d75f5*/\n    {\n      v38 = v58; /*0x1803d7603*/\n      if ( v58 < 0x15 ) /*0x1803d760c*/\n      {\n        v40 = v58 >> 1; /*0x1803d7647*/\n        if ( v58 <= 0x7FFFFFFFFFFFFFFFLL - (v58 >> 1) ) /*0x1803d7653*/\n        {\n          v11 = 31; /*0x1803d7659*/\n          if ( v40 + v58 > 0x1F ) /*0x1803d7662*/\n            v11 = v40 + v58; /*0x1803d7662*/\n        }\n        v41 = malloc(v11 + 1); /*0x1803d7670*/\n        if ( !v41 ) /*0x1803d7676*/\n          ed::fatal_out_of_memory((ed *)\"ed_malloc\", (const char *)(v11 + 1), v42); /*0x1803d7683*/\n        v57 = 21; /*0x1803d7689*/\n        v58 = v11; /*0x1803d7692*/\n        qmemcpy(v41, \"Mods/tech/JointFires\", 20); /*0x1803d769e*/\n        v41[10] = (unsigned __int8)aModsTechJointf[20]; /*0x1803d76b1*/\n        if ( v38 > 0xF ) /*0x1803d76bc*/\n          free(v56[0]); /*0x1803d76c3*/\n        v56[0] = v41; /*0x1803d76c9*/\n      }\n      else\n      {\n        v39 = v56[0]; /*0x1803d7617*/\n        v57 = 21; /*0x1803d761d*/\n        memmove(v56[0], \"Mods/tech/JointFires/\", 0x15u); /*0x1803d7636*/\n        v39[21] = 0; /*0x1803d763b*/\n      }\n    }\n    sub_1801EFC20(v56, \"Cockpit/\", 8u); /*0x1803d76e0*/\n    v43 = v56; /*0x1803d76e5*/\n    if ( v58 > 0xF ) /*0x1803d76f0*/\n      v43 = (void **)v56[0]; /*0x1803d76f0*/\n    lua_pushstring(a1, v43); /*0x1803d76f9*/\n    lua_settable(a1, v3); /*0x1803d7704*/\n    lua_pushstring(a1, \"avionics_language\"); /*0x1803d7713*/\n    v44 = v7 + 152; /*0x1803d7718*/\n    v45 = v7 + 152; /*0x1803d771f*/\n    if ( *((_QWORD *)v7 + 22) > 0xFu ) /*0x1803d7727*/\n      v45 = *(unsigned __int8 **)v44; /*0x1803d7729*/\n    lua_pushstring(a1, v45); /*0x1803d772f*/\n    lua_settable(a1, v3); /*0x1803d773a*/\n    lua_pushstring(a1, \"cockpit_language\"); /*0x1803d7749*/\n    v46 = *((_QWORD *)v7 + 22); /*0x1803d7752*/\n    if ( v46 > 0xF ) /*0x1803d775a*/\n      v44 = *(unsigned __int8 **)v44; /*0x1803d775c*/\n    if ( *((_QWORD *)v7 + 21) != 6 ) /*0x1803d7763*/\n      goto LABEL_77; /*0x1803d7763*/\n    v47 = 0; /*0x1803d7765*/\n    while ( 1 ) /*0x1803d7770*/\n    {\n      v48 = v44[v47++]; /*0x1803d7770*/\n      if ( v48 != aNative[v47 - 1] ) /*0x1803d777b*/\n        break; /*0x1803d777b*/\n      if ( v47 == 6 ) /*0x1803d7781*/\n        goto LABEL_75; /*0x1803d7781*/\n    }\n    v2 = v48 < (unsigned __int8)aNative[v47 - 1] ? -1 : 1;\nLABEL_75:\n    if ( v2 ) /*0x1803d778f*/\n    {\nLABEL_77:\n      v49 = (const char *)(v7 + 152); /*0x1803d779a*/\n      if ( v46 > 0xF ) /*0x1803d77a5*/\n        v49 = *(const char **)v49; /*0x1803d77a7*/\n    }\n    else\n    {\n      v49 = \"russian\"; /*0x1803d7791*/\n    }\n    lua_pushstring(a1, v49); /*0x1803d77ad*/\n    lua_settable(a1, v3); /*0x1803d77b8*/\n    lua_pushstring(a1, \"measurement_system\"); /*0x1803d77c7*/\n    v50 = v7 + 88; /*0x1803d77cc*/\n    if ( *((_QWORD *)v7 + 14) > 0xFu ) /*0x1803d77d5*/\n      v50 = (_QWORD *)*v50; /*0x1803d77d7*/\n    lua_pushstring(a1, v50); /*0x1803d77dd*/\n    lua_settable(a1, v3); /*0x1803d77e8*/\n    lua_setfield(a1, 4294957294LL, \"LockOn_Options\"); /*0x1803d77fc*/\n    lua_pushboolean(a1, 1); /*0x1803d7809*/\n    lua_setfield(a1, 4294957294LL, \"USE_TERRAIN4\"); /*0x1803d781d*/\n    lua_pushcclosure(a1, sub_1803D90D0, 0); /*0x1803d782f*/\n    lua_setfield(a1, 4294957294LL, \"get_input_devices\"); /*0x1803d7843*/\n    if ( v58 > 0xF ) /*0x1803d784f*/\n      free(v56[0]); /*0x1803d7856*/\n  }\n}",
+      "refs": [
+        {
+          "addr": "0x18041233b",
+          "name": "lua_createtable"
+        },
+        {
+          "addr": "0x180412305",
+          "name": "lua_gettop"
+        },
+        {
+          "addr": "0x180412323",
+          "name": "lua_pushstring"
+        },
+        {
+          "addr": "0x180454b70",
+          "name": "aScreen",
+          "string": "screen"
+        },
+        {
+          "addr": "0x18042e660",
+          "name": "?get@Application@gui@@SAPEAV12@XZ"
+        },
+        {
+          "addr": "0x180454b78",
+          "name": "aOculusRift",
+          "string": "oculus_rift"
+        },
+        {
+          "addr": "0x18041238f",
+          "name": "lua_pushboolean"
+        },
+        {
+          "addr": "0x180412341",
+          "name": "lua_settable"
+        },
+        {
+          "addr": "0x18042dcf8",
+          "name": "?isActive@HMD@@SA_NXZ"
+        },
+        {
+          "addr": "0x180436410",
+          "name": "aWidth",
+          "string": "width"
+        },
+        {
+          "addr": "0x180412365",
+          "name": "lua_pushnumber"
+        },
+        {
+          "addr": "0x180454124",
+          "name": "aHeight_0",
+          "string": "height"
+        },
+        {
+          "addr": "0x180436408",
+          "name": "aAspect",
+          "string": "aspect"
+        },
+        {
+          "addr": "0x180454b88",
+          "name": "aCockpit",
+          "string": "cockpit"
+        },
+        {
+          "addr": "0x180436608",
+          "name": "aMirrors_0",
+          "string": "mirrors"
+        },
+        {
+          "addr": "0x18042d7e0",
+          "name": "?globalOptions@@3PEAVIOptions@@EA"
+        },
+        {
+          "addr": "0x180454b90",
+          "name": "aRenderTargetRe",
+          "string": "render_target_resolution"
+        },
+        {
+          "addr": "0x180454bb0",
+          "name": "aUseNightvision",
+          "string": "use_nightvision_googles"
+        },
+        {
+          "addr": "0x180454bc8",
+          "name": "aFlight",
+          "string": "flight"
+        },
+        {
+          "addr": "0x180454bd0",
+          "name": "aImmortal",
+          "string": "immortal"
+        },
+        {
+          "addr": "0x180454be0",
+          "name": "aCrashRecovery",
+          "string": "crash_recovery"
+        },
+        {
+          "addr": "0x180454bf0",
+          "name": "aUnlimitedFuel",
+          "string": "unlimited_fuel"
+        },
+        {
+          "addr": "0x180454c00",
+          "name": "aUnlimitedWeapo",
+          "string": "unlimited_weapons"
+        },
+        {
+          "addr": "0x180454c18",
+          "name": "aEasyFlight",
+          "string": "easy_flight"
+        },
+        {
+          "addr": "0x180454c28",
+          "name": "aEasyRadar",
+          "string": "easy_radar"
+        },
+        {
+          "addr": "0x180454c38",
+          "name": "aRadioAssist",
+          "string": "radio_assist"
+        },
+        {
+          "addr": "0x180454c48",
+          "name": "aExternalLabels",
+          "string": "external_labels"
+        },
+        {
+          "addr": "0x18044cd18",
+          "name": "qword_18044CD18"
+        },
+        {
+          "addr": "0x180454c58",
+          "name": "aAircraftSwitch",
+          "string": "aircraft_switching"
+        },
+        {
+          "addr": "0x1804497f0",
+          "name": "aPadlock",
+          "string": "padlock"
+        },
+        {
+          "addr": "0x180454c70",
+          "name": "aGEffects",
+          "string": "g_effects"
+        },
+        {
+          "addr": "0x180454c80",
+          "name": "aToolTipsEnable",
+          "string": "tool_tips_enable"
+        },
+        {
+          "addr": "0x180546bfc",
+          "name": "?EasyFlight@avDevice@cockpit@@2_NA"
+        },
+        {
+          "addr": "0x180546bfd",
+          "name": "?EasyRadar@avDevice@cockpit@@2_NA"
+        },
+        {
+          "addr": "0x180454c98",
+          "name": "aMission",
+          "string": "mission"
+        },
+        {
+          "addr": "0x18042d7c8",
+          "name": "?globalDispatcher@@3PEAVIDispatcher@@EA"
+        },
+        {
+          "addr": "0x1801db8b0",
+          "name": "sub_1801DB8B0"
+        },
+        {
+          "addr": "0x180435c60",
+          "name": "xmmword_180435C60"
+        },
+        {
+          "addr": "0x1801dcce0",
+          "name": "?_Xlen@?$vector@PEAXV?$allocator@PEAX@std@@@std@@IEBAXXZ"
+        },
+        {
+          "addr": "0x18042e398",
+          "name": "__imp_malloc"
+        },
+        {
+          "addr": "0x18042e9b0",
+          "name": "?fatal_out_of_memory@ed@@YAXPEBD_K@Z"
+        },
+        {
+          "addr": "0x180434ac0",
+          "name": "aEdMalloc",
+          "string": "ed_malloc"
+        },
+        {
+          "addr": "0x18041484c",
+          "name": "memcpy"
+        },
+        {
+          "addr": "0x180454ca0",
+          "name": "aCampaign",
+          "string": "campaign"
+        },
+        {
+          "addr": "0x180434a98",
+          "name": "unk_180434A98"
+        },
+        {
+          "addr": "0x180454cac",
+          "name": "aTitle",
+          "string": "title"
+        },
+        {
+          "addr": "0x180454cb4",
+          "name": "aStub",
+          "string": "stub"
+        },
+        {
+          "addr": "0x180454cc0",
+          "name": "aDescription",
+          "string": "description"
+        },
+        {
+          "addr": "0x180454cd0",
+          "name": "aFilePath",
+          "string": "file_path"
+        },
+        {
+          "addr": "0x18042e3a0",
+          "name": "__imp_free"
+        },
+        {
+          "addr": "0x180454cdc",
+          "name": "aTime_0",
+          "string": "time"
+        },
+        {
+          "addr": "0x18042df30",
+          "name": "?GetAbsoluteModelTime@wTime@@SANXZ"
+        },
+        {
+          "addr": "0x1804148f4",
+          "name": "fmod"
+        },
+        {
+          "addr": "0x180454ce4",
+          "name": "aHours",
+          "string": "hours"
+        },
+        {
+          "addr": "0x180454cf0",
+          "name": "aMinutes",
+          "string": "minutes"
+        },
+        {
+          "addr": "0x180454cf8",
+          "name": "aSeconds",
+          "string": "seconds"
+        },
+        {
+          "addr": "0x180454d00",
+          "name": "aDate",
+          "string": "date"
+        },
+        {
+          "addr": "0x18042e050",
+          "name": "?GetMissionCurrentDate@WorldManager@@QEAA_NAEAH00@Z"
+        },
+        {
+          "addr": "0x18042e308",
+          "name": "?globalWorldManager@@3PEAVWorldManager@@EA"
+        },
+        {
+          "addr": "0x180453f6c",
+          "name": "unk_180453F6C"
+        },
+        {
+          "addr": "0x180453f70",
+          "name": "aMonth",
+          "string": "month"
+        },
+        {
+          "addr": "0x180453f78",
+          "name": "aYear",
+          "string": "year"
+        },
+        {
+          "addr": "0x180454d08",
+          "name": "aInitConditions",
+          "string": "init_conditions"
+        },
+        {
+          "addr": "0x1801f7250",
+          "name": "?save_in_state@avInitData@cockpit@@QEAAXPEAUlua_State@@@Z"
+        },
+        {
+          "addr": "0x180533008",
+          "name": "?contexts_ptr@ccCockpitContext@cockpit@@0PAPEAV12@A"
+        },
+        {
+          "addr": "0x180454d18",
+          "name": "aScriptPath",
+          "string": "script_path"
+        },
+        {
+          "addr": "0x1801efd70",
+          "name": "?binding_context@cockpit@@YAPEAVccCockpitContext@1@XZ"
+        },
+        {
+          "addr": "0x180454d28",
+          "name": "aCommonScriptPa",
+          "string": "common_script_path"
+        },
+        {
+          "addr": "0x180546c20",
+          "name": "?common_path@avDevice@cockpit@@2V?$basic_string@D@ed@@B"
+        },
+        {
+          "addr": "0x180546c30",
+          "name": "xmmword_180546C30"
+        },
+        {
+          "addr": "0x180454d40",
+          "name": "aCommonGroundSc",
+          "string": "common_ground_script_path"
+        },
+        {
+          "addr": "0x180454d78",
+          "name": "aModsTechJointf",
+          "string": "Mods/tech/JointFires/"
+        },
+        {
+          "addr": "0x180414852",
+          "name": "memmove"
+        },
+        {
+          "addr": "0x18042e710",
+          "name": "VFS_exists"
+        },
+        {
+          "addr": "0x1801efc20",
+          "name": "sub_1801EFC20"
+        },
+        {
+          "addr": "0x180454d90",
+          "name": "aCockpit_0",
+          "string": "Cockpit/"
+        },
+        {
+          "addr": "0x180454da0",
+          "name": "aAvionicsLangua",
+          "string": "avionics_language"
+        },
+        {
+          "addr": "0x180454db8",
+          "name": "aCockpitLanguag",
+          "string": "cockpit_language"
+        },
+        {
+          "addr": "0x18043d894",
+          "name": "aNative",
+          "string": "native"
+        },
+        {
+          "addr": "0x180454dd0",
+          "name": "aRussian",
+          "string": "russian"
+        },
+        {
+          "addr": "0x180454dd8",
+          "name": "aMeasurementSys",
+          "string": "measurement_system"
+        },
+        {
+          "addr": "0x180412347",
+          "name": "lua_setfield"
+        },
+        {
+          "addr": "0x180454df0",
+          "name": "aLockonOptions",
+          "string": "LockOn_Options"
+        },
+        {
+          "addr": "0x180454e00",
+          "name": "aUseTerrain4",
+          "string": "USE_TERRAIN4"
+        },
+        {
+          "addr": "0x180412329",
+          "name": "lua_pushcclosure"
+        },
+        {
+          "addr": "0x1803d90d0",
+          "name": "sub_1803D90D0"
+        },
+        {
+          "addr": "0x1804540e0",
+          "name": "aGetInputDevice",
+          "string": "get_input_devices"
+        }
+      ]
+    },
+    "font_construct": {
+      "addr": "0x180399560",
+      "code": "// Hidden C++ exception states: #wind=4\n__int64 __fastcall cockpit::ceFont::construct(Lua::Config *a1, __int64 a2, __int64 a3)\n{\n  unsigned __int64 v6; // rdi\n  void **v7; // rbx\n  unsigned __int64 v8; // rcx\n  __int64 v9; // rsi\n  char *v10; // rbx\n  unsigned __int64 v11; // r8\n  __int64 (__fastcall *v12)(struct Common::FactoryManager *, __int64); // rbx\n  void **v13; // rdx\n  __int64 v14; // rax\n  __int128 v15; // xmm1\n  __m128i v16; // xmm0\n  __m128i v17; // xmm6\n  __int64 v18; // rax\n  __int64 v19; // rax\n  __int64 v20; // rbx\n  char v22[8]; // [rsp+20h] [rbp-79h] BYREF\n  void *Block[2]; // [rsp+28h] [rbp-71h] BYREF\n  size_t Size; // [rsp+38h] [rbp-61h]\n  unsigned __int64 v25; // [rsp+40h] [rbp-59h]\n  void *Src[2]; // [rsp+48h] [rbp-51h] BYREF\n  __m128i si128; // [rsp+58h] [rbp-41h]\n  void *v28[2]; // [rsp+68h] [rbp-31h] BYREF\n  __m128i v29; // [rsp+78h] [rbp-21h]\n  __int128 v30; // [rsp+88h] [rbp-11h]\n  __m128i v31; // [rsp+98h] [rbp-1h]\n\n  *(_OWORD *)Block = 0; /*0x1803995a0*/\n  Size = 0; /*0x1803995a4*/\n  v25 = 15; /*0x1803995a8*/\n  LOBYTE(Block[0]) = 0; /*0x1803995b0*/\n  Lua::Config::get(a1, \"class\"); /*0x1803995ba*/\n  if ( !(unsigned __int8)Lua::Config::pop(a1, Block) ) /*0x1803995c7*/\n  {\n    v6 = v25; /*0x1803995d5*/\n    if ( v25 < 0xD ) /*0x1803995dd*/\n    {\n      v8 = v25 >> 1; /*0x180399615*/\n      v9 = 0x7FFFFFFFFFFFFFFFLL; /*0x180399618*/\n      if ( v25 <= 0x7FFFFFFFFFFFFFFFLL - (v25 >> 1) ) /*0x18039962b*/\n      {\n        v9 = 15; /*0x180399631*/\n        if ( v25 + v8 > 0xF ) /*0x180399639*/\n          v9 = v25 + v8; /*0x180399639*/\n      }\n      v10 = (char *)malloc(v9 + 1); /*0x180399647*/\n      if ( !v10 ) /*0x18039964d*/\n        ed::fatal_out_of_memory((ed *)\"ed_malloc\", (const char *)(v9 + 1), v11); /*0x18039965a*/\n      Size = 13; /*0x180399660*/\n      v25 = v9; /*0x180399668*/\n      strcpy(v10, \"ceTexPolyFont\"); /*0x180399674*/\n      if ( v6 > 0xF ) /*0x180399693*/\n        free(Block[0]); /*0x180399699*/\n      Block[0] = v10; /*0x18039969f*/\n    }\n    else\n    {\n      v7 = Block; /*0x1803995df*/\n      if ( v25 > 0xF ) /*0x1803995e7*/\n        v7 = (void **)Block[0]; /*0x1803995e7*/\n      Size = 13; /*0x1803995ec*/\n      memmove(v7, &qword_18044ED10, 0xDu); /*0x180399604*/\n      *((_BYTE *)v7 + 13) = 0; /*0x180399609*/\n    }\n  }\n  v12 = *(__int64 (__fastcall **)(struct Common::FactoryManager *, __int64))(*(_QWORD *)Common::globalFactoryManager /*0x1803996b0*/\n                                                                           + 16LL);\n  si128 = _mm_load_si128((const __m128i *)&xmmword_180435C80); /*0x1803996c3*/\n  strcpy((char *)Src, \"cockpit::font::\"); /*0x1803996d0*/\n  v13 = Block; /*0x1803996f7*/\n  if ( v25 > 0xF ) /*0x180399700*/\n    v13 = (void **)Block[0]; /*0x180399700*/\n  v14 = sub_1801EFC20(Src, v13, Size); /*0x18039970d*/\n  v30 = *(_OWORD *)v14; /*0x180399715*/\n  v15 = v30; /*0x180399712*/\n  v16 = *(__m128i *)(v14 + 16); /*0x180399719*/\n  *(_BYTE *)v14 = 0; /*0x18039971d*/\n  *(_QWORD *)(v14 + 16) = 0; /*0x180399722*/\n  *(_QWORD *)(v14 + 24) = 15; /*0x180399726*/\n  *(_OWORD *)v28 = v15; /*0x18039972e*/\n  v29 = v16; /*0x180399732*/\n  v17 = _mm_load_si128((const __m128i *)&xmmword_180435C60); /*0x180399736*/\n  v31 = v17; /*0x18039973e*/\n  LOBYTE(v30) = 0; /*0x180399743*/\n  v18 = Common::Identifier::Identifier(v22, v28); /*0x18039974f*/\n  v19 = v12(Common::globalFactoryManager, v18); /*0x18039975b*/\n  v20 = v19 - 16; /*0x18039975e*/\n  if ( !v19 ) /*0x180399765*/\n    v20 = 0; /*0x180399765*/\n  if ( v29.m128i_i64[1] > 0xFuLL ) /*0x18039976e*/\n    free(v28[0]); /*0x180399774*/\n  v29 = v17; /*0x18039977a*/\n  LOBYTE(v28[0]) = 0; /*0x18039977f*/\n  if ( si128.m128i_i64[1] > 0xFuLL ) /*0x180399788*/\n  {\n    free(Src[0]); /*0x18039978e*/\n    v17 = _mm_load_si128((const __m128i *)&xmmword_180435C60); /*0x180399794*/\n  }\n  si128 = v17; /*0x18039979c*/\n  LOBYTE(Src[0]) = 0; /*0x1803997a1*/\n  if ( v20 ) /*0x1803997a8*/\n    (*(void (__fastcall **)(__int64, Lua::Config *, __int64, __int64))(*(_QWORD *)v20 + 32LL))(v20, a1, a2, a3); /*0x1803997bd*/\n  if ( v25 > 0xF ) /*0x1803997c6*/\n    free(Block[0]); /*0x1803997cc*/\n  return v20; /*0x1803997d5*/\n}",
+      "refs": [
+        {
+          "addr": "0x18042e6e8",
+          "name": "?get@Config@Lua@@QEAAXPEBD@Z"
+        },
+        {
+          "addr": "0x1804351c4",
+          "name": "aClass",
+          "string": "class"
+        },
+        {
+          "addr": "0x18042e398",
+          "name": "__imp_malloc"
+        },
+        {
+          "addr": "0x18042e9b0",
+          "name": "?fatal_out_of_memory@ed@@YAXPEBD_K@Z"
+        },
+        {
+          "addr": "0x180434ac0",
+          "name": "aEdMalloc",
+          "string": "ed_malloc"
+        },
+        {
+          "addr": "0x18042e3a0",
+          "name": "__imp_free"
+        },
+        {
+          "addr": "0x180414852",
+          "name": "memmove"
+        },
+        {
+          "addr": "0x18044ed10",
+          "name": "qword_18044ED10"
+        },
+        {
+          "addr": "0x18042e6f0",
+          "name": "?pop@Config@Lua@@QEAA_NPEAV?$basic_string@D@ed@@@Z"
+        },
+        {
+          "addr": "0x18042e868",
+          "name": "?globalFactoryManager@Common@@3PEAVFactoryManager@1@EA"
+        },
+        {
+          "addr": "0x180435c80",
+          "name": "xmmword_180435C80"
+        },
+        {
+          "addr": "0x1801efc20",
+          "name": "sub_1801EFC20"
+        },
+        {
+          "addr": "0x180435c60",
+          "name": "xmmword_180435C60"
+        },
+        {
+          "addr": "0x18042e8e0",
+          "name": "??0Identifier@Common@@QEAA@AEBV?$basic_string@D@ed@@@Z"
+        }
+      ]
+    },
+    "f16_draw_refs": {
+      "result": [
+        {
+          "addr": "0x180c6bd70",
+          "xrefs": [],
+          "more": false
+        },
+        {
+          "addr": "0x180c6bc60",
+          "xrefs": [],
+          "more": false
+        }
+      ]
+    },
+    "dec_0x180373720": {
+      "addr": "0x180373720",
+      "code": "// Lua key 'dedicated_viewport' loads 4 doubles into the viewport at +0x558 as {x, y, width, height}. 'dedicated_viewport_arcade' loads the alternate viewport at +0x578 with the same layout.\n// Collimator-related fields: +0x5FC default distance-factor Vec3f, +0x608 has_default_distance_factor flag, +0x60C runtime distance-factor modifier Vec3f. Lua key 'collimator_default_distance_factor' populates the default vector and sets the flag.\nvoid __fastcall cockpit::ccIndicator::initialize(\n        cockpit::ccIndicator *this,\n        __int64 a2,\n        unsigned __int8 a3,\n        __int64 a4)\n{\n  struct lua_State *v8; // rdx\n  int v9; // ebx\n  _DWORD *v10; // rax\n  _DWORD *v11; // rcx\n  char v12; // al\n  char v13; // al\n  void *v14; // rbx\n  unsigned __int64 v15; // r8\n  void **v16; // rdx\n  _QWORD v17[2]; // [rsp+30h] [rbp-50h] BYREF\n  int v18; // [rsp+40h] [rbp-40h] BYREF\n  bool v19; // [rsp+44h] [rbp-3Ch] BYREF\n  int v20; // [rsp+48h] [rbp-38h] BYREF\n  int v21; // [rsp+4Ch] [rbp-34h] BYREF\n  int v22; // [rsp+50h] [rbp-30h] BYREF\n  void *Block[2]; // [rsp+58h] [rbp-28h] BYREF\n  __m128i si128; // [rsp+68h] [rbp-18h]\n\n  (*(void (__fastcall **)(cockpit::ccIndicator *))(*(_QWORD *)this + 304LL))(this); /*0x18037374f*/\n  cockpit::ccDrawable::initialize(this, a2, a3, a4); /*0x180373762*/\n  v8 = (struct lua_State *)*((_QWORD *)this + 5); /*0x180373767*/\n  if ( v8 ) /*0x18037376e*/\n  {\n    Lua::Config::Config((Lua::Config *)v17, v8, -10002); /*0x18037377e*/\n    Lua::Config::get((Lua::Config *)v17, \"indicator_type\"); /*0x180373790*/\n    if ( !Lua::Config::pop((Lua::Config *)v17, (unsigned __int8 *)this + 1132) ) /*0x1803737a1*/\n      *((_BYTE *)this + 1132) = 0; /*0x1803737ab*/\n    cockpit::ccIndicator::set_render_materials(this); /*0x1803737b5*/\n    if ( Lua::Config::open((Lua::Config *)v17, \"geometry\") ) /*0x1803737c5*/\n    {\n      Lua::Config::get((Lua::Config *)v17, \"HalfWidth\"); /*0x1803737de*/\n      if ( Lua::Config::pop((Lua::Config *)v17, (float *)&v18) ) /*0x1803737ec*/\n        *((_DWORD *)this + 281) = v18; /*0x1803737fb*/\n      Lua::Config::get((Lua::Config *)v17, \"HalfHeight\"); /*0x18037380f*/\n      if ( Lua::Config::pop((Lua::Config *)v17, (float *)&v22) ) /*0x18037381d*/\n        *((_DWORD *)this + 282) = v22; /*0x18037382c*/\n      Lua::Config::get((Lua::Config *)v17, \"Width\"); /*0x180373840*/\n      if ( Lua::Config::pop((Lua::Config *)v17, (float *)&v21) ) /*0x18037384e*/\n        *((float *)this + 281) = *(float *)&v21 * 0.5; /*0x180373865*/\n      Lua::Config::get((Lua::Config *)v17, \"Height\"); /*0x180373879*/\n      if ( Lua::Config::pop((Lua::Config *)v17, (float *)&v20) ) /*0x180373887*/\n        *((float *)this + 282) = *(float *)&v20 * 0.5; /*0x18037389e*/\n      lua_settop(v17[0], 4294967294LL); /*0x1803738b0*/\n    }\n    if ( Lua::Config::open((Lua::Config *)v17, \"purposes\") ) /*0x1803738c0*/\n    {\n      *(float *)&v20 = 0.0; /*0x1803738d0*/\n      v9 = 1; /*0x1803738d3*/\n      Lua::Config::get((Lua::Config *)v17, 1); /*0x1803738de*/\n      while ( Lua::Config::pop((Lua::Config *)v17, &v20) ) /*0x1803738ec*/\n      {\n        v10 = (_DWORD *)*((_QWORD *)this + 168); /*0x180373900*/\n        v11 = (_DWORD *)*((_QWORD *)this + 169); /*0x180373907*/\n        if ( v10 == v11 ) /*0x180373914*/\n        {\nLABEL_19:\n          cockpit::ccIndicator::push_purpose(this, v20); /*0x180373923*/\n        }\n        else\n        {\n          while ( *v10 != v20 ) /*0x180373918*/\n          {\n            if ( ++v10 == v11 ) /*0x180373921*/\n              goto LABEL_19; /*0x180373921*/\n          }\n        }\n        Lua::Config::get((Lua::Config *)v17, ++v9); /*0x180373933*/\n      }\n      lua_settop(v17[0], 4294967294LL); /*0x180373954*/\n    }\n    Lua::Config::get((Lua::Config *)v17, \"render_target_always\"); /*0x180373964*/\n    Lua::Config::pop((Lua::Config *)v17, (bool *)this + 1272); /*0x180373975*/\n    if ( Lua::Config::open((Lua::Config *)v17, \"dedicated_viewport\") ) /*0x180373986*/\n    {\n      Lua::Config::get((Lua::Config *)v17, 1); /*0x18037399d*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 171); /*0x1803739ae*/\n      Lua::Config::get((Lua::Config *)v17, 2); /*0x1803739bd*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 172); /*0x1803739ce*/\n      Lua::Config::get((Lua::Config *)v17, 3); /*0x1803739dd*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 173); /*0x1803739ee*/\n      Lua::Config::get((Lua::Config *)v17, 4); /*0x1803739fd*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 174); /*0x180373a0e*/\n      lua_settop(v17[0], 4294967294LL); /*0x180373a1d*/\n    }\n    else\n    {\n      v12 = *((_BYTE *)this + 1132); /*0x180373a24*/\n      if ( v12 == 1 || v12 == 2 ) /*0x180373a32*/\n      {\n        *((_QWORD *)this + 173) = 0; /*0x180373a34*/\n        *((_QWORD *)this + 174) = 0; /*0x180373a3b*/\n      }\n    }\n    if ( Lua::Config::open((Lua::Config *)v17, \"dedicated_viewport_arcade\") ) /*0x180373a54*/\n    {\n      Lua::Config::get((Lua::Config *)v17, 1); /*0x180373a6b*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 175); /*0x180373a78*/\n      Lua::Config::get((Lua::Config *)v17, 2); /*0x180373a87*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 176); /*0x180373a95*/\n      Lua::Config::get((Lua::Config *)v17, 3); /*0x180373aa4*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 177); /*0x180373ab2*/\n      Lua::Config::get((Lua::Config *)v17, 4); /*0x180373ac1*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 178); /*0x180373acf*/\n      lua_settop(v17[0], 4294967294LL); /*0x180373ade*/\n    }\n    else\n    {\n      *(_OWORD *)((char *)this + 1400) = *(_OWORD *)((char *)this + 1368); /*0x180373aed*/\n      *(_OWORD *)((char *)this + 1416) = *(_OWORD *)((char *)this + 1384); /*0x180373af8*/\n    }\n    v13 = *((_BYTE *)this + 1132); /*0x180373afc*/\n    if ( v13 != 1 && v13 != 2 || *((double *)this + 173) > 0.0 ) /*0x180373b1c*/\n    {\n      v19 = 0; /*0x180373b22*/\n      Lua::Config::get((Lua::Config *)v17, \"allow_manual_viewport_placement\"); /*0x180373b31*/\n      Lua::Config::pop((Lua::Config *)v17, &v19); /*0x180373b3f*/\n      if ( v19 ) /*0x180373b49*/\n      {\n        *(_OWORD *)Block = 0; /*0x180373b52*/\n        si128 = 0; /*0x180373b59*/\n        v14 = malloc(0x20u); /*0x180373b69*/\n        if ( !v14 ) /*0x180373b6f*/\n          ed::fatal_out_of_memory((ed *)\"ed_malloc\", (const char *)0x20, v15); /*0x180373b7d*/\n        Block[0] = v14; /*0x180373b83*/\n        si128 = _mm_load_si128((const __m128i *)&xmmword_18044C460); /*0x180373b8f*/\n        strcpy((char *)v14, \"Scripts/UI/MFDViewport.dlg\"); /*0x180373b9b*/\n        Lua::Config::get((Lua::Config *)v17, \"manual_viewport_dlg\"); /*0x180373bc5*/\n        Lua::Config::pop(v17, Block); /*0x180373bd3*/\n        v18 = 0; /*0x180373bd9*/\n        Lua::Config::get((Lua::Config *)v17, \"manual_viewport_margin_left\"); /*0x180373be7*/\n        Lua::Config::pop((Lua::Config *)v17, &v18); /*0x180373bf5*/\n        v22 = 0; /*0x180373bfb*/\n        Lua::Config::get((Lua::Config *)v17, \"manual_viewport_margin_right\"); /*0x180373c09*/\n        Lua::Config::pop((Lua::Config *)v17, &v22); /*0x180373c17*/\n        *(float *)&v21 = 0.0; /*0x180373c1d*/\n        Lua::Config::get((Lua::Config *)v17, \"manual_viewport_margin_up\"); /*0x180373c2b*/\n        Lua::Config::pop((Lua::Config *)v17, &v21); /*0x180373c39*/\n        *(float *)&v20 = 0.0; /*0x180373c3f*/\n        Lua::Config::get((Lua::Config *)v17, \"manual_viewport_margin_bottom\"); /*0x180373c4d*/\n        Lua::Config::pop((Lua::Config *)v17, &v20); /*0x180373c5b*/\n        v16 = Block; /*0x180373c61*/\n        if ( si128.m128i_i64[1] > 0xFuLL ) /*0x180373c6a*/\n          v16 = (void **)Block[0]; /*0x180373c6a*/\n        cockpit::ccIndicator::make_draggable_frame(this, (const char *)v16, v18, v22, v21, v20); /*0x180373c88*/\n        if ( si128.m128i_i64[1] > 0xFuLL ) /*0x180373c93*/\n          free(Block[0]); /*0x180373c99*/\n      }\n    }\n    Lua::Config::get((Lua::Config *)v17, \"dynamically_update_geometry\"); /*0x180373caa*/\n    Lua::Config::pop((Lua::Config *)v17, (bool *)this + 1432); /*0x180373cbb*/\n    cockpit::ccIndicationRenderParser::read_from_state( /*0x180373ccc*/\n      (cockpit::ccIndicator *)((char *)this + 1144),\n      (struct Lua::Config *)v17);\n    if ( Lua::Config::open((Lua::Config *)v17, \"collimator_default_distance_factor\") ) /*0x180373cdc*/\n    {\n      v18 = 1058642330; /*0x180373cea*/\n      Lua::Config::get((Lua::Config *)v17, 1); /*0x180373cfa*/\n      Lua::Config::pop((Lua::Config *)v17, (float *)&v18); /*0x180373d08*/\n      *((_DWORD *)this + 383) = v18; /*0x180373d13*/\n      v18 = 0; /*0x180373d1c*/\n      Lua::Config::get((Lua::Config *)v17, 2); /*0x180373d2c*/\n      Lua::Config::pop((Lua::Config *)v17, (float *)&v18); /*0x180373d3a*/\n      *((_DWORD *)this + 384) = v18; /*0x180373d45*/\n      v18 = 0; /*0x180373d4e*/\n      Lua::Config::get((Lua::Config *)v17, 3); /*0x180373d5e*/\n      Lua::Config::pop((Lua::Config *)v17, (float *)&v18); /*0x180373d6c*/\n      *((_DWORD *)this + 385) = v18; /*0x180373d77*/\n      *((_BYTE *)this + 1544) = 1; /*0x180373d80*/\n      lua_settop(v17[0], 4294967294LL); /*0x180373d91*/\n    }\n    Lua::Config::get((Lua::Config *)v17, \"shaderLineParamsUpdatable\"); /*0x180373da1*/\n    Lua::Config::pop((Lua::Config *)v17, (bool *)this + 64); /*0x180373daf*/\n    if ( *((_BYTE *)this + 64) ) /*0x180373db5*/\n    {\n      Lua::Config::get((Lua::Config *)v17, \"shaderLineDefaultThickness\"); /*0x180373dc7*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 9); /*0x180373dd5*/\n      Lua::Config::get((Lua::Config *)v17, \"shaderLineDefaultFuzziness\"); /*0x180373de6*/\n      Lua::Config::pop((Lua::Config *)v17, (double *)this + 10); /*0x180373df4*/\n      Lua::Config::get((Lua::Config *)v17, \"shaderLineDrawAsWire\"); /*0x180373e05*/\n      Lua::Config::pop((Lua::Config *)v17, (bool *)this + 88); /*0x180373e13*/\n      Lua::Config::get((Lua::Config *)v17, \"shaderLineUseSpecularPass\"); /*0x180373e24*/\n      Lua::Config::pop((Lua::Config *)v17, (bool *)this + 89); /*0x180373e32*/\n    }\n    (*(void (__fastcall **)(cockpit::ccIndicator *))(*(_QWORD *)this + 312LL))(this); /*0x180373e3e*/\n    Lua::Config::~Config((Lua::Config *)v17); /*0x180373e49*/\n  }\n}",
+      "refs": [
+        {
+          "addr": "0x18036c980",
+          "name": "?initialize@ccDrawable@cockpit@@UEAAXPEAVavDevice@2@EAEBV?$basic_string@D@ed@@@Z"
+        },
+        {
+          "addr": "0x18042e858",
+          "name": "??0Config@Lua@@QEAA@PEAUlua_State@@H@Z"
+        },
+        {
+          "addr": "0x18042e6e8",
+          "name": "?get@Config@Lua@@QEAAXPEBD@Z"
+        },
+        {
+          "addr": "0x18044c948",
+          "name": "aIndicatorType",
+          "string": "indicator_type"
+        },
+        {
+          "addr": "0x18042e910",
+          "name": "?pop@Config@Lua@@QEAA_NPEAE@Z"
+        },
+        {
+          "addr": "0x180376980",
+          "name": "?set_render_materials@ccIndicator@cockpit@@IEAAXXZ"
+        },
+        {
+          "addr": "0x18044c968",
+          "name": "aHalfwidth",
+          "string": "HalfWidth"
+        },
+        {
+          "addr": "0x18042e928",
+          "name": "?pop@Config@Lua@@QEAA_NPEAM@Z"
+        },
+        {
+          "addr": "0x18044c978",
+          "name": "aHalfheight",
+          "string": "HalfHeight"
+        },
+        {
+          "addr": "0x18044c984",
+          "name": "aWidth_0",
+          "string": "Width"
+        },
+        {
+          "addr": "0x18044c98c",
+          "name": "aHeight",
+          "string": "Height"
+        },
+        {
+          "addr": "0x1804122ff",
+          "name": "lua_settop"
+        },
+        {
+          "addr": "0x18042e940",
+          "name": "?open@Config@Lua@@QEAA_NPEBD@Z"
+        },
+        {
+          "addr": "0x18044c958",
+          "name": "aGeometry",
+          "string": "geometry"
+        },
+        {
+          "addr": "0x18042e930",
+          "name": "?get@Config@Lua@@QEAAXH@Z"
+        },
+        {
+          "addr": "0x180375550",
+          "name": "?push_purpose@ccIndicator@cockpit@@UEAAXH@Z"
+        },
+        {
+          "addr": "0x18042e908",
+          "name": "?pop@Config@Lua@@QEAA_NPEAH@Z"
+        },
+        {
+          "addr": "0x18044c998",
+          "name": "aPurposes",
+          "string": "purposes"
+        },
+        {
+          "addr": "0x18044c9a8",
+          "name": "aRenderTargetAl",
+          "string": "render_target_always"
+        },
+        {
+          "addr": "0x18042e918",
+          "name": "?pop@Config@Lua@@QEAA_NPEA_N@Z"
+        },
+        {
+          "addr": "0x18042e900",
+          "name": "?pop@Config@Lua@@QEAA_NPEAN@Z"
+        },
+        {
+          "addr": "0x18044c9c0",
+          "name": "aDedicatedViewp",
+          "string": "dedicated_viewport"
+        },
+        {
+          "addr": "0x18044c9d8",
+          "name": "aDedicatedViewp_0",
+          "string": "dedicated_viewport_arcade"
+        },
+        {
+          "addr": "0x18044c9f8",
+          "name": "aAllowManualVie",
+          "string": "allow_manual_viewport_placement"
+        },
+        {
+          "addr": "0x18042e398",
+          "name": "__imp_malloc"
+        },
+        {
+          "addr": "0x18042e9b0",
+          "name": "?fatal_out_of_memory@ed@@YAXPEBD_K@Z"
+        },
+        {
+          "addr": "0x180434ac0",
+          "name": "aEdMalloc",
+          "string": "ed_malloc"
+        },
+        {
+          "addr": "0x18044c460",
+          "name": "xmmword_18044C460"
+        },
+        {
+          "addr": "0x18044ca38",
+          "name": "aManualViewport",
+          "string": "manual_viewport_dlg"
+        },
+        {
+          "addr": "0x18042e6f0",
+          "name": "?pop@Config@Lua@@QEAA_NPEAV?$basic_string@D@ed@@@Z"
+        },
+        {
+          "addr": "0x18044ca50",
+          "name": "aManualViewport_0",
+          "string": "manual_viewport_margin_left"
+        },
+        {
+          "addr": "0x18044ca70",
+          "name": "aManualViewport_1",
+          "string": "manual_viewport_margin_right"
+        },
+        {
+          "addr": "0x18044ca90",
+          "name": "aManualViewport_2",
+          "string": "manual_viewport_margin_up"
+        },
+        {
+          "addr": "0x18044cab0",
+          "name": "aManualViewport_3",
+          "string": "manual_viewport_margin_bottom"
+        },
+        {
+          "addr": "0x180374350",
+          "name": "?make_draggable_frame@ccIndicator@cockpit@@QEAAXPEBDHHHH@Z"
+        },
+        {
+          "addr": "0x18042e3a0",
+          "name": "__imp_free"
+        },
+        {
+          "addr": "0x18044cad0",
+          "name": "aDynamicallyUpd",
+          "string": "dynamically_update_geometry"
+        },
+        {
+          "addr": "0x18036cf10",
+          "name": "?read_from_state@ccIndicationRenderParser@cockpit@@QEAAXAEAVConfig@Lua@@@Z"
+        },
+        {
+          "addr": "0x18044caf0",
+          "name": "aCollimatorDefa",
+          "string": "collimator_default_distance_factor"
+        },
+        {
+          "addr": "0x18044cb18",
+          "name": "aShaderlinepara",
+          "string": "shaderLineParamsUpdatable"
+        },
+        {
+          "addr": "0x18044cb38",
+          "name": "aShaderlinedefa",
+          "string": "shaderLineDefaultThickness"
+        },
+        {
+          "addr": "0x18044cb58",
+          "name": "aShaderlinedefa_0",
+          "string": "shaderLineDefaultFuzziness"
+        },
+        {
+          "addr": "0x18044cb78",
+          "name": "aShaderlinedraw",
+          "string": "shaderLineDrawAsWire"
+        },
+        {
+          "addr": "0x18044cb90",
+          "name": "aShaderlineuses",
+          "string": "shaderLineUseSpecularPass"
+        },
+        {
+          "addr": "0x18042e8b0",
+          "name": "__imp_??1Config@Lua@@QEAA@XZ"
+        }
+      ]
+    },
+    "dec_0x180376980": {
+      "addr": "0x180376980",
+      "code": "// Reads Lua keys 'render_target' and 'used_render_mask'; fills render_target_id (+0x470) if unset, stores used_render_mask at +0x4D8, caches the material ptr at +0x478, and registers self in global ccDrawable::render_targets.\nvoid __fastcall cockpit::ccIndicator::set_render_materials(cockpit::ccIndicator *this)\n{\n  __int64 v2; // rax\n  _QWORD *used_render_mask_storage; // rdi\n  __int64 v4; // rsi\n  size_t v5; // rax\n  size_t v6; // rbx\n  __int64 v7; // rdi\n  unsigned __int64 v8; // rax\n  void *v9; // rsi\n  unsigned __int64 v10; // r8\n  Graphics::MaterialPtr *cached_material_slot; // rbx\n  struct Graphics::Material *v12[2]; // [rsp+20h] [rbp-E0h] BYREF\n  struct Graphics::Material *v13[2]; // [rsp+30h] [rbp-D0h] BYREF\n  _BYTE v14[16]; // [rsp+40h] [rbp-C0h] BYREF\n  struct Graphics::Material **v15; // [rsp+50h] [rbp-B0h]\n  void *Block[2]; // [rsp+58h] [rbp-A8h] BYREF\n  __int128 v17; // [rsp+68h] [rbp-98h]\n  char render_target_material_name[112]; // [rsp+80h] [rbp-80h] BYREF\n  char render_mask_channel_name[112]; // [rsp+F0h] [rbp-10h] BYREF\n\n  Lua::Config::Config((Lua::Config *)v14, *((struct lua_State **)this + 5), -10002); /*0x1803769c0*/\n  if ( *((int *)this + 284) < 0 ) /*0x1803769cf*/\n  {\n    Lua::Config::get((Lua::Config *)v14, \"render_target\"); /*0x1803769dd*/\n    Lua::Config::pop((Lua::Config *)v14, (int *)this + 284); /*0x1803769ef*/\n  }\n  if ( *((_DWORD *)this + 284) <= 0x1Fu ) /*0x180376a00*/\n  {\n    sub_1802605B0(render_target_material_name, \"render_target_%d\"); /*0x180376a14*/\n    v2 = Graphics::Materials::lib(); /*0x180376a19*/\n    Graphics::Materials::create(v2, v13, render_target_material_name, \"MFD\"); /*0x180376a32*/\n    Lua::Config::get((Lua::Config *)v14, \"used_render_mask\"); /*0x180376a45*/\n    used_render_mask_storage = (_QWORD *)((char *)this + 1240); /*0x180376a4b*/\n    Lua::Config::pop(v14, (char *)this + 1240); /*0x180376a5a*/\n    sub_1802605B0(render_mask_channel_name, \"mfd%d\"); /*0x180376a72*/\n    v4 = (*(__int64 (__fastcall **)(struct Graphics::Material *))(*(_QWORD *)v13[0] + 24LL))(v13[0]); /*0x180376a82*/\n    (*(void (__fastcall **)(__int64, _QWORD, char *))(*(_QWORD *)v4 + 80LL))(v4, 0, render_mask_channel_name); /*0x180376a95*/\n    if ( *((_QWORD *)this + 158) > 0xFu ) /*0x180376aa4*/\n      used_render_mask_storage = (_QWORD *)*used_render_mask_storage; /*0x180376aa6*/\n    (*(void (__fastcall **)(__int64, __int64, _QWORD *))(*(_QWORD *)v4 + 80LL))(v4, 1, used_render_mask_storage); /*0x180376ab4*/\n    cockpit::ccDrawable::assign_as_render_target_source(this, *((_DWORD *)this + 284)); /*0x180376ac0*/\n    *(_OWORD *)Block = 0; /*0x180376ac8*/\n    v17 = 0; /*0x180376ad0*/\n    v5 = strlen(render_target_material_name); /*0x180376ada*/\n    v6 = v5; /*0x180376adf*/\n    v7 = 0x7FFFFFFFFFFFFFFFLL; /*0x180376ae2*/\n    if ( v5 > 0x7FFFFFFFFFFFFFFFLL ) /*0x180376aef*/\n      std::vector<void *>::_Xlen(); /*0x180376c77*/\n    if ( v5 > 0xF ) /*0x180376af9*/\n    {\n      v8 = v5 | 0xF; /*0x180376b21*/\n      if ( v8 <= 0x7FFFFFFFFFFFFFFFLL ) /*0x180376b28*/\n      {\n        v7 = v8; /*0x180376b2a*/\n        if ( v8 < 0x16 ) /*0x180376b35*/\n          v7 = 22; /*0x180376b35*/\n      }\n      v9 = malloc(v7 + 1); /*0x180376b43*/\n      if ( !v9 ) /*0x180376b49*/\n        ed::fatal_out_of_memory((ed *)\"ed_malloc\", (const char *)(v7 + 1), v10); /*0x180376b56*/\n      Block[0] = v9; /*0x180376b5c*/\n      *(_QWORD *)&v17 = v6; /*0x180376b61*/\n      *((_QWORD *)&v17 + 1) = v7; /*0x180376b66*/\n      memcpy(v9, render_target_material_name, v6); /*0x180376b75*/\n      *((_BYTE *)v9 + v6) = 0; /*0x180376b7a*/\n    }\n    else\n    {\n      *(_QWORD *)&v17 = v5; /*0x180376afb*/\n      *((_QWORD *)&v17 + 1) = 15; /*0x180376b00*/\n      memcpy(Block, render_target_material_name, v5); /*0x180376b15*/\n      *((_BYTE *)Block + v6) = 0; /*0x180376b1a*/\n    }\n    cached_material_slot = (Graphics::MaterialPtr *)(*(_QWORD *)sub_18036B1D0( /*0x180376b97*/\n                                                                  &cockpit::ccDrawable::materials,\n                                                                  v12,\n                                                                  Block)\n                                                   + 48LL);\n    Graphics::MaterialPtr::acquire(cached_material_slot, v13[0]); /*0x180376ba3*/\n    Graphics::MaterialPtr::release(cached_material_slot, (struct Graphics::Material **)cached_material_slot); /*0x180376baf*/\n    *(struct Graphics::Material **)cached_material_slot = v13[0]; /*0x180376bba*/\n    if ( *((_QWORD *)&v17 + 1) > 0xFu ) /*0x180376bc3*/\n      free(Block[0]); /*0x180376bca*/\n    v12[0] = v13[0]; /*0x180376bd5*/\n    Graphics::MaterialPtr::acquire((Graphics::MaterialPtr *)v12, v13[0]); /*0x180376bdf*/\n    v15 = v12; /*0x180376bea*/\n    Graphics::MaterialPtr::acquire((cockpit::ccIndicator *)((char *)this + 1144), v12[0]); /*0x180376bfb*/\n    Graphics::MaterialPtr::release( /*0x180376c0f*/\n      (cockpit::ccIndicator *)((char *)this + 1144),\n      (struct Graphics::Material **)this + 143);\n    *((struct Graphics::Material **)this + 143) = v12[0]; /*0x180376c1a*/\n    Graphics::MaterialPtr::release((Graphics::MaterialPtr *)v12, v12); /*0x180376c2b*/\n    Graphics::MaterialPtr::release((Graphics::MaterialPtr *)v13, v13); /*0x180376c3c*/\n  }\n  Lua::Config::~Config((Lua::Config *)v14); /*0x180376c48*/\n}",
+      "refs": [
+        {
+          "addr": "0x18042e858",
+          "name": "??0Config@Lua@@QEAA@PEAUlua_State@@H@Z"
+        },
+        {
+          "addr": "0x18042e6e8",
+          "name": "?get@Config@Lua@@QEAAXPEBD@Z"
+        },
+        {
+          "addr": "0x18044c900",
+          "name": "aRenderTarget",
+          "string": "render_target"
+        },
+        {
+          "addr": "0x18042e908",
+          "name": "?pop@Config@Lua@@QEAA_NPEAH@Z"
+        },
+        {
+          "addr": "0x1802605b0",
+          "name": "sub_1802605B0"
+        },
+        {
+          "addr": "0x18044c910",
+          "name": "aRenderTargetD",
+          "string": "render_target_%d"
+        },
+        {
+          "addr": "0x18042d558",
+          "name": "?lib@Materials@Graphics@@SAAEAV12@XZ"
+        },
+        {
+          "addr": "0x18042d560",
+          "name": "?create@Materials@Graphics@@QEAA?AVMaterialPtr@2@PEBD0@Z"
+        },
+        {
+          "addr": "0x18044c924",
+          "name": "aMfd",
+          "string": "MFD"
+        },
+        {
+          "addr": "0x18044c928",
+          "name": "aUsedRenderMask",
+          "string": "used_render_mask"
+        },
+        {
+          "addr": "0x18042e6f0",
+          "name": "?pop@Config@Lua@@QEAA_NPEAV?$basic_string@D@ed@@@Z"
+        },
+        {
+          "addr": "0x18044c93c",
+          "name": "aMfdD",
+          "string": "mfd%d"
+        },
+        {
+          "addr": "0x18036bca0",
+          "name": "?assign_as_render_target_source@ccDrawable@cockpit@@IEAAXH@Z"
+        },
+        {
+          "addr": "0x1804148d0",
+          "name": "strlen"
+        },
+        {
+          "addr": "0x1801dcce0",
+          "name": "?_Xlen@?$vector@PEAXV?$allocator@PEAX@std@@@std@@IEBAXXZ"
+        },
+        {
+          "addr": "0x18042e398",
+          "name": "__imp_malloc"
+        },
+        {
+          "addr": "0x18042e9b0",
+          "name": "?fatal_out_of_memory@ed@@YAXPEBD_K@Z"
+        },
+        {
+          "addr": "0x180434ac0",
+          "name": "aEdMalloc",
+          "string": "ed_malloc"
+        },
+        {
+          "addr": "0x18041484c",
+          "name": "memcpy"
+        },
+        {
+          "addr": "0x18036b1d0",
+          "name": "sub_18036B1D0"
+        },
+        {
+          "addr": "0x180548460",
+          "name": "?materials@ccDrawable@cockpit@@2V?$unordered_map@V?$basic_string@D@ed@@VMaterialPtr@Graphics@@U?$hash@V?$basic_string@D@ed@@@std@@U?$equal_to@V?$basic_string@D@ed@@@6@V?$allocator@U?$pair@$$CBV?$basic_string@D@ed@@VMaterialPtr@Graphics@@@std@@@2@@std@@A"
+        },
+        {
+          "addr": "0x18042d5a0",
+          "name": "?acquire@MaterialPtr@Graphics@@AEAAXPEAVMaterial@2@@Z"
+        },
+        {
+          "addr": "0x18042d598",
+          "name": "?release@MaterialPtr@Graphics@@AEAAXAEAPEAVMaterial@2@@Z"
+        },
+        {
+          "addr": "0x18042e3a0",
+          "name": "__imp_free"
+        },
+        {
+          "addr": "0x18042e8b0",
+          "name": "__imp_??1Config@Lua@@QEAA@XZ"
+        }
+      ]
+    },
+    "dec_0x1803721a0": {
+      "addr": "0x1803721a0",
+      "code": "__int64 __fastcall cockpit::ccIndicator::get_render_purpose(cockpit::ccIndicator *this, unsigned __int8 a2)\n{\n  int v3; // ebx\n  __int64 v4; // rax\n  cockpit *v5; // rcx\n  cockpit *v7; // rcx\n  char v8; // al\n\n  v3 = a2; /*0x1803721bb*/\n  v4 = *(_QWORD *)globalView; /*0x1803721c1*/\n  if ( byte_18054B308 )\n  {\n    if ( (*(unsigned __int8 (**)(void))(v4 + 176))() ) /*0x1803721c6*/\n      return (unsigned int)cockpit::HUD_ONLY_viewport_active(v5) + 8; /*0x1803721dc*/\n    else\n      return 0xFFFFFFFFLL; /*0x1803721ea*/\n  }\n  else if ( (*(unsigned __int8 (**)(void))(v4 + 184))() )\n  {\n    return (unsigned int)(v3 + 4); /*0x180372204*/\n  }\n  else if ( (*(unsigned __int8 (__fastcall **)(struct IView *))(*(_QWORD *)globalView + 176LL))(globalView) )\n  {\n    if ( cockpit::HUD_ONLY_viewport_active(v7) )\n    {\n      v8 = *((_BYTE *)this + 1132); /*0x18037226a*/\n      if ( (v8 == 1 || v8 == 2) && *((double *)this + 173) > 0.0 && (_BYTE)v3 ) /*0x18037228c*/\n        return 2; /*0x18037228e*/\n      else\n        return 1; /*0x18037229e*/\n    }\n    else\n    {\n      return (_BYTE)v3 != 0 ? 2 : 0;\n    }\n  }\n  else if ( globalView /*0x180372241*/\n         && (*(unsigned int (__fastcall **)(struct IView *))(*(_QWORD *)globalView + 96LL))(globalView) == 19 )\n  {\n    return (unsigned int)(v3 + 6); /*0x180372243*/\n  }\n  else\n  {\n    return 3; /*0x180372251*/\n  }\n}",
+      "refs": [
+        {
+          "addr": "0x18042d7e8",
+          "name": "?globalView@@3PEAVIView@@EA"
+        },
+        {
+          "addr": "0x1803a9820",
+          "name": "?HUD_ONLY_viewport_active@cockpit@@YA_NXZ"
+        },
+        {
+          "addr": "0x18054b308",
+          "name": "byte_18054B308"
+        }
+      ]
+    }
+  }
+}

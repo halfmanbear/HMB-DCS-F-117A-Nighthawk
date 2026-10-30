@@ -4,6 +4,7 @@ make_default_activity(update_time_step)
 local dev = GetSelf()
 local irads_terrain = dofile(LockOn_Options.script_path.."Systems/IRADS_Terrain.lua")
 local check_irads_terrain = dofile(LockOn_Options.script_path.."Systems/IRADS_Diagnostics.lua")
+local display_compositor = dofile(LockOn_Options.script_path.."Systems/DisplayCompositor.lua").new()
 -- Local variables ==================
 local Page_changed = 0
 
@@ -238,6 +239,7 @@ dev:listen_command(87)	-- TGP on
 
 
 function post_initialize()	-- modes / toggle default settings
+    display_compositor.initialize()
 -- LEFT DISPLAY ===================	
 
 	LD_UPPER:set(1)		-- 1 = GEN, 2 = def, 3 = AAR, 4 = LDP
@@ -1096,6 +1098,7 @@ function BrightnessAtSpawn()
 end
 
 function update()
+    display_compositor.update()
     irads_terrain.update()
     check_irads_terrain()
 

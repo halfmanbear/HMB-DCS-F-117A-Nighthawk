@@ -228,8 +228,8 @@ F_117_NightHawk = {
     {
         [1] = 
         {
-            ejection_seat_name = 17, --ejection seat model 
-            drop_canopy_name = "f-117-nighthawk_canopy", --name of .edm file for canopy jettison
+            ejection_seat_name = 17, -- ejection seat model 
+            drop_canopy_name = "f-117-nighthawk_canopy", --12, --name of .edm file for canopy jettison
             pos = {5.213, 0.744, 0}, --(+forward/-back,+up/-down,+right/-left)
             --canopy_pos = {4.5, 1, 0}, --(+forward/-back,+up/-down,+right/-left)
             g_suit =  5.0, --pilot g-suit type was 2.0
@@ -239,11 +239,6 @@ F_117_NightHawk = {
             role = "pilot",
             role_display_name    = _("Pilot"),
             ejection_added_speed = {-5, 15, 0},
-        },
-        [2] = 
-        { --required to prevent player ejection crash (although causes ai to eject two pilots)
-          --  can_be_playable = false,
-          --  ejection_seat_name = 17, --ejection seat model 
         },
     },
     fires_pos = { 

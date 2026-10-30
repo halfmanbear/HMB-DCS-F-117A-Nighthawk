@@ -4,6 +4,7 @@ dev = GetSelf()
 local update_time_step = 0.001 --update will be called 1000 times per second
 make_default_activity(update_time_step)
 local sensor_data = get_base_data()
+local update_ocip = dofile(LockOn_Options.script_path.."HUD/Device/OCIP_data.lua")(sensor_data)
 
 -- Conversions
 
@@ -107,6 +108,7 @@ function SetCommand(command,value)
 end        
 
 function update()
+        update_ocip(update_time_step)
 
         ROLL_HUD:set(sensor_data.getRoll())
 

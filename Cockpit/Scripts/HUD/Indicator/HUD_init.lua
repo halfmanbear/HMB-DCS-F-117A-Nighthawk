@@ -22,3 +22,11 @@ update_screenspace_diplacement(SelfWidth/SelfHeight,false)
 dedicated_viewport_arcade = dedicated_viewport
 
 
+
+-- Native screen-space stroke shader settings.
+local stroke_style=dofile(LockOn_Options.script_path.."display_readability.lua")
+shaderLineParamsUpdatable=true
+shaderLineDefaultThickness=stroke_style.thickness
+shaderLineDefaultFuzziness=stroke_style.fuzziness
+shaderLineDrawAsWire=false
+shaderLineUseSpecularPass=false
