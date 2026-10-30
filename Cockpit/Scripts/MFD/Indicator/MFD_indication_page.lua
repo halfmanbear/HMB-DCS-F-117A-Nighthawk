@@ -7,7 +7,7 @@
 -- Tune GAP/ARM/GW/GH and text positions below if sizes look wrong in-game.
 
 local S   = 0.20    -- overall overlay scale
-local LW  = 0.0018  -- line stroke width
+local strokes=dofile(LockOn_Options.script_path.."display_strokes.lua")
 local GAP = 0.03    -- crosshair centre gap radius
 local ARM = 0.05    -- crosshair arm length (gap → tip)
 local GW  = 0.04    -- tracking gate half-width
@@ -17,7 +17,7 @@ local GH  = 0.04    -- tracking gate half-height
 -- Everything is a child of ROOT. Gated on mainpower so symbology disappears
 -- with the rest of the avionics when power is off.
 local ROOT              = CreateElement "ceSimple"
-ROOT.name               = create_guid_string()
+ROOT.name               = "F117_IRADS_SOURCE"
 ROOT.init_pos           = {0, 0}
 ROOT.element_params     = {"mainpower", "MFD_OVERLAY", "F117_IRADS_POWER"}
 ROOT.controllers        = {{"parameter_in_range", 0, 0.9, 1.1}, {"parameter_in_range", 1, 0.9, 1.1}, {"parameter_in_range", 2, 0.9, 1.1}}
@@ -44,10 +44,8 @@ local function mfdProps(obj, params, ctrls)
 end
 
 local function line(x1, y1, x2, y2, params, ctrls)
-    local l          = CreateElement "ceSimpleLineObject"
-    l.name           = create_guid_string()
-    l.vertices       = {{x1, y1}, {x2, y2}}
-    l.width          = LW
+    local l = strokes.line({{x1,y1},{x2,y2}},1)
+    l.name = create_guid_string()
     l.material       = MFD_GREEN
     return mfdProps(l, params, ctrls)
 end
@@ -58,7 +56,9 @@ local function text(str, x, y, sd, align, params, ctrls)
     t.init_pos       = {x, y}
     t.value          = str
     t.material       = MFD_FONT
-    t.stringdefs     = sd    or MFD_SD_SM
+    local size = sd or MFD_SD_SM
+    t.stringdefs     = {size[1]*1.3, size[1]*1.3*.65, size[1]*1.3*.13, size[4]}
+    strokes.text(t)
     t.alignment      = align or "CenterCenter"
     return mfdProps(t, params, ctrls)
 end

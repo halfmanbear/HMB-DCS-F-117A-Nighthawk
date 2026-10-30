@@ -19,6 +19,10 @@ picture.tex_coords      = {{0, 0},
                             {0, 1}}
 picture.material        = "render_target_1"
 picture.use_mipfilter   = false
-picture.element_params = {"F117_IRADS_POWER"}
-picture.controllers = {{"parameter_in_range", 0, 0.9, 1.1}}
+picture.element_params = {"F117_IRADS_POWER","mainpower"}
+picture.controllers = {{"parameter_in_range", 0, 0.9, 1.1},{"parameter_in_range",1,.9,1.1}}
+if F117_COMPOSITE_PAGE then
+    picture.element_params[3]="F117_LCD_READY"
+    picture.controllers[3]={"parameter_in_range",2,.9,1.1}
+end
 Add(picture)
