@@ -21,12 +21,14 @@ PAGES = {
     'MFD': SCRIPTS / 'MFD/Indicator/MFD_indication_page.lua',
     'Left MFD': SCRIPTS / 'MFD/Indicator/Left/Left_vsd_page.lua',
     'Right MFD': SCRIPTS / 'MFD/Indicator/Right/Right_hsd_page.lua',
+    'Central Map': SCRIPTS / 'MFD/Indicator/Map/Map_page.lua',
 }
 ENTRIES = {
     'HUD': SCRIPTS / 'HUD/Indicator/HUD_base_page.lua',
     'MFD': SCRIPTS / 'MFD/Indicator/MFD_base_page.lua',
     'Left MFD': SCRIPTS / 'MFD/Indicator/Left/Left_base_page.lua',
     'Right MFD': SCRIPTS / 'MFD/Indicator/Right/Right_base_page.lua',
+    'Central Map': SCRIPTS / 'MFD/Indicator/Map/Map_base_page.lua',
 }
 DRAFTS = set()
 GEOMETRY_PATH = Path(__file__).with_name('data') / 'cockpit_display_geometry.json'
@@ -80,11 +82,15 @@ def measured_surfaces():
 
 def measured_boundary(mode, units_per_metre=1):
     """Physical MFD guide; scale is explicit, not a claimed DCS calibration."""
-    surface=measured_surfaces().get(mode)
+    surface=measured_surfaces().get('MFD' if mode=='Central Map' else mode)
     if not surface or mode=='HUD':return None
     return [(x*units_per_metre,y*units_per_metre) for x,y in surface['boundary_local_m']]
 DEFAULTS = {
-    'mainpower': 1, 'HUDBrightness': 1, 'MFD_OVERLAY': 1, 'F117_IRADS_POWER': 1,
+    'F117_LEFT_EO': 1, 'ONE': 1, 'F117_IRADS_CONTRAST_BAND': 45,
+    'F117_MAP_VALID': 1, 'F117_MAP_RANGE_TEXT': '25 NM', 'F117_MAP_ORIENTATION_TEXT': 'CNUP',
+    'F117_MAP_GS_TEXT': 'GS 450', 'F117_MAP_HDG_TEXT': 'HDG 300 T',
+    'F117_MAP_POSITION_TEXT': 'POSITION UNAVAILABLE',
+    'mainpower': 1, 'HUDBrightness': 1, 'F117_HUD_DRAW_BRIGHTNESS': 1, 'F117_IRADS_DRAW_BRIGHTNESS': .65, 'MFD_OVERLAY': 1, 'F117_IRADS_POWER': 1,
     'currentPhase': 8, 'masterMode': 1, 'headingMode': 2, 'ALTITUDE_MODE': 1,
     'altMode': 1, 'RadarAltAvail': 1, 'CURR_IAS': 314, 'GS_HUD': 450,
     'MACH_A': .71, 'machDecimals': 71, 'machWhole': .71, 'ALTITUDE_HUD': 22200,
@@ -96,12 +102,19 @@ DEFAULTS = {
     'F117_RELEASE_STATUS': 3, 'F117_WEAPON_STATION': 1,
     'nextWPRange': 18.4, 'nextWPName': 'D 39', 'nextWPType': 2,
     'F117_RELEASE_CUE_TTG': 30,
+    'F117_IRADS_ALT_TEXT': 'ALT 19620', 'F117_IRADS_RANGE_TEXT': 'LR -----',
+    'F117_IRADS_TIME_TEXT': 'TTI --:--', 'F117_IRADS_MAG_TEXT': '1.4X',
+    'F117_IRADS_COORD_TEXT': '', 'F117_IRADS_BRIGHTNESS': .65,
     'F117_OCIP_CAS': 314, 'F117_OCIP_ALT': 22200, 'F117_OCIP_HEADING': 300,
     'F117_OCIP_MACH': .71, 'F117_OCIP_VVI': -500,
     'F117_OCIP_VV_X': 0, 'F117_OCIP_VV_Y': -.05, 'F117_OCIP_VV_VALID': 1,
     'F117_OCIP_INS_VALID': 1, 'F117_OCIP_APPROACH': 0, 'F117_OCIP_AOA': .05,
 }
 
+
+DEFAULTS.update(F117_MAP_SOURCE_VISIBLE=0,F117_MAP_FUNCTION_TEXT='FUNC',F117_MAP_FUNCTION=0,F117_MAP_MANUAL=0,F117_MAP_DATABASE_TEXT='DMAP',
+    F117_MAP_CRS_TEXT='CRS 300',F117_MAP_RANGE=25,F117_MAP_TDC_TEXT='TDC0',
+    F117_MAP_BGD_TEXT='BGD 0',F117_MAP_REFEL_TEXT='REFEL',F117_MAP_ELEVATION_FT=3000)
 
 def convert(value):
     if hasattr(value, 'keys'):
@@ -216,6 +229,8 @@ class Model:
                     visible &= v == param(c[2])
                 elif op == 'opacity_using_parameter':
                     opacity *= max(0, min(1, float(v)))
+                elif op == 'set_contrast_raw':
+                    pass  # Native video shader; the editor has no live camera texture.
                 elif op == 'move_left_right_using_parameter':
                     x += float(v) * c[2]
                 elif op == 'move_up_down_using_parameter':
@@ -307,7 +322,7 @@ def position_spans(source, element):
         if not (low <= a < high) or i+1 >= len(ts) or ts[i+1][0] != '(':
             continue
         args = arguments(ts, i+1)
-        if word in ('text', 'readout', 'group', 'add_text_hud', 'add_text_hud2'):
+        if word in ('text', 'readout', 'label', 'param_label', 'group', 'add_text_hud', 'add_text_hud2'):
             return spans(args[1:3])
         if word == 'add_text_hud_param':
             return spans(args[:2])
@@ -337,6 +352,172 @@ def move_source(source, element, dx, dy):
         edits.append((a, b, new))
     for a, b, new in reversed(edits):
         source = source[:a] + new + source[b:]
+    return source
+
+
+def _expression(value, factor=1, offset=0):
+    try:
+        return f'{float(value)*factor+offset:.10g}'
+    except ValueError:
+        result=value
+        if factor!=1: result=f'({result}) * {factor:.10g}'
+        if abs(offset)>1e-12: result=f'({result}) + ({offset:.10g})'
+        return result
+
+
+def source_call(source, element):
+    ts=tokens(source)
+    line=int(element.get('_source_line') or 1)
+    starts=[0]+[m.end() for m in re.finditer('\n',source)]
+    low=starts[max(0,min(line-1,len(starts)-1))]
+    high=starts[line] if line<len(starts) else len(source)
+    names={'text','readout','label','param_label','group','line','poly','box','circle','add_text_hud','add_text_hud2','add_text_hud_param'}
+    for i,(word,start,_) in enumerate(ts[:-1]):
+        if low<=start<high and word in names and ts[i+1][0]=='(':
+            args=arguments(ts,i+1)
+            return word,[(ts[a][1],ts[b-1][2]) if a<b else None for a,b in args]
+    return None,[]
+
+
+
+def lua_literal(value):
+    if value is None:return 'nil'
+    if isinstance(value,bool):return 'true' if value else 'false'
+    if isinstance(value,(int,float)):return repr(value)
+    if isinstance(value,str):return json.dumps(value,ensure_ascii=False)
+    if isinstance(value,list):return '{'+','.join(lua_literal(v) for v in value)+'}'
+    if isinstance(value,dict):return '{'+','.join('['+lua_literal(k)+']='+lua_literal(v) for k,v in value.items())+'}'
+    raise ValueError('Unsupported material definition.')
+
+
+def recolor_selection(source, elements, model, hex_color):
+    """Rebuild each source call's own material, keeping its font/texture and alpha."""
+    if not re.fullmatch(r'#?[0-9a-fA-F]{6}',hex_color.strip()):
+        raise ValueError('Enter a six-digit hex color, for example #00FF00.')
+    value=hex_color.strip().lstrip('#')
+    rgb=[int(value[i:i+2],16) for i in (0,2,4)]
+    chosen={e['name'] for e in elements}
+    work=[]
+    for e in model.elements:
+        parent=e.get('parent_element');seen=set()
+        while parent in model.by_name and parent not in seen and parent not in chosen:
+            seen.add(parent);parent=model.by_name[parent].get('parent_element')
+        if e['name'] in chosen or parent in chosen:
+            if e.get('material') and e.get('isvisible') is not False:work.append(e)
+    edits={}
+    ts=tokens(source)
+    for e in work:
+        word,args=source_call(source,e)
+        if not word or word=='group' or not args:
+            raise ValueError('This element needs its material edited in Lua; select a drawing helper call.')
+        # Locate this call exactly, including its closing parenthesis.
+        opening=next(i for i,t in enumerate(ts) if t[1]==args[0][0])-1
+        start=ts[opening-1][1]
+        depth=0;end=None
+        for token,_,stop in ts[opening:]:
+            if token=='(':depth+=1
+            elif token==')':
+                depth-=1
+                if depth==0:end=stop;break
+        mat=e['material']
+        if not isinstance(mat,dict):raise ValueError('Material definition is unavailable.')
+        color=rgb+[component(mat.get('color'),3,255)]
+        material=('MakeFont('+lua_literal(mat['description'])+','+lua_literal(color)+')' if mat.get('font') else
+                  'MakeMaterial('+lua_literal(mat.get('path'))+','+lua_literal(color)+')')
+        replacement='F117_layout_color(function() return '+source[start:end]+' end, '+material+')'
+        span=(start,end)
+        if span in edits and edits[span]!=replacement:
+            raise ValueError('This call creates different materials; edit their Lua separately.')
+        edits[span]=replacement
+    if not edits:raise ValueError('Select a drawable element or a group containing symbols.')
+    ordered=sorted(edits)
+    if any(a[1]>b[0] for a,b in zip(ordered,ordered[1:])):raise ValueError('Selected calls overlap.')
+    for (a,b),replacement in sorted(edits.items(),reverse=True):source=source[:a]+replacement+source[b:]
+    include='dofile(LockOn_Options.script_path.."Indicator/layout_color.lua")'
+    if include not in source:source=include+'\n'+source
+    return source
+
+
+def transform_selection(source, elements, model, params, dx=0, dy=0, factor=1, pivot=(0,0)):
+    """One atomic source edit, deduplicating loops and selected parent/children.
+
+    World-space transforms are converted through each parent rotation. Geometry
+    arguments remain expressions; point arrays are transformed before Add().
+    """
+    if not math.isfinite(factor) or factor<=0: raise ValueError('Scale must be positive.')
+    states={e['name']:state for e,state in model.scene(params)}
+    chosen={e['name']:e for e in elements}
+    def ancestors(e):
+        seen=set()
+        while e.get('parent_element') in model.by_name:
+            e=model.by_name[e['parent_element']]
+            if e['name'] in seen:break
+            seen.add(e['name']);yield e['name']
+    roots={name:e for name,e in chosen.items() if not any(a in chosen for a in ancestors(e))}
+    work=dict(roots)
+    if factor!=1:
+        for e in model.elements:
+            if any(a in roots for a in ancestors(e)):work[e['name']]=e
+    edits={}
+    def put(span,value):
+        if span is None:raise ValueError('This source argument is not editable.')
+        if span in edits and edits[span]!=value:
+            raise ValueError('Selected instances share source code but require different transforms. Select their parent instead.')
+        edits[span]=value
+    for name,e in work.items():
+        state=states[name]
+        inherited=any(a in roots for a in ancestors(e))
+        parent=states.get(e.get('parent_element'),(0,0,0))
+        angle=parent[2];ca,sa=math.cos(angle),math.sin(angle)
+        unit=e.get('_coordinate_scale',1)
+        px,py=(0,0) if inherited else pivot
+        wx,wy=(0,0) if inherited else (dx,dy)
+        # desired local affine transform, around world pivot (or scaled parent origin)
+        if inherited: ox=oy=0
+        else:
+            ox=(wx+(1-factor)*(parent[0]-px))*ca+(wy+(1-factor)*(parent[1]-py))*sa
+            oy=-(wx+(1-factor)*(parent[0]-px))*sa+(wy+(1-factor)*(parent[1]-py))*ca
+        word,args=source_call(source,e)
+        spans=position_spans(source,e)
+        if word=='group' and len(args)>1 and source[slice(*args[0])].lstrip().startswith('{'):
+            # Side-display group({x,y},parent,...), unlike named HUD group(name,x,y,...).
+            ts=tokens(source);opening=next(i for i,t in enumerate(ts) if t[1]==args[0][0])
+            spans=[(ts[a][1],ts[b-1][2]) for a,b in arguments(ts,opening)[:2]]
+        if word in ('line','poly') and args:
+            span=args[0];value=source[slice(*span)]
+            # Points are expressed relative to the element, normally at its parent origin.
+            lx,ly=ox/unit,oy/unit
+            new=(f'(function(points) local result={{}} for i,p in ipairs(points) do '
+                 f'result[i]={{p[1]*{factor:.10g}+({lx:.10g}),p[2]*{factor:.10g}+({ly:.10g})}} '
+                 f'end return result end)({value})')
+            put(span,new)
+        elif word in ('box','circle') and len(args)>=3:
+            for span,offset in zip(args[:2],(ox/unit,oy/unit)):
+                put(span,_expression(source[slice(*span)],factor,offset))
+            if factor!=1:
+                for span in args[2:4 if word=='box' else 3]:
+                    put(span,_expression(source[slice(*span)],factor))
+        elif spans:
+            for span,offset in zip(spans,(ox,oy)):
+                prefix=source[source.rfind('\n',0,span[0])+1:span[0]]
+                units=1 if re.search(r'\binit_pos\s*=',prefix) else unit
+                put(span,_expression(source[slice(*span)],factor,offset/units))
+            if factor!=1 and e.get('_etype') in ('ceStringPoly','ceStringSLine'):
+                index=2 if word=='add_text_hud_param' else 3
+                if word not in ('text','readout','add_text_hud','add_text_hud2','add_text_hud_param') or len(args)<=index:
+                    raise ValueError('Text size is defined outside this call. Select a text/readout call or edit its size in Lua.')
+                span=args[index];size=source[slice(*span)]
+                if size=='nil':size={'HUD':'2.8','MFD':'SD','Left MFD':'VSD_SD','Right MFD':'HSD_SD'}[model.mode]
+                new=(f'(function(s) if type(s)=="table" then return '
+                     f'{{s[1]*{factor:.10g},s[2]*{factor:.10g},(s[3] or 0)*{factor:.10g},s[4]}} '
+                     f'else return s*{factor:.10g} end end)({size})')
+                put(span,new)
+        else:
+            raise ValueError(f"Cannot transform {e.get('name')} at source line {e.get('_source_line')}; edit its Lua or select an editable parent.")
+    ordered=sorted(edits)
+    for a,b in zip(ordered,ordered[1:]):
+        if a[1]>b[0]:raise ValueError('Selected source expressions overlap. Select their parent instead.')
+    for (a,b),value in sorted(edits.items(),reverse=True):source=source[:a]+value+source[b:]
     return source
 
 
@@ -437,7 +618,7 @@ class Renderer:
             if isinstance(mat, dict) and mat.get('color'):
                 c = mat['color']
                 color = tuple(int(max(0, min(255, component(c, i, 255)))) for i in range(3)) + (int(255*opacity),)
-            if kind == 'ceStringPoly':
+            if kind in ('ceStringPoly','ceStringSLine'):
                 # DCS bitmap fonts and font metrics differ; sizes are adjustable
                 # in source and remain an approximation in this offline view.
                 sd = e.get('stringdefs') or [.007, .007]
@@ -518,7 +699,8 @@ class Renderer:
                         alpha=ImageChops.multiply(ImageChops.multiply(intensity,sampled.getchannel('A')),coverage)
                         layer=Image.new('RGBA',(size,size),color)
                         layer.putalpha(alpha.point(lambda v:int(v*opacity)))
-                elif isinstance(mat,str) and mat.startswith('render_target_'):
+                elif (isinstance(mat,str) and mat.startswith('render_target_')) or (
+                        isinstance(mat,dict) and re.fullmatch(r'mfd\d+',str(mat.get('path')))):
                     # Live video is unavailable offline; show an empty sensor backdrop.
                     ld.polygon(pts,fill=(12,18,15,255))
                 else:
@@ -589,7 +771,7 @@ class Editor:
         self.reference_opacity=tk.DoubleVar(value=.25)
         self.reference_image=None; self.params=dict(DEFAULTS); self.renderer=Renderer()
         self.models={}; self.sources={}; self.disk={}; self.undo_stack=[]
-        self.hits=[]; self.selected=None; self.drag=None; self.pending=False
+        self.hits=[]; self.selected=None; self.selection=[]; self.drag=None; self.marquee=None; self.pending=False
         self.center=(0,0); self.size=800
         bar=ttk.Frame(root,padding=8); bar.pack(fill='x')
         ttk.Label(bar,text='F-117  LAYOUT STUDIO',font=('Segoe UI',12,'bold')).pack(side='left',padx=(0,20))
@@ -643,9 +825,21 @@ class Editor:
         self.canvas.bind('<MouseWheel>',self.zoom)
         self.canvas.bind('<ButtonPress-2>',self.pan_start)
         self.canvas.bind('<B2-Motion>',self.pan_move)
+        self.canvas.bind('<KeyPress>',self.keypress)
+        root.bind('<Control-z>',self.shortcut_undo)
+        root.bind('<Control-Z>',self.shortcut_undo)
         self.inspector=tk.StringVar(value='Click a symbol to inspect it. Drag to move its source position.')
         ttk.Label(right,textvariable=self.inspector,wraplength=400,justify='left').pack(fill='x',pady=(0,8))
         ttk.Button(right,text='Select parent / move a group',command=self.parent).pack(fill='x')
+        color_row=ttk.Frame(right);color_row.pack(fill='x',pady=6)
+        ttk.Label(color_row,text='Hex color').pack(side='left')
+        self.hex_color=tk.StringVar(value='#00FF00')
+        color_entry=ttk.Entry(color_row,textvariable=self.hex_color,width=10)
+        color_entry.pack(side='left',padx=6)
+        color_entry.bind('<Return>',lambda _:self.apply_color())
+        ttk.Button(color_row,text='Apply to selected',command=self.apply_color).pack(side='left')
+        ttk.Button(right,text='Select all symbols',command=self.select_all_symbols).pack(fill='x')
+
         ttk.Label(right,text='LUA SOURCE  |  Ctrl+Enter previews, Ctrl+S saves').pack(anchor='w',pady=(12,5))
         self.code=tk.Text(right,wrap='none',undo=True,font=('Consolas',10),tabs=('4c',))
         scroll=ttk.Scrollbar(right,command=self.code.yview);scroll.pack(side='right',fill='y')
@@ -653,6 +847,8 @@ class Editor:
         self.code.tag_configure('source_line',background='#d8efdc')
         self.code.bind('<Control-Return>',lambda _:self.apply_source())
         self.code.bind('<Control-s>',lambda _:self.save())
+        self.code.bind('<Control-z>',self.shortcut_undo)
+        self.code.bind('<Control-Z>',self.shortcut_undo)
         ttk.Label(root,textvariable=self.status,padding=7,wraplength=1450).pack(fill='x')
         root.protocol('WM_DELETE_WINDOW',self.close)
         self.switch()
@@ -674,7 +870,7 @@ class Editor:
             self.disk[self.current]=PAGES[self.current].read_text(encoding='utf-8-sig')
             self.sources[self.current]=self.disk[self.current]
         self.code.delete('1.0','end');self.code.insert('1.0',self.sources[self.current])
-        self.selected=None;self.reset_view();self.compile()
+        self.selected=None;self.selection=[];self.reset_view();self.compile()
 
     def compile(self):
         try:
@@ -754,10 +950,15 @@ class Editor:
             self.canvas.delete('all')
             self.offset=((self.canvas.winfo_width()-self.size)/2,(self.canvas.winfo_height()-self.size)/2)
             self.canvas.create_image(*self.offset,image=self.photo,anchor='nw')
+            lookup={h.element['name']:h for h in self.hits}
+            states={e['name']:state for e,state in model.scene(self.params,self.all.get())}
+            self.selection=[lookup[h.element['name']] if h.element['name'] in lookup else
+                Hit(model.by_name[h.element['name']],h.box,states[h.element['name']])
+                for h in self.selection if h.element['name'] in model.by_name]
             self.selection_box()
             note=f'{self.current}: {len(model.elements)} elements, {len(self.hits)} visible. '
             if self.current in DRAFTS:note+='DRAFT PAGE: no cockpit indicator registration yet. '
-            note+='Drag = move source group; wheel = zoom; middle drag = pan. '
+            note+='Box drag = select; Shift = add/toggle; arrows = move; +/- = scale; Ctrl+Z = undo. '
             note+='Font metrics, 3D optics and camera imagery are approximate.'
             if self.current=='HUD':note+=' HUD clipping preview uses the working rectangle, not head/VR glass projection.'
             if missing:note+=f' Missing texture atlases: {len(missing)} (grey outlines).'
@@ -767,68 +968,145 @@ class Editor:
 
     def selection_box(self):
         self.canvas.delete('selection')
-        if not self.selected:return
+        if not self.selection:
+            self.selected=None
+            self.inspector.set('Click or drag a box to select. Arrows move; +/- scales; Ctrl+Z undoes.')
+            return
+        self.selected=self.selection[0]
+        for hit in self.selection:
+            box=hit.box
+            self.canvas.create_rectangle(box[0]+self.offset[0]-3,box[1]+self.offset[1]-3,
+                box[2]+self.offset[0]+3,box[3]+self.offset[1]+3,outline='#ffca64',width=2,tags='selection')
         e=self.selected.element
         line=int(e.get('_position_line') or e.get('_source_line') or 1)
-        parent=e.get('parent_element','none')
-        editable=position_spans(self.text(),e)
-        self.inspector.set(f"{e.get('_etype')} | {e.get('name')}\nSource line {line} | parent: {parent}\n"
-                           +('Drag edits this source position; loops/shared calls move together.' if editable else
-                             'Use source pane for this shape, or select its parent.')+
-                           '\nParams: '+', '.join(sequence(e.get('element_params'))))
-        box=self.selected.box
-        self.canvas.create_rectangle(box[0]+self.offset[0]-3,box[1]+self.offset[1]-3,
-            box[2]+self.offset[0]+3,box[3]+self.offset[1]+3,outline='#ffca64',width=2,tags='selection')
+        self.inspector.set(f"{len(self.selection)} selected | {e.get('_etype')} | {e.get('name')}\n"
+            f"Source line {line} | parent: {e.get('parent_element','none')}\n"
+            'Arrows move all selected; Shift+arrow = 10x; +/- scales 5%.\n'
+            'Loops/shared source calls move together. Ctrl+Z undoes one action.')
+
+    def selectable_hits(self):
+        # Screen-filling backgrounds/dimmers must not intercept empty-space drags.
+        return [h for h in self.hits if (h.box[2]-h.box[0])*(h.box[3]-h.box[1])<self.size*self.size*.65]
 
     def press(self,event):
+        self.canvas.focus_set()
         x,y=event.x-self.offset[0],event.y-self.offset[1]
-        choices=[h for h in self.hits if h.box[0]-5<=x<=h.box[2]+5 and h.box[1]-5<=y<=h.box[3]+5]
+        choices=[h for h in self.selectable_hits() if h.box[0]-5<=x<=h.box[2]+5 and h.box[1]-5<=y<=h.box[3]+5]
+        hit=min(choices,key=lambda h:max(1,h.box[2]-h.box[0])*max(1,h.box[3]-h.box[1])) if choices else None
         group=self.selected if self.selected and self.selected.element.get('_etype')=='ceSimple' else None
-        if group and group.box[0]-5<=x<=group.box[2]+5 and group.box[1]-5<=y<=group.box[3]+5:
-            self.selected=group
-        elif choices:
-            self.selected=min(choices,key=lambda h:max(1,h.box[2]-h.box[0])*max(1,h.box[3]-h.box[1]))
-        else:return
+        if group and group.box[0]-5<=x<=group.box[2]+5 and group.box[1]-5<=y<=group.box[3]+5:hit=group
+        if event.state & 1 or not hit:
+            self.marquee=(event.x,event.y,list(self.selection) if event.state & 1 else [],hit)
+            self.drag=None
+            return
+        if not any(h.element['name']==hit.element['name'] for h in self.selection):self.selection=[hit]
         self.selection_box()
-        e=self.selected.element
-        line=int(e.get('_position_line') or e.get('_source_line') or 1)
+        e=hit.element;line=int(e.get('_position_line') or e.get('_source_line') or 1)
         self.code.tag_remove('source_line','1.0','end');self.code.tag_add('source_line',f'{line}.0',f'{line+1}.0')
         self.code.see(f'{line}.0')
-        self.drag=(event.x,event.y,self.text(),self.selected)
+        self.drag=(event.x,event.y,list(self.selection))
 
     def motion(self,event):
-        if self.drag:
-            self.canvas.delete('selection')
-            b=self.drag[3].box
-            self.canvas.create_rectangle(b[0]+self.offset[0]-3,b[1]+self.offset[1]-3,
-                b[2]+self.offset[0]+3,b[3]+self.offset[1]+3,outline='#ffca64',width=2,tags='selection')
+        if self.marquee:
+            self.canvas.delete('marquee')
+            x,y,_,_=self.marquee
+            self.canvas.create_rectangle(x,y,event.x,event.y,outline='#73ceff',dash=(4,3),tags='marquee')
+        elif self.drag:
+            self.selection_box()
             self.canvas.move('selection',event.x-self.drag[0],event.y-self.drag[1])
 
     def release(self,event):
+        if self.marquee:
+            x,y,base,hit=self.marquee;self.marquee=None
+            self.canvas.delete('marquee')
+            if abs(event.x-x)+abs(event.y-y)<3:
+                if hit:
+                    names={h.element['name'] for h in base}
+                    self.selection=[h for h in base if h.element['name']!=hit.element['name']] if hit.element['name'] in names else base+[hit]
+                else:self.selection=base
+            else:
+                x0,x1=sorted((x-self.offset[0],event.x-self.offset[0]))
+                y0,y1=sorted((y-self.offset[1],event.y-self.offset[1]))
+                found=[h for h in self.selectable_hits() if x0<=h.box[0] and h.box[2]<=x1 and y0<=h.box[1] and h.box[3]<=y1]
+                combined={h.element['name']:h for h in base+found}
+                self.selection=list(combined.values())
+            self.selection_box();return
         if not self.drag:return
-        sx,sy,source,hit=self.drag;self.drag=None
+        sx,sy,hits=self.drag;self.drag=None
+        if abs(event.x-sx)+abs(event.y-sy)<3:return
         scale=self.size/(2*self.extent.get())
         dx,dy=(event.x-sx)/scale,-(event.y-sy)/scale
-        if abs(event.x-sx)+abs(event.y-sy)<3:return
-        # Translate world drag back through the parent rotation.
-        model=self.models[self.current];parent=model.by_name.get(hit.element.get('parent_element'))
-        if parent:
-            states={id(e):s for e,s in model.scene(self.params,self.all.get())}
-            a=states[id(parent)][2]
-            dx,dy=dx*math.cos(a)+dy*math.sin(a),-dx*math.sin(a)+dy*math.cos(a)
         snap=self.snap.get()
         if snap>0:dx,dy=round(dx/snap)*snap,round(dy/snap)*snap
-        try:new=move_source(source,hit.element,dx,dy)
-        except ValueError as exc:self.selection_box();self.message(str(exc));return
-        self.undo_stack.append((self.current,source))
-        self.code.delete('1.0','end');self.code.insert('1.0',new)
-        self.selected=None;self.compile()
+        self.transform(dx,dy)
+
+    def transform(self,dx=0,dy=0,factor=1):
+        if not self.selection:return
+        if self.text()!=self.sources.get(self.current):
+            self.message('Preview source edits before transforming a selection.');return
+        boxes=[h.box for h in self.selection]
+        cx=(min(b[0] for b in boxes)+max(b[2] for b in boxes))/2
+        cy=(min(b[1] for b in boxes)+max(b[3] for b in boxes))/2
+        scale=self.size/(2*self.extent.get())
+        pivot=(self.center[0]+(cx-self.size/2)/scale,self.center[1]-(cy-self.size/2)/scale)
+        old=self.text()
+        try:
+            new=transform_selection(old,[h.element for h in self.selection],self.models[self.current],
+                                    self.params,dx,dy,factor,pivot)
+            if new==old:return
+            Model(self.current,new) # validate the complete action before changing the editor
+        except Exception as exc:
+            self.selection_box();self.message('Selection unchanged: '+str(exc));return
+        self.undo_stack.append((self.current,old))
+        self.code.delete('1.0','end');self.code.insert('1.0',new);self.code.edit_reset()
+        self.compile()
+
+    def select_all_symbols(self):
+        self.selection=self.selectable_hits()
+        self.selection_box()
+
+    def apply_color(self):
+        if not self.selection:
+            self.message('Select one or more elements first.');return
+        if self.text()!=self.sources.get(self.current):
+            self.message('Preview source edits before applying color to a selection.');return
+        old=self.text()
+        try:
+            new=recolor_selection(old,[h.element for h in self.selection],self.models[self.current],self.hex_color.get())
+            Model(self.current,new)
+        except Exception as exc:
+            self.message('Color unchanged: '+str(exc));return
+        self.undo_stack.append((self.current,old))
+        self.code.delete('1.0','end');self.code.insert('1.0',new);self.code.edit_reset()
+        self.compile()
+
+    def keypress(self,event):
+        if event.state & 4:return # Ctrl+Z is handled by the window binding.
+        arrows={'Left':(-1,0),'Right':(1,0),'Up':(0,1),'Down':(0,-1)}
+        if event.keysym in arrows:
+            step=self.snap.get() or 2*self.extent.get()/self.size
+            if event.state & 1:step*=10
+            x,y=arrows[event.keysym];self.transform(x*step,y*step)
+            return 'break'
+        if event.keysym in ('plus','equal','KP_Add','minus','KP_Subtract'):
+            self.transform(factor=1.05 if event.keysym in ('plus','equal','KP_Add') else 1/1.05)
+            return 'break'
+        if event.keysym=='Escape':
+            self.selection=[];self.selection_box();return 'break'
+
+    def shortcut_undo(self,event=None):
+        if self.root.focus_get()==self.code and self.text()!=self.sources.get(self.current):
+            try:self.code.edit_undo()
+            except self.tk.TclError:pass
+        else:self.undo()
+        return 'break'
 
     def parent(self):
         if not self.selected:return
         e=self.models[self.current].by_name.get(self.selected.element.get('parent_element'))
         if e:
-            self.selected=Hit(e,self.selected.box,self.selected.state);self.selection_box()
+            self.selection=[Hit(e,self.selected.box,self.selected.state)]
+            self.selection_box();self.canvas.focus_set()
 
     def zoom(self,event):
         self.extent.set(max(.005,min(50,self.extent.get()*(.85 if event.delta>0 else 1/.85))))
@@ -845,7 +1123,7 @@ class Editor:
         mode,source=self.undo_stack.pop()
         if mode!=self.current:
             self.mode.set(mode);self.switch()
-        self.code.delete('1.0','end');self.code.insert('1.0',source);self.compile()
+        self.code.delete('1.0','end');self.code.insert('1.0',source);self.code.edit_reset();self.compile()
 
     def save(self):
         from tkinter import messagebox

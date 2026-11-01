@@ -20,6 +20,18 @@ if errorlevel 1 exit /b %errorlevel%
 cl.exe /nologo /O2 /W4 /WX /std:c++17 /EHsc /MD "$PSScriptRoot/test_compositor.cpp" /link bcrypt.lib /OUT:"$buildRoot/test_compositor.exe"
 if errorlevel 1 exit /b %errorlevel%
 "$buildRoot/test_compositor.exe" "E:/Eagle Dynamics/DCS World/bin-mt/lua.dll" "$output"
+if errorlevel 1 exit /b %errorlevel%
+cl.exe /nologo /O2 /W4 /WX /std:c++17 /EHsc /MD "$PSScriptRoot/test_brightness.cpp" /link bcrypt.lib /OUT:"$buildRoot/test_brightness.exe"
+if errorlevel 1 exit /b %errorlevel%
+"$buildRoot/test_brightness.exe" "E:/Eagle Dynamics/DCS World/bin-mt/lua.dll" "$output"
+if errorlevel 1 exit /b %errorlevel%
+cl.exe /nologo /O2 /W4 /WX /std:c++17 /EHsc /MD "$PSScriptRoot/test_charts.cpp" /link bcrypt.lib /OUT:"$buildRoot/test_charts.exe"
+if errorlevel 1 exit /b %errorlevel%
+"$buildRoot/test_charts.exe" "E:/Eagle Dynamics/DCS World/bin-mt/lua.dll" "$output"
+if errorlevel 1 exit /b %errorlevel%
+cl.exe /nologo /O2 /W4 /WX /std:c++17 /EHsc /MD "$PSScriptRoot/test_parameters.cpp" /link bcrypt.lib /OUT:"$buildRoot/test_parameters.exe"
+if errorlevel 1 exit /b %errorlevel%
+"$buildRoot/test_parameters.exe" "E:/Eagle Dynamics/DCS World/bin-mt/lua.dll" "$output"
 exit /b %errorlevel%
 "@ | Set-Content -LiteralPath $commandFile -Encoding ASCII
     & $env:ComSpec /d /c $commandFile

@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -72,6 +73,8 @@ class PackagingTests(unittest.TestCase):
                      "Shapes/old-model.edm", "Shapes/bak_model.owv", "Shapes/model.edm.json",
                      "Cockpit/Scripts/MFD/Indicator/old_test_files/test.lua", "tools/private.py"):
             write(self.mod, name, "development-only\n")
+        for name in packager.DISPLAY_RUNTIME_FILES:
+            write(self.mod, name, b"committed display runtime resource")
         commit(self.mod)
         write(self.efm, "source.cpp", "// source\n")
         commit(self.efm)
@@ -91,7 +94,8 @@ class PackagingTests(unittest.TestCase):
         prefix = packager.MOD_FOLDER + "/"
         with zipfile.ZipFile(archive) as bundle:
             names = set(bundle.namelist())
-            self.assertEqual([n for n in names if n.endswith(".dll")], [prefix + "bin/" + packager.DLL_NAME])
+            self.assertEqual({n for n in names if n.endswith(".dll")},
+                             {prefix + "bin/" + packager.DLL_NAME, prefix + "bin/F117Displays.dll"})
             self.assertEqual(bundle.read(prefix + "bin/" + packager.DLL_NAME), example_dll())
             self.assertEqual(bundle.read(prefix + "comm.lua").decode().splitlines(), ["-- runtime"])
             self.assertFalse(any("old_test_files" in n or "blender_files" in n or "proxy.ini" in n or "bak_" in n for n in names))
@@ -99,10 +103,41 @@ class PackagingTests(unittest.TestCase):
             manifest = json.loads(bundle.read(prefix + "build-manifest.json"))
             self.assertEqual(manifest["efm_branch"], "dev")
             self.assertEqual(manifest["efm_commit"], command(self.efm, "rev-parse", "HEAD"))
+            self.assertEqual(manifest["model_sha256"],
+                             hashlib.sha256(bundle.read(prefix + "Shapes/f-117-nighthawk.edm")).hexdigest())
             self.assertIn(manifest["version"].encode(), bundle.read(prefix + "entry.lua"))
         self.assertTrue(archive.with_suffix(".zip.sha256").is_file())
         self.assertEqual((self.mod / "bin" / packager.DLL_NAME).read_bytes(), original_proxy)
         self.assertEqual((self.mod / "entry.lua").read_text(), original_entry)
+
+    def test_display_runtime_assets_use_committed_content(self):
+        for name in packager.DISPLAY_RUNTIME_FILES:
+            write(self.mod, name, b"uncommitted replacement")
+        archive = self.package()
+        with zipfile.ZipFile(archive) as bundle:
+            for name in packager.DISPLAY_RUNTIME_FILES:
+                self.assertEqual(bundle.read(packager.MOD_FOLDER + "/" + name),
+                                 b"committed display runtime resource")
+        self.assertFalse(packager.runtime_file("bin/DEV_F117Displays.dll"))
+        self.assertFalse(packager.runtime_file("bin/unrelated.dll"))
+
+    def test_missing_display_dll_fails(self):
+        command(self.mod, "rm", "bin/F117Displays.dll")
+        commit(self.mod)
+        with self.assertRaisesRegex(ValueError, "Required runtime files.*F117Displays.dll"):
+            self.package()
+
+    def test_missing_stroke_font_fails(self):
+        command(self.mod, "rm", "Cockpit/Scripts/Resources/Stroke/F117_stroke_font.svg")
+        commit(self.mod)
+        with self.assertRaisesRegex(ValueError, "Required runtime files.*F117_stroke_font.svg"):
+            self.package()
+
+    def test_display_dll_private_paths_are_rejected(self):
+        write(self.mod, "bin/F117Displays.dll", b"C:/Users/Example/private.pdb")
+        commit(self.mod)
+        with self.assertRaisesRegex(ValueError, "Personal absolute path"):
+            self.package()
 
     def test_stable_version_and_tag(self):
         command(self.efm, "branch", "-m", "main")

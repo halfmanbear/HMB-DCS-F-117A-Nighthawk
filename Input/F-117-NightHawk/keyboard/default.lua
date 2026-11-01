@@ -1,8 +1,32 @@
 local cockpit = folder.."../../../Cockpit/Scripts/"
 dofile(cockpit.."command_defs.lua")
+dofile(cockpit.."devices.lua")
 
 local res = external_profile("Config/Input/Aircrafts/base_keyboard_binding.lua")
 join(res.keyCommands,{
+{combos = {{key = 'M', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.DATABASE, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Database PMAP / DMAP'), category = _('F-117A Displays')},
+{combos = {{key = 'F', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.FUNCTION, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Function Page'), category = _('F-117A Displays')},
+{combos = {{key = 'L', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.LOOK, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Manual Look'), category = _('F-117A Displays')},
+{combos = {{key = 'S', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.SCROLL, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Manual Scroll'), category = _('F-117A Displays')},
+{combos = {{key = 'A', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.AUTO, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Return to Auto'), category = _('F-117A Displays')},
+{combos = {{key = 'Left', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.PAN_LEFT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Pan Left'), category = _('F-117A Displays')},
+{combos = {{key = 'Right', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.PAN_RIGHT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Pan Right'), category = _('F-117A Displays')},
+{combos = {{key = 'Up', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.PAN_UP, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Pan Forward'), category = _('F-117A Displays')},
+{combos = {{key = 'Down', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.PAN_DOWN, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Pan Back'), category = _('F-117A Displays')},
+{combos = {{key = 'D', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.TACTICAL_DECLUTTER, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Tactical Declutter'), category = _('F-117A Displays')},
+{combos = {{key = 'B', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.BACKGROUND_DECLUTTER, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Background Declutter'), category = _('F-117A Displays')},
+{combos = {{key = 'R', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.REFERENCE_ELEVATION, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Reference Elevation Mode'), category = _('F-117A Displays')},
+{combos = {{key = 'PgUp', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.ELEVATION_UP, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Elevation Increase'), category = _('F-117A Displays')},
+{combos = {{key = 'PgDown', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.ELEVATION_DOWN, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Elevation Decrease'), category = _('F-117A Displays')},
+
+{combos = {{key = ']', reformers = {'LCtrl','LShift'}}}, down = map_commands.RANGE_UP, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Range Increase'), category = _('F-117A Displays')},
+{combos = {{key = '[', reformers = {'LCtrl','LShift'}}}, down = map_commands.RANGE_DOWN, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Range Decrease'), category = _('F-117A Displays')},
+{combos = {{key = 'M', reformers = {'LCtrl','LShift'}}}, down = map_commands.ORIENTATION, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Orientation Cycle'), category = _('F-117A Displays')},
+-- Left CMDI EO is a display selection, independent of IRADS power.
+{combos = {{key = 'E', reformers = {'LCtrl','LShift'}}}, down = left_cmdi_commands.EO_TOGGLE, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Left CMDI EO / VSD Toggle'), category = _('F-117A Displays')},
+{down = left_cmdi_commands.EO_SELECT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Left CMDI Select EO'), category = _('F-117A Displays')},
+{down = left_cmdi_commands.VSD_SELECT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Left CMDI Select VSD'), category = _('F-117A Displays')},
+
 {down = f117_commands.MASTER_ARM_TOGGLE, name = _('Master Arm / Safe'), category = _('F-117A Essential System Controls')},
 {down = f117_commands.WEAPON_STATION_NEXT, name = _('Weapon Station Next'), category = _('F-117A Essential System Controls')},
 {down = f117_commands.WEAPON_STATION_PREV, name = _('Weapon Station Previous'), category = _('F-117A Essential System Controls')},
@@ -44,6 +68,11 @@ join(res.keyCommands,{
 {combos = {{key = '.', reformers = {'RAlt'}}}, down = iCommandPlaneThreatWarnSoundVolumeUp, name = _('RWR/SPO Sound Signals Volume Up'), category = _('Sensors')},
 
 -- F-117A IRADS
+{combos = {{key = 'PgUp', reformers = {'LCtrl','LShift'}}}, down = irads_image_commands.BRIGHTNESS_UP, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Brightness Increase'), category = _('F-117A IRADS')},
+{combos = {{key = 'PgDown', reformers = {'LCtrl','LShift'}}}, down = irads_image_commands.BRIGHTNESS_DOWN, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Brightness Decrease'), category = _('F-117A IRADS')},
+{combos = {{key = 'PgUp', reformers = {'LCtrl','LAlt'}}}, down = irads_image_commands.CONTRAST_UP, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Contrast Increase'), category = _('F-117A IRADS')},
+{combos = {{key = 'PgDown', reformers = {'LCtrl','LAlt'}}}, down = irads_image_commands.CONTRAST_DOWN, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Contrast Decrease'), category = _('F-117A IRADS')},
+{combos = {{key = 'Home', reformers = {'LCtrl','LShift'}}}, down = irads_image_commands.RESET, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Reset Brightness / Contrast for Mission Time'), category = _('F-117A IRADS')},
 {combos = {{key = 'I', reformers = {'LCtrl'}}}, down = 87, name = _('IRADS On/Off'),  category = {_('Sensors'), _('F-117A IRADS')}},
 {combos = {{key = ';'}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Up'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {combos = {{key = '.'}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Down'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},

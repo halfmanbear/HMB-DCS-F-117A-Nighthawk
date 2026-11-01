@@ -68,7 +68,7 @@ def validate():
     for path in [*SCRIPTS.glob('display_*.lua'),SCRIPTS/'materials.lua',SCRIPTS/'Systems/DisplayCompositor.lua',SCRIPTS/'Systems/Displays.lua',*(SCRIPTS/'MFD/Indicator/LCD').glob('*.lua'),SCRIPTS/'MFD/Indicator/render_config.lua',SCRIPTS/'device_init.lua', *(SCRIPTS/'HUD/Device').glob('*.lua'), *CAL.glob('*.lua'), *(SCRIPTS/'HUD/Indicator').glob('*.lua'), *(SCRIPTS/'MFD/Indicator/Left').glob('*.lua'), *(SCRIPTS/'MFD/Indicator/Right').glob('*.lua')]:
         compile_lua(path.read_text(encoding='utf-8-sig'))
 
-    for enabled,count in [(False,8),(True,9)]:
+    for enabled,count in [(False,6),(True,7)]:
         lua,load = runtime(enabled)
         load(SCRIPTS/'device_init.lua')
         indicators=lua.globals().indicators
@@ -80,7 +80,7 @@ def validate():
         assert [indicators[5][4][1][i] for i in range(1,4)] == [
             'RADAR-PLASHKA-CENTER','RADAR-PLASHKA-DOWN','RADAR-PLASHKA-RIGHT']
         if enabled:
-            assert [Path(indicators[i][2]).stem for i in range(9,10)] == [
+            assert [Path(indicators[i][2]).stem for i in range(6,7)] == [
                 'centre_init']
 
     # Both operational display pages load independently of their init states.
@@ -132,7 +132,7 @@ def validate():
             if e['_etype']=='ceMeshPoly':
                 assert len(e['indices'])%3==0
                 assert all(0<=i<len(e['vertices']) for i in e['indices'])
-            if e['_etype']=='ceStringPoly':
+            if e['_etype'] in ('ceStringPoly','ceStringSLine'):
                 assert 0 < e['stringdefs'][0] < .01, e['stringdefs']
         if kind=='hud':
             assert len(masks)==2
@@ -148,7 +148,7 @@ def validate():
         # validated absolute DCS font sizes back ONLY for its preview rendering.
         if kind=='hud':
             for e in model.elements:
-                if e['_etype']=='ceStringPoly':
+                if e['_etype'] in ('ceStringPoly','ceStringSLine'):
                     e['stringdefs']=[v/0.001 for v in e['stringdefs']]
         # Finite glass projection needs the DCS camera (and each VR eye).
         # Export angular layout only, without pretending to emulate that mask.

@@ -7,6 +7,11 @@
 #include <cstdio>
 #include <cstring>
 #include <new>
+#include <vector>
+#include <string>
+#include <mutex>
+#include <cmath>
+#include <algorithm>
 
 struct lua_State;
 using LuaFunction = int (*)(lua_State*);
@@ -23,6 +28,11 @@ struct LuaAPI {
     void (*pushstring)(lua_State*, const char*);
     void* (*touserdata)(lua_State*, int);
     double (*tonumber)(lua_State*, int);
+    const char* (*tolstring)(lua_State*, int, size_t*);
+    void (*rawgeti)(lua_State*, int, int);
+    void (*rawseti)(lua_State*, int, int);
+    int (*gettop)(lua_State*);
+    void (*settop)(lua_State*, int);
 } lua;
 template<class T> bool symbol(HMODULE dll, const char* name, T& out) {
     out = reinterpret_cast<T>(GetProcAddress(dll, name));
@@ -37,7 +47,9 @@ bool bindLua() {
     LUA_BIND(pushvalue,"lua_pushvalue"); LUA_BIND(setfield,"lua_setfield");
     LUA_BIND(createtable,"lua_createtable"); LUA_BIND(pushboolean,"lua_pushboolean");
     LUA_BIND(pushstring,"lua_pushstring"); LUA_BIND(touserdata,"lua_touserdata");
-    LUA_BIND(tonumber,"lua_tonumber");
+    LUA_BIND(tonumber,"lua_tonumber"); LUA_BIND(tolstring,"lua_tolstring");
+    LUA_BIND(rawgeti,"lua_rawgeti"); LUA_BIND(rawseti,"lua_rawseti");
+    LUA_BIND(gettop,"lua_gettop"); LUA_BIND(settop,"lua_settop");
 #undef LUA_BIND
     return true;
 }
@@ -118,6 +130,7 @@ struct Owner {
         {"F117_IRADS_SOURCE","F117_LCD_CENTRE"}};
     void* ready=nullptr;
     bool bound=false, active=false, failed=false;
+    bool modeSet=false, diagnostic=false;
 };
 // Native ccIndicatorBake's vector-deleting destructor uses a 0x1D0 stride.
 static constexpr size_t BakerSize=0x1d0;
@@ -174,6 +187,11 @@ Owner* upvalue(lua_State* state) {
 int start(lua_State* state) {
     auto* owner=upvalue(state);
     if (!owner) return result(state,false,"missing compositor owner");
+    const bool diagnostic=lua.tonumber(state,2)==1;
+    if (owner->modeSet && owner->diagnostic!=diagnostic)
+        return result(state,false,"compositor mode changed; restart cockpit required");
+    owner->modeSet=true;owner->diagnostic=diagnostic;
+    if (diagnostic) owner->channels[2].marker="F117_BAKE_TEST_SOURCE";
     if (owner->active) return result(state,true,"native MFD compositor already active");
     if (owner->failed) return result(state,false,"compositor unavailable; direct drawing retained");
     if (!owner->bound) {
@@ -181,19 +199,21 @@ int start(lua_State* state) {
             owner->failed=true;
             return result(state,false,"CockpitBase build/export mismatch; direct drawing retained");
         }
-        owner->ready=owner->api.parameter("F117_LCD_READY");
+        owner->ready=owner->api.parameter(diagnostic?"F117_LCD_TEST_READY":"F117_LCD_READY");
         owner->api.setNumber(owner->ready,0);
         owner->bound=true;
     }
     for (auto& channel:owner->channels) channel.source={};
     void* context=owner->api.context();
     if (!findSources(*owner,context)) return result(state,false,"waiting for cockpit context");
-    for (auto& channel:owner->channels)
-        if (!channel.source.indicator) return result(state,false,"waiting for MFD source pages");
+    const int first=diagnostic?2:0;
+    for (int i=first;i<3;++i)
+        if (!owner->channels[i].source.indicator) return result(state,false,"waiting for MFD source pages");
     double requested=lua.tonumber(state,1);
     if (!(requested>=128 && requested<=4096)) requested=1024;
     int resolution=static_cast<int>(requested);
-    for (auto& channel:owner->channels) {
+    for (int i=first;i<3;++i) {
+        auto& channel=owner->channels[i];
         channel.baker=HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,BakerSize);
         if (!channel.baker) {
             destroyBakers(*owner);owner->failed=true;
@@ -210,13 +230,22 @@ int start(lua_State* state) {
     }
     // Commit only after all channels have been created. Before this point the
     // original pages still draw normally and every texture holder is hidden.
-    for (auto& channel:owner->channels) {
+    for (int i=first;i<3;++i) {
+        auto& channel=owner->channels[i];
         owner->api.pushPurpose(channel.source.indicator,Bake);
         owner->api.removePurpose(channel.source.indicator,General);
         owner->api.removePurpose(channel.source.indicator,HudOnly);
     }
     owner->active=true;
     owner->api.setNumber(owner->ready,1);
+    if (diagnostic) {
+        const auto& channel=owner->channels[2];
+        char message[320];
+        std::snprintf(message,sizeof(message),
+            "centre native bake test active: marker=%s context=%p index=%d texture=%s resolution=%d; pixels unverified",
+            channel.marker,channel.source.context,channel.source.index,channel.texture,resolution);
+        return result(state,true,message);
+    }
     return result(state,true,"native MFD compositor active (VSD/HSD/IRADS)");
 }
 int collect(lua_State* state) {
@@ -237,3 +266,7 @@ extern "C" __declspec(dllexport) int luaopen_f117_displays(lua_State* state) {
     lua.pushvalue(state,-2);lua.pushcclosure(state,start,1);lua.setfield(state,-2,"start");
     return 1;
 }
+
+#include "NativeBrightness.h"
+#include "NativeCharts.h"
+#include "NativeParameters.h"

@@ -296,6 +296,7 @@ end
 --- @param textParam string The param handle to use for the text.
 --- @param alignment string The alignment of the text (default is align.CC).
 --- @param format table The formats for the text (default is {"%.0f"}, use {"%s"} for param handles that are strings).
+--- Lua set("25") stores a number and "%s" then crashes DCS; write such text with Systems/TextParameter.lua.
 --- @param stringdef table The text size for the text (default is strdefs.std).
 --- @param font string The font to use for the text (default is fonts["white"]).
 --- @param collimationType string The collimation type of the element ("HUD"/"HMD" for collimated elements, nil for non-collimated elements).

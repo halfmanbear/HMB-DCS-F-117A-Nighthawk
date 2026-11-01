@@ -1,0 +1,153 @@
+"""Regression checks for the extended-review cockpit and preview fixes."""
+import importlib.util
+import math
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from lupa.lua51 import LuaRuntime
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / 'Cockpit/Scripts'
+
+
+class CockpitSystemsTests(unittest.TestCase):
+    def runtime(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute("""
+            values={};args={};vn=200;vu=0;ve=0;ias=100;baro=1000;radar=100
+            sensor=setmetatable({
+                getSelfVelocity=function()return vn,vu,ve end,
+                getSelfAirspeed=function()return 150,0,0 end,
+                getBarometricAltitude=function()return baro end,
+                getRadarAltitude=function()return radar end,
+                getIndicatedAirSpeed=function()return ias end
+            },{__index=function()return function()return 0 end end})
+            function get_base_data()return sensor end
+            function get_param_handle(name)return {
+                get=function()return values[name] or 0 end,
+                set=function(_,v)values[name]=v end}end
+            function make_default_activity()end
+            function GetSelf()return {listen_command=function()end,
+                performClickableAction=function()end}end
+            function get_aircraft_type()return 'F-117-NightHawk' end
+            function dispatch_action()end
+            function get_absolute_model_time()return 43200 end
+            function set_aircraft_draw_argument_value(a,v)args[a]=v end
+            function create_sound_host()return {create_sound=function()
+                return {play_once=function()end}end}end
+            LockOn_Options={init_conditions={birth_place='AIR_HOT'}}
+        """)
+        lua.globals().LockOn_Options.script_path = SCRIPTS.as_posix() + '/'
+
+        def load(path):
+            return lua.execute(Path(path).read_text(encoding='utf-8-sig'))
+
+        lua.globals().dofile = load
+        return lua, load
+
+    def test_real_altitude_selector_drives_baro_and_radar_readouts(self):
+        lua, load = self.runtime()
+        load(SCRIPTS / 'HUD/Device/HUD_Device.lua')
+        g = lua.globals()
+        g.post_initialize()
+        hud_update = g['update']
+
+        def modules(path):
+            if '/Systems/' in str(path) and not str(path).endswith('/Displays.lua'):
+                if str(path).endswith('IRADS_Diagnostics.lua'):
+                    return lua.eval('function()end')
+                return lua.eval("""{new=function()return {
+                    initialize=function()end,update=function()end,set_command=function()return false end}end,
+                    initialize=function()end,update=function()end,set_command=function()return false end,
+                    default_side_brightness=function()return 1 end}""")
+            return load(path)
+
+        g.dofile = modules
+        load(SCRIPTS / 'Systems/Displays.lua')
+        g.post_initialize()
+        hud_update()
+        self.assertEqual(g['values'].altMode, 1)
+        self.assertAlmostEqual(g['values'].ALTITUDE_HUD, 3280.8399)
+        g.SetCommand(g['keys'].LDSK_14, 1)
+        hud_update()
+        self.assertEqual(g['values'].altMode, 2)
+        self.assertAlmostEqual(g['values'].ALTITUDE_HUD, 328.08399)
+        g.radar = 250
+        hud_update()
+        self.assertAlmostEqual(g['values'].ALTITUDE_HUD, 820.209975)
+        g.SetCommand(g['keys'].LDSK_14, 1)
+        hud_update()
+        self.assertAlmostEqual(g['values'].ALTITUDE_HUD, 3280.8399)
+
+    def test_ground_speed_uses_horizontal_ground_velocity_despite_wind_or_climb(self):
+        lua, load = self.runtime()
+        load(SCRIPTS / 'HUD/Device/HUD_Device.lua')
+        g = lua.globals()
+        g.post_initialize()
+        for vn, vu, ve, ias in [(200, 0, 0, 100), (120, -40, 160, 90),
+                                 (0, 100, 0, 0), (0, 0, 15, 10)]:
+            g.vn, g.vu, g.ve, g.ias = vn, vu, ve, ias
+            g['update']()
+            expected = math.hypot(vn, ve) * 1.94384449
+            self.assertAlmostEqual(g['values'].GS_HUD, expected)
+            self.assertAlmostEqual(g['values'].CURR_IAS,
+                                   expected if ias * 1.94384449 < 50 else ias * 1.94384449)
+
+    def test_beacon_phase_wraps_smoothly_at_eighty_five_cycles_per_minute(self):
+        lua, load = self.runtime()
+        load(SCRIPTS / 'Systems/lights_system.lua')
+        g = lua.globals()
+        g.post_initialize()
+        previous = .5
+        for _ in range(400):
+            g['update']()
+            phase = g.args[1001]
+            self.assertGreaterEqual(phase, 0)
+            self.assertLess(phase, 1)
+            self.assertAlmostEqual((phase - previous) % 1, .05 * 85 / 60)
+            previous = phase
+        g.SetCommand(10007, 1)
+        g['update']()
+        self.assertEqual(g.args[1001], 0)
+
+    def test_color_action_rejects_selection_from_stale_source_lines(self):
+        import sys
+        sys.path.insert(0, str(ROOT / 'tools'))
+        from layout_editor import Editor, Model, PAGES
+        source = PAGES['Right MFD'].read_text(encoding='utf-8-sig')
+        model = Model('Right MFD', source)
+        selected = next(e for e in model.elements if e.get('value') == 'SNSR')
+        changed = source.replace('text("MARK",', '\ntext("MARK",', 1)
+        messages = []
+        editor = Editor.__new__(Editor)
+        editor.current = 'Right MFD'
+        editor.sources = {'Right MFD': source}
+        editor.models = {'Right MFD': model}
+        editor.selection = [SimpleNamespace(element=selected)]
+        editor.text = lambda: changed
+        editor.message = messages.append
+        with patch('layout_editor.recolor_selection') as recolor:
+            editor.apply_color()
+            recolor.assert_not_called()
+        self.assertIn('Preview source edits', messages[-1])
+        self.assertEqual(editor.text(), changed)
+
+    def test_legacy_preview_renders_the_current_hud_without_a_gui(self):
+        spec = importlib.util.spec_from_file_location('hud_preview', ROOT / 'hud_preview.py')
+        preview = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(preview)
+        image, model, hits = preview.render_preview(roll=30, pitch=-5, size=300)
+        self.assertEqual(image.size, (300, 300))
+        self.assertIn('OCIP_ROOT', model.by_name)
+        self.assertGreater(len(hits), 10)
+        _, level, _ = preview.render_preview(size=300)
+        states = {e['name']: s for e, s in model.scene(
+            dict(preview.DEFAULTS, ROLL_HUD=math.radians(30), PITCH_HUD=math.radians(-5)))}
+        level_states = {e['name']: s for e, s in level.scene(preview.DEFAULTS)}
+        self.assertNotEqual(states['OCIP_LADDER_BANK'][2], level_states['OCIP_LADDER_BANK'][2])
+
+
+if __name__ == '__main__':
+    unittest.main()

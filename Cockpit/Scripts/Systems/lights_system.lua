@@ -28,7 +28,7 @@ light_system:listen_command(10007)
 
 function post_initialize()
     sndhost = create_sound_host("CptLgts", "3D", 0, 2.0, 0)
-    btnpress = sndhost:create_sound("Aircrafts/BAEHawk/Cockpit/Click2")
+    btnpress = sndhost:create_sound("Aircrafts/F-117/Cockpit/Click")
     local birth = LockOn_Options.init_conditions.birth_place
     if birth == "GROUND_HOT" then
         PNL_LIGHT = 1
@@ -101,23 +101,10 @@ end
 --Rotation logic
 local flashcounter = 0.5
 local flashperminute = 85
-local anticoll_inc = 1
-
--- returns linear movement from 0.0 to 1.0 at 85 cycles per minute
+-- One modulo-one phase cycle is one complete beacon rotation.
 function update_anticoll_value()
-    if anticoll_inc == 1 then
-        flashcounter = flashcounter + (update_time_step * (flashperminute / 60) * 0.5)
-    --  else
-    --      flashcounter = flashcounter - (update_time_step*(flashperminute/60) * 0.5)
-    end
-
-    if flashcounter > 1 or flashcounter < 0.075 then
-        anticoll_inc = 1 - anticoll_inc
-    end
-
-    -- set flashing duty cycle here
-    local a, b = math.modf(flashcounter) -- extract the decimal part
-    return b
+    flashcounter = (flashcounter + update_time_step * flashperminute / 60) % 1
+    return flashcounter
 end
 --Rotation Logic End
 

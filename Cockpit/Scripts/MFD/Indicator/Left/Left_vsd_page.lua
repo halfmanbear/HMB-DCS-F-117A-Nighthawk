@@ -1,11 +1,12 @@
+local finish_native_brightness=dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")("F117_VSD_SOURCE")
 -- LEFT VSD DESIGN: manual PDF p33, Figure 4-13 basic display.
 -- Metres, fitted to the measured aperture. Flight data uses existing parameters;
 -- navigation/status text is static reference artwork. Default left cockpit page.
 local SD,SM,VAL=VSD_SD,VSD_SD_SMALL,VSD_SD_VALUE
 local ROOT=CreateElement "ceSimple"
 ROOT.name="F117_VSD_SOURCE"
-ROOT.element_params={"mainpower"}
-ROOT.controllers={{"parameter_in_range",0,0.9,1.1}}
+ROOT.element_params={"mainpower","F117_LEFT_EO"}
+ROOT.controllers={{"parameter_in_range",0,0.9,1.1},{"parameter_in_range",1,-.1,.1}}
 Add(ROOT)
 local function props(e,parent,level,params,controllers)
     e.name=e.name or create_guid_string()
@@ -48,7 +49,7 @@ local function line(points,colour,parent,level,width)
     return props(e,parent,level)
 end
 local function text(value,x,y,sd,align,params,controllers,formats,colour,parent,level)
-    local e=CreateElement "ceStringPoly"
+    local e=CreateElement "ceStringSLine"
     e.value=value;e.init_pos={x,y,0}
     e.material=VSD_FONTS[colour or "white"]
     local s=sd or SD
@@ -178,3 +179,11 @@ line({{-.023,-.0415},{-.015,-.0415}})
 line({{-.019,-.043},{-.019,-.040}})
 text("STAT",0,-.0415,SM)
 text("DEP",.034,-.0415,SM)
+
+F117_SIDE_DIM_PARAMETER="F117_LEFT_DIM_OPACITY"
+F117_SIDE_DIM_ROOT=ROOT.name
+dofile(LockOn_Options.script_path.."MFD/Indicator/side_display_dimmer.lua")
+
+dofile(LockOn_Options.script_path.."MFD/Indicator/Left/Left_eo_page.lua")
+
+finish_native_brightness()

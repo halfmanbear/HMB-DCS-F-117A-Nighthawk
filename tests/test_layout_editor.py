@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-from layout_editor import DEFAULTS, Model, PAGES, Renderer, move_source, measured_boundary, measured_surfaces, hud_working_area
+from layout_editor import DEFAULTS, Model, PAGES, Renderer, move_source, transform_selection, recolor_selection, Editor, measured_boundary, measured_surfaces, hud_working_area
 
 
 class LayoutEditorTests(unittest.TestCase):
@@ -33,10 +33,10 @@ class LayoutEditorTests(unittest.TestCase):
 
     def test_left_vsd_colour_and_flight_data_preview(self):
         model=self.load('Left MFD')
-        colours=[e.get('material',{}).get('color') for e in model.elements if isinstance(e.get('material'),dict)]
+        colours=[(e.get('material') if isinstance(e.get('material'),dict) else {}).get('color') for e in model.elements if isinstance(e.get('material'),dict)]
         self.assertIn([3,16,178,255],colours)
         self.assertIn([163,140,80,255],colours)
-        texts={s[5] for e,s in model.scene(dict(DEFAULTS,CURR_IAS=287,ALTITUDE_HUD=18420,HEADING_HUD=42)) if s[3]}
+        texts={s[5] for e,s in model.scene(dict(DEFAULTS,F117_LEFT_EO=0,CURR_IAS=287,ALTITUDE_HUD=18420,HEADING_HUD=42)) if s[3]}
         self.assertIn('287',texts)
         self.assertIn('18420',texts)
         self.assertIn('042',texts)
@@ -123,7 +123,137 @@ class LayoutEditorTests(unittest.TestCase):
         self.assertAlmostEqual(moved['init_pos'][0],target['init_pos'][0]+.01)
         self.assertAlmostEqual(moved['init_pos'][1],target['init_pos'][1]-.02)
         unchanged=next(e for e in updated.elements if e.get('value')=='SRCH')
-        self.assertEqual(unchanged['init_pos'],[-.070,-.060])
+        self.assertEqual(unchanged['init_pos'],[-.073,-.049])
+
+    def test_multi_move_and_scale_real_text_and_geometry(self):
+        model=self.load('MFD')
+        labels=[next(e for e in model.elements if e.get('value')==name) for name in ['W-HOT','SRCH']]
+        changed=transform_selection(model.source,labels,model,DEFAULTS,dx=.01,dy=.02)
+        moved=Model('MFD',changed)
+        for before in labels:
+            after=moved.by_name[before['name']]
+            self.assertAlmostEqual(after['init_pos'][0],before['init_pos'][0]+.01)
+            self.assertAlmostEqual(after['init_pos'][1],before['init_pos'][1]+.02)
+        scaled=Model('MFD',transform_selection(model.source,labels,model,DEFAULTS,factor=1.05))
+        for before in labels:
+            after=scaled.by_name[before['name']]
+            self.assertAlmostEqual(after['stringdefs'][0],before['stringdefs'][0]*1.05)
+            self.assertAlmostEqual(after['init_pos'][0],before['init_pos'][0]*1.05)
+        arm=next(e for e in model.elements if e['_etype']=='ceSMultiLine')
+        enlarged=Model('MFD',transform_selection(model.source,[arm],model,DEFAULTS,dx=.01,factor=2))
+        self.assertAlmostEqual(enlarged.by_name[arm['name']]['vertices'][0][0],arm['vertices'][0][0]*2+.01)
+        # Repeated transforms preserve selection identities and valid Lua.
+        again=Model('MFD',transform_selection(enlarged.source,[enlarged.by_name[arm['name']]],enlarged,DEFAULTS,dx=.01))
+        self.assertAlmostEqual(again.by_name[arm['name']]['vertices'][0][0],arm['vertices'][0][0]*2+.02)
+
+    def test_shared_loop_moves_once_and_parent_rotation_is_respected(self):
+        model=self.load('MFD')
+        ticks=[e for e in model.elements if e['_etype']=='ceSMultiLine' and len(e['vertices'])==2
+               and abs(e['vertices'][0][0]+.073)<1e-8]
+        self.assertEqual(len(ticks),5)
+        result=Model('MFD',transform_selection(model.source,ticks,model,DEFAULTS,dx=.01))
+        self.assertAlmostEqual(result.by_name[ticks[0]['name']]['vertices'][0][0],-.063)
+        source='''local p=group("P",0,0)
+text("X",.1,.2,2,p)
+'''
+        # Synthetic model exercises parent rotation independently of page drawing helpers.
+        from types import SimpleNamespace
+        parent={'name':'p','_etype':'ceSimple'}
+        child={'name':'c','parent_element':'p','_etype':'ceStringPoly','_source_line':2}
+        synthetic=SimpleNamespace(mode='HUD',by_name={'p':parent,'c':child},elements=[parent,child],
+            scene=lambda _: [(parent,(0,0,math.pi/2)),(child,(-.2,.1,math.pi/2))])
+        changed=transform_selection(source,[child],synthetic,{},dx=.03)
+        self.assertIn('text("X",0.1,0.17',changed)
+
+    def test_hud_scaling_uses_mrad_positions_and_scalar_font_sizes(self):
+        model=self.load('HUD')
+        e=model.by_name['OCIP_GS']
+        result=Model('HUD',transform_selection(model.source,[e],model,DEFAULTS,factor=1.05))
+        self.assertAlmostEqual(result.by_name[e['name']]['init_pos'][0],e['init_pos'][0]*1.05)
+        self.assertAlmostEqual(result.by_name[e['name']]['stringdefs'][0],e['stringdefs'][0]*1.05)
+
+    def test_parent_child_selection_transforms_once(self):
+        base=PAGES['HUD'].read_text(encoding='utf-8-sig')
+        source=base+'''\nlocal edit_group=group("EDIT_GROUP",20,10)
+text("E",2,3,2.8,edit_group,nil,nil,nil,nil,nil,"EDIT_CHILD")
+'''
+        model=Model('HUD',source)
+        parent,child=model.by_name['EDIT_GROUP'],model.by_name['EDIT_CHILD']
+        delta=5*parent['_coordinate_scale']
+        moved=Model('HUD',transform_selection(source,[parent,child],model,DEFAULTS,dx=delta))
+        self.assertAlmostEqual(moved.by_name['EDIT_GROUP']['init_pos'][0],parent['init_pos'][0]+delta)
+        self.assertEqual(moved.by_name['EDIT_CHILD']['init_pos'],child['init_pos'])
+        scaled=Model('HUD',transform_selection(source,[parent,child],model,DEFAULTS,factor=2))
+        self.assertAlmostEqual(scaled.by_name['EDIT_GROUP']['init_pos'][0],parent['init_pos'][0]*2)
+        self.assertAlmostEqual(scaled.by_name['EDIT_CHILD']['init_pos'][0],child['init_pos'][0]*2)
+        self.assertAlmostEqual(scaled.by_name['EDIT_CHILD']['stringdefs'][0],child['stringdefs'][0]*2)
+
+    def test_editor_marquee_keyboard_transforms_and_undo(self):
+        import tkinter as tk
+        from types import SimpleNamespace
+        root=tk.Tk();root.withdraw()
+        try:
+            editor=Editor(root);editor.mode.set('MFD');editor.switch()
+            root.update_idletasks();editor.redraw()
+            hits=[h for h in editor.hits if h.element.get('value') in ['W-HOT','SRCH']]
+            self.assertEqual(len(hits),2)
+            x0=min(h.box[0] for h in hits)-8+editor.offset[0]
+            y0=min(h.box[1] for h in hits)-8+editor.offset[1]
+            x1=max(h.box[2] for h in hits)+8+editor.offset[0]
+            y1=max(h.box[3] for h in hits)+8+editor.offset[1]
+            editor.press(SimpleNamespace(x=x0,y=y0,state=1))
+            editor.motion(SimpleNamespace(x=x1,y=y1))
+            editor.release(SimpleNamespace(x=x1,y=y1))
+            names={h.element.get('value') for h in editor.selection}
+            self.assertTrue({'W-HOT','SRCH'}<=names)
+            old=editor.text()
+            editor.keypress(SimpleNamespace(keysym='Right',state=0))
+            self.assertNotEqual(editor.text(),old)
+            self.assertEqual(len(editor.undo_stack),1)
+            self.assertGreaterEqual(len(editor.selection),2)
+            editor.shortcut_undo()
+            self.assertEqual(editor.text(),old)
+            editor.keypress(SimpleNamespace(keysym='plus',state=1))
+            self.assertNotEqual(editor.text(),old)
+            editor.shortcut_undo()
+            self.assertEqual(editor.text(),old)
+            editor.hex_color.set('#FF4000');editor.apply_color()
+            self.assertNotEqual(editor.text(),old)
+            self.assertTrue(any((e.get('material') if isinstance(e.get('material'),dict) else {}).get('color')==[255,64,0,255] for e in editor.models['MFD'].elements))
+            editor.shortcut_undo();self.assertEqual(editor.text(),old)
+        finally:root.destroy()
+
+    def test_hex_colors_preserve_fonts_textures_and_unselected_materials(self):
+        for mode in PAGES:
+            model=self.load(mode)
+            target=next(e for e in model.elements if e.get('_etype') in ('ceStringPoly','ceStringSLine') and e.get('isvisible') is not False)
+            changed=recolor_selection(model.source,[target],model,'#123aEF')
+            result=Model(mode,changed)
+            matches=[e for e in result.elements if (e.get('material') if isinstance(e.get('material'),dict) else {}).get('color')==[18,58,239,255]]
+            self.assertTrue(matches,mode)
+            self.assertEqual(matches[0]['material']['description'],target['material']['description'])
+            self.assertTrue(any((e.get('material') if isinstance(e.get('material'),dict) else {}).get('color')!=[18,58,239,255] for e in result.elements if e.get('material')),mode)
+            # Color wrappers remain compatible with position editing and recoloring.
+            target=matches[0]
+            moved=move_source(changed,target,.01,0)
+            moved_model=Model(mode,moved)
+            target=next(e for e in moved_model.elements if (e.get('material') if isinstance(e.get('material'),dict) else {}).get('color')==[18,58,239,255])
+            again=Model(mode,recolor_selection(moved,[target],moved_model,'00FF00'))
+            self.assertTrue(any((e.get('material') if isinstance(e.get('material'),dict) else {}).get('color')==[0,255,0,255] for e in again.elements))
+        model=self.load('HUD')
+        colors=[e['material']['color'] for e in model.elements if e.get('material') and e.get('isvisible') is not False]
+        self.assertTrue(colors)
+        self.assertTrue(all(c==[0,255,0,255] for c in colors))
+
+    def test_group_color_includes_children_and_rejects_invalid_hex(self):
+        model=self.load('HUD')
+        group=model.by_name['OCIP_PITCH_REFERENCE']
+        changed=recolor_selection(model.source,[group],model,'#FF8000')
+        result=Model('HUD',changed)
+        children=[e for e in result.elements if e.get('parent_element')==group['name']]
+        self.assertTrue(children)
+        self.assertTrue(all(e['material']['color']==[255,128,0,255] for e in children))
+        with self.assertRaises(ValueError):recolor_selection(model.source,[group],model,'#xyz')
 
     def test_expression_drag_moves_loop_as_a_group(self):
         source='for i=1,3 do\n add_text_hud("X", i*.1, -.2, nil)\nend'
@@ -143,11 +273,11 @@ class LayoutEditorTests(unittest.TestCase):
 
     def test_render_and_dynamic_text(self):
         model=self.load('MFD')
-        params=dict(DEFAULTS,F117_IRADS_LOCK_VALID=1,F117_IRADS_LOCK_RANGE=1234)
+        params=dict(DEFAULTS,F117_IRADS_LOCK_VALID=1,F117_IRADS_LOCK_RANGE=1234,F117_IRADS_RANGE_TEXT='LR 04049')
         image,hits,missing=Renderer().render(model,params,size=300,extent=.09)
         self.assertEqual(image.size,(300,300))
         self.assertFalse(missing)
-        self.assertTrue(any(h.state[5]=='RNG 1234 M' for h in hits))
+        self.assertTrue(any(h.state[5]=='LR 04049' for h in hits))
 
 
 if __name__=='__main__':unittest.main()

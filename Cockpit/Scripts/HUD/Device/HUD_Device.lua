@@ -31,6 +31,7 @@ local ROLL_HUD  = get_param_handle("ROLL_HUD")
 local HEADING_HUD = get_param_handle("HEADING_HUD")
 
 local ALTITUDE_HUD = get_param_handle("ALTITUDE_HUD")
+local altitude_mode = get_param_handle("altMode")
 local headingMode = get_param_handle("headingMode")
 
 
@@ -78,6 +79,7 @@ function post_initialize()
         -- currentPhase gates most HUD symbology (requires range 6.9–8.9).
         -- 8 = normal flight; F-117 would update this dynamically but F-117 stays in normal flight.
         get_param_handle("currentPhase"):set(8)
+        altitude_mode:set(1)
 
 end
 
@@ -146,9 +148,9 @@ function update()
 		get_param_handle("altitudeDeclutt"):set(0)
 	end
 
-        if get_param_handle("ALTITUDE_MODE"):get() == 1 then        -- 1 = barometric, 2 = Radar
+        if altitude_mode:get() == 1 then        -- 1 = barometric, 2 = Radar
                 ALTITUDE_HUD:set(sensor_data.getBarometricAltitude() * 3.2808399)
-        elseif get_param_handle("ALTITUDE_MODE"):get() == 2 then
+        elseif altitude_mode:get() == 2 then
                 local Hud_Ralt = sensor_data.getRadarAltitude() * 3.2808399
 
                 if (Hud_Ralt > 5249.4) and (Hud_Ralt < 5249.6) then        
@@ -164,8 +166,8 @@ function update()
 
 -- Speeds =================================================================================================================================
         HUD_IAS = sensor_data.getIndicatedAirSpeed() * 1.94384449                 -- m/s to kts
-        local self_vel_l,self_vel_v,self_vel_h = sensor_data.getSelfAirspeed()                -- Prereq for ground speed in kts
-        HUD_GS = math.sqrt(self_vel_h^2 + self_vel_l^2)*1.94384449
+        local ground_north,ground_up,ground_east = sensor_data.getSelfVelocity()
+        HUD_GS = math.sqrt(ground_north^2 + ground_east^2)*1.94384449
 -- Below 50 kts use ground speed reading instead
         if HUD_IAS < 50 then
                 CURR_IAS:set(HUD_GS)
