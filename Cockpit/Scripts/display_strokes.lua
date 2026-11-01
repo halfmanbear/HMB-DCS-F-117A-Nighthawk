@@ -12,6 +12,8 @@ function S.line(points,scale,weight)
     return e
 end
 function S.text(e)
+    -- Create text with ceStringSLine: ceStringPoly bypasses the indicator's
+    -- stroke settings, including the native offscreen/bake width scaling.
     e.thickness=style.thickness;e.fuzziness=style.fuzziness;e.draw_as_wire=false
     e.use_mipfilter=false
 end

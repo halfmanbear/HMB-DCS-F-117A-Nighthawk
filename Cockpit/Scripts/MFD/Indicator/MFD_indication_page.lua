@@ -1,169 +1,115 @@
--- F-117A Center MFD — DLIR/FLIR symbology overlay
--- Draws on top of the TV feed.
--- Params driven by Displays.lua (SRCH_TRCK_MODE, MLAS_TOGGLE, WHOT_TOGGLE, BOST_TOGGLE)
---
--- Coordinate system: (0,0) = display centre.
--- ±0.5 reaches roughly the edge of the MFD screen.
--- Tune GAP/ARM/GW/GH and text positions below if sizes look wrong in-game.
-
-local S   = 0.20    -- overall overlay scale
+-- Optional presentation settings for the left CMDI EO repeater.
+local options=F117_IRADS_OVERLAY_OPTIONS or {}
+local finish_native_brightness=options.repeater and function()end or dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")("F117_IRADS_SOURCE")
+-- IRADS sensor overlay, styled from the mission capture and sensor-display diagram.
+-- Coordinates retain the established centre indicator mapping (aperture ~ +/-0.08).
 local strokes=dofile(LockOn_Options.script_path.."display_strokes.lua")
-local GAP = 0.03    -- crosshair centre gap radius
-local ARM = 0.05    -- crosshair arm length (gap → tip)
-local GW  = 0.04    -- tracking gate half-width
-local GH  = 0.04    -- tracking gate half-height
-
--- ── Root element ────────────────────────────────────────────────────────────
--- Everything is a child of ROOT. Gated on mainpower so symbology disappears
--- with the rest of the avionics when power is off.
-local ROOT              = CreateElement "ceSimple"
-ROOT.name               = "F117_IRADS_SOURCE"
-ROOT.init_pos           = {0, 0}
-ROOT.element_params     = {"mainpower", "MFD_OVERLAY", "F117_IRADS_POWER"}
-ROOT.controllers        = {{"parameter_in_range", 0, 0.9, 1.1}, {"parameter_in_range", 1, 0.9, 1.1}, {"parameter_in_range", 2, 0.9, 1.1}}
-ROOT.h_clip_relation    = h_clip_relations.COMPARE
-ROOT.level              = MFD_LEVEL
-ROOT.collimated         = false
-ROOT.additive_alpha     = true
-ROOT.blend_mode         = blend_mode.IBM_REGULAR_ADDITIVE_ALPHA
+local ROOT=CreateElement "ceSimple"
+ROOT.name=options.root_name or "F117_IRADS_SOURCE"
+ROOT.parent_element=options.parent
+ROOT.element_params={"mainpower","MFD_OVERLAY","F117_IRADS_POWER"}
+ROOT.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1},{"parameter_in_range",2,.9,1.1}}
+ROOT.h_clip_relation=h_clip_relations.COMPARE
+ROOT.level=options.level or MFD_LEVEL
 Add(ROOT)
 
--- ── Internal helpers ────────────────────────────────────────────────────────
-local function mfdProps(obj, params, ctrls)
-    obj.name            = obj.name or create_guid_string()
-    obj.parent_element  = ROOT.name
-    obj.h_clip_relation = h_clip_relations.COMPARE
-    obj.level           = MFD_LEVEL
-    obj.collimated      = false
-    obj.additive_alpha  = true
-    obj.blend_mode      = blend_mode.IBM_REGULAR_ADDITIVE_ALPHA
-    if params then obj.element_params = params end
-    if ctrls  then obj.controllers    = ctrls  end
-    Add(obj)
-    return obj
+local function props(e,params,controllers)
+    e.name=e.name or create_guid_string()
+    if options.repeater then e.z_enabled=true end
+    e.parent_element=ROOT.name
+    e.h_clip_relation=h_clip_relations.COMPARE
+    e.level=options.level or MFD_LEVEL
+    e.collimated=false
+    e.additive_alpha=true
+    e.blend_mode=blend_mode.IBM_REGULAR_ADDITIVE_ALPHA
+    -- Copy shared lock/mode tables before adding per-element luminance control.
+    local p,c={},{}
+    for i,v in ipairs(params or {}) do p[i]=v end
+    for i,v in ipairs(controllers or {}) do c[i]=v end
+    p[#p+1]=options.brightness_parameter or "F117_IRADS_DRAW_BRIGHTNESS"
+    c[#c+1]={"opacity_using_parameter",#p-1}
+    e.element_params=p
+    e.controllers=c
+    Add(e)
+    return e
 end
-
-local function line(x1, y1, x2, y2, params, ctrls)
-    local l = strokes.line({{x1,y1},{x2,y2}},1)
-    l.name = create_guid_string()
-    l.material       = MFD_GREEN
-    return mfdProps(l, params, ctrls)
+local function line(points,params,controllers)
+    local e=strokes.line(points,options.scale or 1,.8)
+    e.material=MFD_WHITE
+    return props(e,params,controllers)
 end
-
-local function text(str, x, y, sd, align, params, ctrls)
-    local t          = CreateElement "ceStringPoly"
-    t.name           = create_guid_string()
-    t.init_pos       = {x, y}
-    t.value          = str
-    t.material       = MFD_FONT
-    local size = sd or MFD_SD_SM
-    t.stringdefs     = {size[1]*1.3, size[1]*1.3*.65, size[1]*1.3*.13, size[4]}
-    strokes.text(t)
-    t.alignment      = align or "CenterCenter"
-    return mfdProps(t, params, ctrls)
+local SD={.0036,.0036,0,0}
+local SMALL={.0025,.0025,0,0}
+local function text(value,x,y,size,align,params,controllers,formats)
+    local e=CreateElement "ceStringSLine"
+    local scale=options.scale or 1
+    e.init_pos={x*scale,y*scale}
+    e.value=value
+    e.material=MFD_FONT
+    size=size or SD
+    e.stringdefs={size[1]*scale,size[1]*.65*scale,size[1]*.13*scale,0}
+    e.alignment=align or "LeftCenter"
+    e.formats=formats
+    strokes.text(e)
+    return props(e,params,controllers)
 end
+local locked={"F117_IRADS_LOCK_VALID"}
+local yes={{"parameter_in_range",0,.9,1.1}}
+local no={{"parameter_in_range",0,-.1,.1}}
 
--- ── Targeting reticle ───────────────────────────────────────────────────────
--- Four-segment crosshair with open centre (no lines cross the aimpoint).
-line((-GAP - ARM) * S,  0,             (-GAP) * S,         0)           -- left arm
-line( GAP * S,          0,             (GAP + ARM) * S,    0)           -- right arm
-line( 0,                GAP * S,        0,                (GAP + ARM) * S) -- top arm
-line( 0,               (-GAP - ARM) * S, 0,               (-GAP) * S)     -- bottom arm
+-- Header positions follow the flight capture. LR is lock slant range in feet.
+text("",-.075,.063,SD,"LeftCenter",{"F117_IRADS_ALT_TEXT"},{{"text_using_parameter",0,0}},{"%s"})
+text("",-.022,.063,SD,"LeftCenter",{"F117_IRADS_RANGE_TEXT"},{{"text_using_parameter",0,0}},{"%s"})
+-- Predicted remaining weapon flight time; never represented as confirmed impact.
+text("",.075,.063,SD,"RightCenter",{"F117_IRADS_TIME_TEXT"},{{"text_using_parameter",0,0}},{"%s"})
 
--- Small filled dot at the exact aimpoint
-local dot             = CreateElement "ceMeshPoly"
-dot.name              = create_guid_string()
-dot.init_pos          = {0, 0}
-dot.primitivetype     = "triangles"
-dot.material          = MFD_GREEN
-set_circle(dot, 0.004, 0, 360, 12)
-mfdProps(dot)
+-- Four separated arms in search, horizontal arms and a small gate when locked,
+-- matching the two supplied references. The aimpoint stays unobscured.
+line({{-.020,0},{-.0045,0}})
+line({{.0045,0},{.020,0}})
+line({{0,.0045},{0,.019}},locked,no)
+line({{0,-.019},{0,-.0045}},locked,no)
+line({{-.0017,-.0017},{-.0017,.0017},{.0017,.0017},{.0017,-.0017},{-.0017,-.0017}},locked,yes)
 
--- ── Tracking gate ───────────────────────────────────────────────────────────
--- Square box visible only when SRCH_TRCK_MODE == 2 (TRACK).
-local TK_P = {"F117_IRADS_LOCK_VALID"}
-local TK_C = {{"parameter_in_range", 0, 0.9, 1.1}}
-line(-GW * S,  GH * S,   GW * S,  GH * S,  TK_P, TK_C)   -- top
-line(-GW * S, -GH * S,   GW * S, -GH * S,  TK_P, TK_C)   -- bottom
-line(-GW * S, -GH * S,  -GW * S,  GH * S,  TK_P, TK_C)   -- left
-line( GW * S, -GH * S,   GW * S,  GH * S,  TK_P, TK_C)   -- right
+-- Left sensor funnel: fixed reference geometry, not a simulated steering command.
+line({{-.066,.043},{-.066,.040},{-.058,.029},{-.058,-.030},{-.054,-.041}})
+line({{-.036,.043},{-.036,.040},{-.044,.029},{-.044,-.030},{-.048,-.041}})
+text("LG",-.073,-.006,SD)
+for i=0,4 do
+    local y=-.013-i*.004
+    line({{-.073,y},{-.0715,y}})
+end
+-- Gain bars and the upper-right attitude ladder are omitted until their actual
+-- source parameters are available; no static fill or false attitude is drawn.
 
--- ── Mode text (bottom-left) ─────────────────────────────────────────────────
--- "SRCH" when mode 1, "TRCK" when mode 2.
-text("SRCH", -0.070, -0.060, MFD_SD_XS, "LeftCenter",
-    {"F117_IRADS_LOCK_VALID"}, {{"parameter_in_range", 0, -0.1, 0.1}})
-text("POINT", -0.070, -0.060, MFD_SD_XS, "LeftCenter",
-    {"F117_IRADS_LOCK_VALID"}, {{"parameter_in_range", 0, 0.9, 1.1}})
+text("N",-.073,.055,SD,"LeftCenter",{"IRADS_ZOOM"},{{"parameter_in_range",0,2.9,3.1}})
+text("CUED",-.073,.048,SD,"LeftCenter",locked,yes)
+text("SRCH",-.073,-.049,SMALL,"LeftCenter",locked,no)
+text("POINT",-.073,-.049,SMALL,"LeftCenter",locked,yes)
+text("W-HOT",-.073,-.055,SMALL,"LeftCenter",{"WHOT_TOGGLE"},{{"parameter_in_range",0,.9,1.1}})
+text("B-HOT",-.073,-.055,SMALL,"LeftCenter",{"WHOT_TOGGLE"},{{"parameter_in_range",0,-.1,.1}})
+text("",-.073,-.061,SMALL,"LeftCenter",{"F117_IRADS_MAG_TEXT"},{{"text_using_parameter",0,0}},{"%s"})
+text("LASE",0,.033,SD,"CenterCenter",{"F117_LASER_FIRING"},{{"parameter_in_range",0,.9,1.1}})
+text("ARM",.073,.048,SMALL,"RightCenter",{"F117_LASER_ARMED"},{{"parameter_in_range",0,.9,1.1}})
+text("BOST",.073,.041,SMALL,"RightCenter",{"BOST_TOGGLE"},{{"parameter_in_range",0,.9,1.1}})
 
--- ── IR polarity (top-left) ──────────────────────────────────────────────────
--- "W-HOT" when WHOT_TOGGLE == 1, "B-HOT" when 0.
-text("W-HOT", -0.070,  0.060, MFD_SD_XS, "LeftCenter",
-    {"WHOT_TOGGLE"}, {{"parameter_in_range", 0,  0.9, 1.1}})
-text("B-HOT", -0.070,  0.060, MFD_SD_XS, "LeftCenter",
-    {"WHOT_TOGGLE"}, {{"parameter_in_range", 0, -0.1, 0.1}})
-
--- ── CCRP profile readout (top-center) ───────────────────────────────────────
-text("CCRP: GBU-31V1", 0.0, 0.070, MFD_SD_XS, "CenterCenter",
-    {"F117_CCRP_PROFILE"}, {{"parameter_in_range", 0, -0.1, 0.1}})
-text("CCRP: GBU-31V3", 0.0, 0.070, MFD_SD_XS, "CenterCenter",
-    {"F117_CCRP_PROFILE"}, {{"parameter_in_range", 0, 0.9, 1.1}})
-text("CCRP: GBU-32", 0.0, 0.070, MFD_SD_XS, "CenterCenter",
-    {"F117_CCRP_PROFILE"}, {{"parameter_in_range", 0, 1.9, 2.1}})
-text("CCRP: GBU-12", 0.0, 0.070, MFD_SD_XS, "CenterCenter",
-    {"F117_CCRP_PROFILE"}, {{"parameter_in_range", 0, 2.9, 3.1}})
-text("CCRP: GBU-27", 0.0, 0.070, MFD_SD_XS, "CenterCenter",
-    {"F117_CCRP_PROFILE"}, {{"parameter_in_range", 0, 3.9, 4.1}})
-
--- ── Laser status (top-right) ────────────────────────────────────────────────
--- ARM is permission to lase; LASE requires a live native laser spot.
-text("ARM",  0.070,  0.060, MFD_SD_XS, "RightCenter",
-    {"F117_LASER_ARMED"}, {{"parameter_in_range", 0, 0.9, 1.1}})
-
-text("LASE", 0.070, 0.045, MFD_SD_XS, "RightCenter",
-    {"F117_LASER_FIRING"}, {{"parameter_in_range", 0, 0.9, 1.1}})
-
--- ── Boost indicator (bottom-right) ──────────────────────────────────────────
--- "BOST" when brightness boost is active.
-text("BOST", 0.070, -0.060, MFD_SD_XS, "RightCenter",
-    {"BOST_TOGGLE"}, {{"parameter_in_range", 0, 0.9, 1.1}})
-
--- ── Zoom level (bottom-center) ───────────────────────────────────────────────
--- WIDE=1.4×, MED=10×, NAR=80× — driven by IRADS_ZOOM (1/2/3).
-text("WIDE", 0, -0.060, MFD_SD_XS, "CenterCenter",
-    {"IRADS_ZOOM"}, {{"parameter_in_range", 0, 0.9, 1.1}})
-text("MED",  0, -0.060, MFD_SD_XS, "CenterCenter",
-    {"IRADS_ZOOM"}, {{"parameter_in_range", 0, 1.9, 2.1}})
-text("NAR",  0, -0.060, MFD_SD_XS, "CenterCenter",
-    {"IRADS_ZOOM"}, {{"parameter_in_range", 0, 2.9, 3.1}})
-
--- Actual EFM release-inhibit state, independent of decorative display modes.
-local delivery_status = {
-    [1]="MASTER SAFE", [2]="IRADS OFF", [3]="NO TARGET", [4]="NO STORE",
-    [5]="LASER NOT READY", [6]="BAY CLOSED", [7]="NO SOLUTION",
-    [8]="OUT OF RANGE", [9]="RELEASE READY", [10]="RELEASED",
-    [11]="LAUNCH RETRY", [12]="ON GROUND", [13]="LAUNCH UNAVAILABLE", [14]="ALIGN TARGET"
+-- Compact operational feedback retained from the original overlay.
+local status={
+    [1]="MASTER SAFE",[2]="IRADS OFF",[3]="NO TARGET",[4]="NO STORE",
+    [5]="LASER NOT READY",[6]="BAY CLOSED",[7]="NO SOLUTION",
+    [8]="OUT OF RANGE",[9]="RELEASE READY",[10]="RELEASED",
+    [11]="LAUNCH RETRY",[12]="ON GROUND",[13]="LAUNCH UNAVAILABLE",[14]="ALIGN TARGET"
 }
-for code,label in pairs(delivery_status) do
-    text(label,0,0.040,MFD_SD_XS,"CenterCenter",{"F117_RELEASE_STATUS"},
-        {{"parameter_in_range",0,code-0.1,code+0.1}})
+for code,label in pairs(status) do
+    text(label,.073,-.049,SMALL,"RightCenter",{"F117_RELEASE_STATUS"},{{"parameter_in_range",0,code-.1,code+.1}})
 end
-text("M ARM",-0.070,0.045,MFD_SD_XS,"LeftCenter",{"F117_MASTER_ARM"},
-    {{"parameter_in_range",0,0.9,1.1}})
-local range=text("",0,-0.045,MFD_SD_XS,"CenterCenter",{"F117_IRADS_LOCK_RANGE","F117_IRADS_LOCK_VALID"},
-    {{"text_using_parameter",0,0},{"parameter_in_range",1,0.9,1.1}})
-range.formats={"RNG %.0f M"}
--- Flight time is predicted remaining time, not confirmed weapon impact/telemetry.
-local flight=text("",0,-0.030,MFD_SD_XS,"CenterCenter",{"F117_STORE_FLIGHT_TIME"},
-    {{"text_using_parameter",0,0},{"parameter_in_range",0,0.01,200.0}})
-flight.formats={"EST TOF %.0f S"}
+local stores={[0]="GBU-31V1",[1]="GBU-31V3",[2]="GBU-32",[3]="GBU-12",[4]="GBU-27"}
+for code,label in pairs(stores) do
+    text(label,.073,-.055,SMALL,"RightCenter",{"F117_CCRP_PROFILE"},{{"parameter_in_range",0,code-.1,code+.1}})
+end
+text("",.073,-.061,SMALL,"RightCenter",{"F117_WEAPON_STATION"},{{"text_using_parameter",0,0}},{"STN %.0f"})
 
-local station=text("",0,0.055,MFD_SD_XS,"CenterCenter",{"F117_WEAPON_STATION"},{{"text_using_parameter",0,0}})
-station.formats={"STN %.0f"}
+-- Target latitude/longitude in degrees and decimal minutes, as in the capture.
+text("",0,-.070,SD,"CenterCenter",{"F117_IRADS_COORD_TEXT"},{{"text_using_parameter",0,0}},{"%s"})
 
--- Estimated release limits in horizontal metres; RNG above is slant range.
-local minimum=text("",-0.070,0.020,MFD_SD_XS,"LeftCenter",{"F117_RELEASE_MIN_RANGE","F117_RELEASE_CUE_VALID"},
-    {{"text_using_parameter",0,0},{"parameter_in_range",1,0.9,1.1}})
-minimum.formats={"MIN %.0f M"}
-local maximum=text("",0.070,0.020,MFD_SD_XS,"RightCenter",{"F117_RELEASE_MAX_RANGE","F117_RELEASE_CUE_VALID"},
-    {{"text_using_parameter",0,0},{"parameter_in_range",1,0.9,1.1}})
-maximum.formats={"MAX %.0f M"}
+finish_native_brightness()

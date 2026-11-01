@@ -63,9 +63,9 @@ The sensor axes target the DISPLAYS cockpit device (7), using actions 3001/3002/
 Displays forwards signed values once on custom EFM commands 10119/10120/10121.
 The former direct axes 2110/2111/2112 and 20110/20111/20112 remain DLL aliases.
 Saved local bindings were migrated to the new device signatures without changing their assigned axes.
-Keyboard and analog slew now scale with optical FOV: native multiplier = 60 × 1.4 / zoom.
-Wide (1.4×) uses 60, Medium (10×) uses 8.4 and Narrow (80×) uses 1.05.
-Wide is 6× faster than the previous v4 rate; Narrow provides finer adjustment.
+Keyboard and analog slew now scale with optical FOV: native multiplier = 60 Ãƒâ€” 1.4 / zoom.
+Wide (1.4Ãƒâ€”) uses 60, Medium (10Ãƒâ€”) uses 8.4 and Narrow (80Ãƒâ€”) uses 1.05.
+Wide is 6Ãƒâ€” faster than the previous v4 rate; Narrow provides finer adjustment.
 Analog deflection remains proportional with a 5% deadzone, and held directions update immediately when zoom changes.
 A held keyboard direction takes priority over its analog axis, so centering that axis cannot cancel keyboard motion.
 The user confirmed live video, keyboard motion and the v4 TDC axis route in DCS.
@@ -155,7 +155,7 @@ needs observation after an earlier release. See _irads_geometry_dlz_fix_20261028
 ## Terrain-validated IRADS lock (28 October 2026)
 
 Current build: terrain-lock-v11. Flat-road diagnostics measured native saved
-points 826–898 m above Terrain.GetHeight. Designation now intersects a snapshot
+points 826Ã¢â‚¬â€œ898 m above Terrain.GetHeight. Designation now intersects a snapshot
 of the rendered ray with DCS terrain in cockpit Lua, then commits a matching
 validated result to the EFM. Pending/no-hit targets cannot arm laser or pass
 release gates. The v10 camera-point hook remains removed. Offline checks pass. The user
@@ -163,3 +163,29 @@ confirmed the v11 terrain lock works in DCS; repeated accepted points match
 terrain height to the logs' printed 0.001 m precision. Separate weapon impact,
 laser acquisition and fuselage visibility checks are not implied. See
 _irads_terrain_lock_fix_20261028/README.md for evidence, limits and rollback.
+
+## OCIP display arrangement (30 October 2026)
+
+The left CMDI now starts in IRADS EO/targeting mode. Ctrl+Shift+E toggles EO/VSD;
+IRADS power still uses its existing control. The central screen shows a Harris
+moving-map outline with live ownship data and a valid designated IRADS point.
+The right HSD is unchanged.
+
+- Ctrl+Shift+[ / ]: central map range decrease/increase (10, 25, 50, 100, 140 NM).
+- Ctrl+Shift+M: centered/decentered north-up/track-up orientation cycle.
+- Dedicated EO/VSD and map actions are under **F-117A Displays** in Controls.
+
+The central page now follows the supplied manual map figures, with planned
+waypoint/threat symbols and manual panning. Planning data is explicitly supplied
+in `Cockpit/Scripts/Systems/MapMission.lua` (empty by default); automatic mission
+route import and Harris-specific elevation shading remain unimplemented.
+Geographic backgrounds now use the experimental common DCS chart backend. See [OCIP cockpit research](docs/ocip-cockpit-research.md)
+for sources, confirmed facts, interpretation and validation limits.
+
+
+The generic DCS theatre-chart backend is now enabled experimentally. It uses
+an isolated common chart device, with native build checks and camera-readiness
+gating. Correct chart pixels and refresh still need an in-DCS check. Disable
+`Cockpit/Scripts/MFD/Indicator/Map/Charts/config.lua` to restore the fallback.
+The shared view contract and native rendering findings are documented in
+[native map rendering](docs/native-map-rendering.md).

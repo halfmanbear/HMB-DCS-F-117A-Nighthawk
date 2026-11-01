@@ -1,3 +1,12 @@
+> Current OCIP content: left CMDI defaults to EO; centre is a map outline.
+> The legacy `F117_IRADS_SOURCE` marker now belongs to the map parser. Its native
+> brightness gain is the centre display setting. Camera target 0 is retained
+> beneath the opaque centre map and sampled by left EO. The optional compositor
+> remains disabled, because turning it on produced a white centre image in DCS
+> (see [display pipeline](../../docs/display-readability.md#display-pipeline)).
+> Earlier IRADS-centre descriptions below document the original integration. See
+> [current routing and research](../../docs/ocip-cockpit-research.md).
+
 # F117Displays native compositor
 
 This optional cockpit Lua extension owns three `CockpitBase::ccIndicatorBake`
@@ -43,7 +52,11 @@ destructor counts. It also loads the actual DLL export and tests graceful
 fallback with CockpitBase absent. Python display tests cover the Lua bootstrap,
 holder readiness gates, glyphs and unchanged HUD optics.
 
-## Compatibility and first DCS test
+## Compatibility and testing in DCS
+
+Use the [static centre holder test](../../docs/compositor-diagnostics.md) first
+to isolate texture sampling and presentation from native baking. It needs no
+DLL rebuild and is disabled by default.
 
 Opaque native C++ allocation and context offsets are private APIs. The adapter
 checks the loaded CockpitBase file's SHA-256 before using them:
@@ -51,15 +64,67 @@ checks the loaded CockpitBase file's SHA-256 before using them:
 A different build retains direct drawing. Native exports are resolved by name.
 The baker allocation size and context offsets are specific to this build.
 
-Fully restart DCS. Look for `F117_DISPLAYS` in dcs.log and the message
+To test the compositor, set `enabled=true` in
+`Cockpit/Scripts/MFD/Indicator/render_config.lua` and fully restart DCS. While it
+is off, dcs.log shows `native compositor disabled; direct drawing retained`. When
+it is on, look for `F117_DISPLAYS` and the message
 `native MFD compositor active (VSD/HSD/IRADS)`. Check all three screens, stick
 occlusion, power, head movements, mission reload and VR. Capture a normal seated
 screenshot to compare the baked source projection with the established layout.
-If needed, set `enabled=false` in
-`Cockpit/Scripts/MFD/Indicator/render_config.lua` and restart for direct drawing.
+Set `enabled=false` again and restart to return to direct drawing.
 The module uses the exposed DCS target-resolution option, with a 1024 fallback;
 `resolution=2048` in that config explicitly overrides it.
 
-The release packager currently ships only the EFM DLL. Shipping this adapter in a
-release will also require adding its native build/test and artifact to packaging.
-The currently installed adapter is a local development build.
+Release packages include the committed `bin/F117Displays.dll`, but the package
+workflow does not build it. Commit a rebuilt copy when the native code changes.
+
+
+## Native brightness (independent of compositor)
+
+The same DLL also exports `luaopen_f117_brightness`. Shipping display pages
+register their actual materials with this module; `Systems/NativeBrightness.lua`
+updates native renderer gain for the HUD and all MFDs even while compositor
+`enabled=false`. The module checks the same CockpitBase hash, discovers current
+indicators by page markers, and uses the parser embedded at +1144. Registration
+uses native `read_from_state`; its material count is checked before activation.
+Ordinary materials use `change_brightness`; the camera target additionally uses
+`set_mfd_shader_brightness` with a neutral value of 0.5 and gain conversion.
+
+Material names are held by the module, because DCS closes a page's Lua state
+straight after loading it; a later page load replaces them. That closure also
+releases the page's `package.loadlib` handle, and pages load before the display
+device, so the module pins the DLL until DCS exits. Fully restart DCS to replace
+it. Current indicator
+pointers are rediscovered each update, not retained for subsequent native calls.
+Missing sources/materials reset discovered renderers to neutral before Lua
+re-enables the old dimmers, and the logged status names the blocking page. The
+compositor remains disabled; this export does not change its readiness, purposes
+or resources.
+
+The build now also runs `test_brightness.cpp` against DCS Lua, covering material
+capture/deduplication, source order, all five gains, video conversion, idempotent
+configuration, missing source fallback, failed material resolution, retry, page
+state closure
+and the actual DLL export. See `docs/irads-image-controls.md` for controls
+and runtime verification limits.
+
+
+## Text parameters
+
+`NativeParameters.h` adds `luaopen_f117_params`, used through
+`Systems/TextParameter.lua`. Lua `handle:set()` stores any string that reads as a
+number (`25`, `007`, `1E5`) as a number, and a `%s` element then crashes DCS in
+`sprintf`. `ed_cockpit_update_parameter_with_string` always stores text. Use it
+for any `%s` value that could look numeric, and never mix `handle:set()` writes on
+the same parameter. If the export is unavailable, numeric-looking text gains a
+`W` prefix so it still stays text. `test_parameters.cpp` runs against real DCS Lua
+with an instrumented parameter store.
+
+## Generic chart producer
+
+`NativeCharts.h` adds `luaopen_f117_charts` to the existing adapter. It updates
+only the uniquely marked, version-checked generic chart device registered by
+this mod. It is not a Hornet/F-15E device transplant. The build now also runs
+`test_charts.cpp` against real DCS Lua; those checks do not render map pixels.
+See [native map investigation](../../docs/native-map-rendering.md) for layouts,
+live-check requirements and rollback.

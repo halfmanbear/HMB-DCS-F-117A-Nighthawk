@@ -1,7 +1,7 @@
 # Automated runtime packages
 
 The `Package mod` GitHub Actions workflow builds a standalone, installable mod ZIP.
-It never copies the mod repository's DLLs or reads a local proxy configuration.
+It never copies the mod repository's EFM DLLs or reads a local proxy configuration.
 No local usernames or absolute workstation paths are configured in the workflow.
 
 | Trigger | Mod source | EFM source branch | Result |
@@ -36,6 +36,8 @@ information for this packaging build. Neither repository's source project nor
 your development configuration is modified. New EFM commits alone do not trigger
 this mod's workflow; push the mod or run the workflow manually to package them.
 Both repositories must have their intended changes committed and pushed first.
+Push the EFM before a mod commit that changes damage cells, so the package never
+pairs the new model with the old mapping. See `model-efm-compatibility.md`.
 
 ## Package contents
 
@@ -48,10 +50,11 @@ The ZIP contains a single `F-117-NightHawk/` directory, ready to extract into
 `Saved Games/DCS/Mods/aircraft/`. It includes:
 
 - Runtime scripts, models, textures, missions, sounds, and other approved assets.
-- Exactly one DLL: the fresh EFM build at `bin/F_117_NightHawk.dll`.
+- Two DLLs: the fresh EFM build at `bin/F_117_NightHawk.dll`, and the committed
+  display adapter at `bin/F117Displays.dll`. The workflow does not build the adapter.
 - Contributor credits and a short installation/attribution README.
 - `build-manifest.json`: base/package versions, channel, both commit IDs, EFM
-  repository/branch, and the DLL SHA256.
+  repository/branch, and the DLL and exterior model SHA256s.
 
 The workflow also publishes a SHA256 checksum file alongside the ZIP. GitHub's
 automatic source archives remain source snapshots; use the named mod ZIP to install.

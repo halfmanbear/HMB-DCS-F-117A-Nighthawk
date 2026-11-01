@@ -96,3 +96,20 @@ deviceCommands = deviceCommands or setmetatable({}, {
 -- Device-local axis actions; input profiles explicitly target DISPLAYS.
 -- Displays forwards signed values on custom EFM commands, avoiding stock axes.
 irads_axis_commands = { HORIZONTAL = 3001, VERTICAL = 3002, ZOOM = 3003 }
+
+-- Device-local IRADS image controls, independent of native camera/EFM commands.
+irads_image_commands = {
+    BRIGHTNESS_UP=3004, BRIGHTNESS_DOWN=3005,
+    CONTRAST_UP=3006, CONTRAST_DOWN=3007, RESET=3008,
+    BRIGHTNESS_AXIS=3009, CONTRAST_AXIS=3010,
+}
+
+-- Device-local display selection; independent of sensor power and tracking.
+left_cmdi_commands = { EO_TOGGLE=3011, EO_SELECT=3012, VSD_SELECT=3013 }
+
+-- Central map outline controls; not a replica of the real bezel switch layout.
+map_commands = { RANGE_UP=3014, RANGE_DOWN=3015, ORIENTATION=3016,
+    DATABASE=3017, FUNCTION=3018, LOOK=3019, SCROLL=3020, AUTO=3021,
+    PAN_LEFT=3022, PAN_RIGHT=3023, PAN_UP=3024, PAN_DOWN=3025,
+    TACTICAL_DECLUTTER=3026, BACKGROUND_DECLUTTER=3027,
+    REFERENCE_ELEVATION=3028, ELEVATION_UP=3029, ELEVATION_DOWN=3030 }

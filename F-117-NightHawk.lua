@@ -458,11 +458,33 @@ F_117_NightHawk = {
     -- args {} = main EDM Animation args that show damaged parts
     Damage = verbose_to_dmg_properties(
         {
-            -- Names match embedded ShellNodes/SegmentsNodes; IDs follow DCS Damage.lua.
+            -- Every key must have a same-named ShellNode or SegmentsNode in the EDM, and every
+            -- EDM collision name a key here, or DCS logs "Corrupt damage model".
+            -- IDs follow DCS Damage.lua. Critical damage values are starting values, not calibrated.
             -- DCS alone owns these visibility arguments; the EFM consumes integrity callbacks.
-            ["COCKPIT"] = {critical_damage = 5, droppable = false}, -- 3
-            ["MAIN"] = {critical_damage = 12, droppable = false},  -- 10: fixed wings + fuselage
-            ["ENGINE"] = {critical_damage = 8, droppable = false}, -- 11: no separate engine shell yet
+            ["NOSE_CENTER"] = {critical_damage = 5, droppable = false}, -- 0
+            ["COCKPIT"] = {critical_damage = 5, droppable = false}, -- 3: canopy and cockpit station
+            ["FUSELAGE_LEFT_SIDE"] = {critical_damage = 10, droppable = false},  -- 9
+            ["FUSELAGE_RIGHT_SIDE"] = {critical_damage = 10, droppable = false}, -- 10: same cell as MAIN
+            ["FUSELAGE_BOTTOM"] = {critical_damage = 4, droppable = false}, -- 82: weapon bay doors
+            ["ENGINE_L"] = {critical_damage = 8, droppable = false}, -- 11
+            ["ENGINE_R"] = {critical_damage = 8, droppable = false}, -- 12
+            ["TAIL_LEFT_SIDE"] = {critical_damage = 6, droppable = false, deps_cells = {"RUDDER_L"}},  -- 56
+            ["TAIL_RIGHT_SIDE"] = {critical_damage = 6, droppable = false, deps_cells = {"RUDDER_R"}}, -- 57
+
+            -- Fixed wing panels. Destroying a panel also destroys the surfaces it carries.
+            ["WING_L_IN"] = {critical_damage = 8, droppable = false, deps_cells = {"WING_L_OUT", "FLAP_L"}}, -- 35
+            ["WING_R_IN"] = {critical_damage = 8, droppable = false, deps_cells = {"WING_R_OUT", "FLAP_R"}}, -- 36
+            ["WING_L_OUT"] = {critical_damage = 5, droppable = false, deps_cells = {"AILERON_L"}}, -- 23
+            ["WING_R_OUT"] = {critical_damage = 5, droppable = false, deps_cells = {"AILERON_R"}}, -- 24
+
+            -- Gear doors use the gear bay cells; wheels match damage_element in FM/config.lua.
+            ["GEAR_F"] = {critical_damage = 3, droppable = false}, -- 8
+            ["GEAR_L"] = {critical_damage = 4, droppable = false}, -- 15
+            ["GEAR_R"] = {critical_damage = 4, droppable = false}, -- 16
+            ["WHEEL_F"] = {critical_damage = 3, droppable = false}, -- 83
+            ["WHEEL_L"] = {critical_damage = 3, droppable = false}, -- 84
+            ["WHEEL_R"] = {critical_damage = 3, droppable = false}, -- 85
 
             -- Left_Wing / Right_Wing are outer elevons, not entire wing structures.
             ["AILERON_L"] = {critical_damage = 3, args = {1010}, droppable = false}, -- 25

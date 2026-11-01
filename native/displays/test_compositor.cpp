@@ -5,6 +5,7 @@
 
 namespace {
 int constructed=0,destroyed=0,initialized=0,switched=0,failAt=0;
+int expectedChannels=3;
 int indices[3]={},dimensions[3]={};
 double readiness=-1;
 unsigned char contextMemory[0x148]={};
@@ -29,8 +30,16 @@ bool fakeInit(void*,void* context,const char* texture,const char* effect,int eff
 void* fakeElement(void* indicator,const char* name) {
     return std::strcmp(static_cast<Indicator*>(indicator)->marker,name)==0 ? indicator : nullptr;
 }
-void fakePush(void*,int purpose){check(initialized==3 && purpose==100,"commit follows all init calls");++switched;}
-void fakeRemove(void*,int purpose){check(initialized==3 && (purpose==0 || purpose==1),"remove direct purposes after init");++switched;}
+void fakePush(void* indicator,int purpose){
+    check(initialized==expectedChannels && purpose==100,"commit follows all init calls");
+    if (expectedChannels==1) check(indicator==&indicators[3],"diagnostic switches centre only");
+    ++switched;
+}
+void fakeRemove(void* indicator,int purpose){
+    check(initialized==expectedChannels && (purpose==0 || purpose==1),"remove direct purposes after init");
+    if (expectedChannels==1) check(indicator==&indicators[3],"diagnostic preserves side purposes");
+    ++switched;
+}
 void fakeNumber(void*,double value){readiness=value;}
 }
 
@@ -45,8 +54,13 @@ int main(int argc,char** argv) {
         symbol(runtime,"lua_getfield",getfield) && symbol(runtime,"lua_pushnumber",pushnumber) &&
         symbol(runtime,"lua_pcall",pcall) && symbol(runtime,"lua_toboolean",toboolean) &&
         symbol(runtime,"lua_settop",settop),"host Lua exports");
-    for (int scenario=0;scenario<4;++scenario) {
+    for (int scenario=0;scenario<7;++scenario) {
         constructed=destroyed=initialized=switched=0;readiness=-1;failAt=scenario==1?2:0;
+        expectedChannels=scenario>=4?1:3;
+        if (scenario==5) failAt=1;
+        indicators[0].marker=scenario>=4?"side not present":"F117_HSD_SOURCE";
+        indicators[2].marker=scenario>=4?"side not present":"F117_VSD_SOURCE";
+        indicators[3].marker=scenario==6?"wrong diagnostic page":scenario>=4?"F117_BAKE_TEST_SOURCE":"F117_IRADS_SOURCE";
         std::memset(contextMemory,0,sizeof(contextMemory));
         Vector view{pointers,pointers+4,pointers+4};
         std::memcpy(contextMemory+0xb0,&view,sizeof(view));
@@ -63,8 +77,8 @@ int main(int argc,char** argv) {
         lua.pushcclosure(state,start,1);lua.setfield(state,-10002,"run");
         if (scenario==2) indicators[2].marker="not ready";
         auto run=[&](double resolution) {
-            getfield(state,-10002,"run");pushnumber(state,resolution);
-            check(pcall(state,1,2,0)==0,"native start returns normally");
+            getfield(state,-10002,"run");pushnumber(state,resolution);pushnumber(state,scenario>=4?1:0);
+            check(pcall(state,2,2,0)==0,"native start returns normally");
             bool ok=toboolean(state,-2)!=0;settop(state,0);return ok;
         };
         bool ok=run(scenario==2?2048:1024);
@@ -79,8 +93,19 @@ int main(int argc,char** argv) {
             check(!ok && constructed==0 && switched==0,"missing page preserves direct drawing");
             indicators[2].marker="F117_VSD_SOURCE";
             check(run(2048) && dimensions[0]==2048,"late page initialization can retry at selected resolution");
-        } else {
+        } else if (scenario==3) {
             check(!ok && constructed==0 && switched==0,"absent CockpitBase preserves direct drawing");
+        } else if (scenario==4) {
+            check(ok && constructed==1 && initialized==1 && switched==3 && readiness==1,"single-channel diagnostic commits");
+            check(indices[0]==3,"diagnostic selects dedicated marker without side sources");
+            check(run(1024) && constructed==1,"diagnostic start is idempotent");
+            getfield(state,-10002,"run");pushnumber(state,1024);pushnumber(state,0);
+            check(pcall(state,2,2,0)==0 && !toboolean(state,-2),"active diagnostic cannot switch to normal mode");
+            settop(state,0);
+        } else if (scenario==5) {
+            check(!ok && constructed==1 && destroyed==1 && switched==0 && readiness==0,"diagnostic init failure rolls back");
+        } else {
+            check(!ok && constructed==0 && switched==0,"diagnostic waits for dedicated marker");
         }
         closeState(state);
         check(destroyed==constructed,"Lua GC destroys every constructed baker exactly once");

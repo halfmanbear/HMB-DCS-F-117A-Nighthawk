@@ -1,3 +1,4 @@
+local finish_native_brightness=dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")("F117_HSD_SOURCE")
 -- Basic HSD: manual PDF page 36, Figure 4-14 (printed 4-23).
 -- Metres. Heading/GS are live; unavailable navigation fields show dashes.
 local SD,SM,VAL=HSD_SD,HSD_SD_SMALL,HSD_SD_VALUE
@@ -48,7 +49,7 @@ local function line(points,colour,parent,level,width)
     return props(e,parent,level)
 end
 local function text(value,x,y,sd,align,params,controllers,formats,colour,parent,level)
-    local e=CreateElement "ceStringPoly"
+    local e=CreateElement "ceStringSLine"
     e.value=value;e.init_pos={x,y,0}
     e.material=HSD_FONTS[colour or "white"]
     local s=sd or SD
@@ -120,3 +121,9 @@ text("MAP",-.014,-.0405,SD)
 text("STAT",.005,-.0405,SD)
 text("SMD",.023,-.0405,SD)
 text("DFRM",.041,-.0405,SD)
+
+F117_SIDE_DIM_PARAMETER="F117_RIGHT_DIM_OPACITY"
+F117_SIDE_DIM_ROOT=ROOT.name
+dofile(LockOn_Options.script_path.."MFD/Indicator/side_display_dimmer.lua")
+
+finish_native_brightness()

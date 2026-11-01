@@ -29,7 +29,11 @@ function SetScale(...) end
 function GetScale() return 1 end
 function get_param_handle(name)
     return {get=function() return _parameters[name] or 0 end,
-            set=function(_,v) _parameters[name]=v end}
+            set=function(_,v)
+                -- Native set() tests lua_isnumber first, so "25" is stored as 25.
+                if type(v)=="string" then v=tonumber(v) or v end
+                _parameters[name]=v
+            end}
 end
 function Copy(o)
     local c = {}; for k,v in pairs(o) do c[k]=v end; return c
@@ -50,5 +54,5 @@ end
 FOV=1; MILLYRADIANS=2
 h_clip_relations={COMPARE=1,REWRITE_LEVEL=2,INCREASE_IF_LEVEL=3,
     DECREASE_IF_LEVEL=4,INCREASE_LEVEL=5,DECREASE_LEVEL=6}
-blend_mode={IBM_REGULAR_ADDITIVE_ALPHA=1,IBM_REGULAR=2}
+blend_mode={IBM_REGULAR_ADDITIVE_ALPHA=1,IBM_REGULAR=2,IBM_ONLY_ALPHA=5}
 LockOn_Options={script_path='',common_script_path='__dcs__/'}

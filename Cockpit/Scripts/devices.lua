@@ -16,3 +16,6 @@ devices["FC3"]					    = counter()
 devices["IRADS"]				    = counter()
 devices["GAUGES"]				    = counter()
 devices["WEAPONS"]				    = counter()
+
+-- Dedicated generic chart device; append to preserve all existing IDs.
+devices["MAP_CHARTS"] = counter()

@@ -2,11 +2,16 @@ dofile(LockOn_Options.script_path.."command_defs.lua")
 local update_time_step = 0.05 
 make_default_activity(update_time_step)
 local dev = GetSelf()
+local irads_image = dofile(LockOn_Options.script_path.."Systems/IRADS_ImageControls.lua")
+local irads_readouts = dofile(LockOn_Options.script_path.."Systems/IRADS_Readouts.lua")
 local irads_terrain = dofile(LockOn_Options.script_path.."Systems/IRADS_Terrain.lua")
 local check_irads_terrain = dofile(LockOn_Options.script_path.."Systems/IRADS_Diagnostics.lua")
+local native_brightness = dofile(LockOn_Options.script_path.."Systems/NativeBrightness.lua").new()
 local display_compositor = dofile(LockOn_Options.script_path.."Systems/DisplayCompositor.lua").new()
 -- Local variables ==================
+local map_outline = dofile(LockOn_Options.script_path.."Systems/MovingMap.lua").new()
 local Page_changed = 0
+local left_eo = get_param_handle("F117_LEFT_EO")
 
 -- params =====================================================
 -- LEFT DISPLAY ===================
@@ -49,6 +54,8 @@ local RDR_BACKGROUND = get_param_handle("RDR_BACKGROUND")
 local PLAYER_SELECTED_STATION = get_param_handle("PLAYER_SELECTED_STATION")
 local F117_CCRP_PROFILE = get_param_handle("F117_CCRP_PROFILE") -- auto-detected: 0=GBU-31(V)1/B, 1=GBU-31(V)3/B, 2=GBU-32(V)2/B, 3=GBU-12, 4=GBU-27
 local LDBrightness  = get_param_handle("LDBrightness")
+local left_dim=get_param_handle("F117_LEFT_DIM_OPACITY")
+local right_dim=get_param_handle("F117_RIGHT_DIM_OPACITY")
 local CDBrightness = get_param_handle("CDBrightness")
 local RDBrightness = get_param_handle("RDBrightness")
 get_param_handle("ONE"):set(1)
@@ -239,7 +246,10 @@ dev:listen_command(87)	-- TGP on
 
 
 function post_initialize()	-- modes / toggle default settings
+    left_eo:set(1) -- User default: targeting/EO at mission start
+    map_outline.initialize()
     display_compositor.initialize()
+    irads_image.initialize()
 -- LEFT DISPLAY ===================	
 
 	LD_UPPER:set(1)		-- 1 = GEN, 2 = def, 3 = AAR, 4 = LDP
@@ -295,6 +305,7 @@ function post_initialize()	-- modes / toggle default settings
 	RD_VSI_TOGGLE:set(1)			-- 1 = on , 0 = off	
 
 	BrightnessAtSpawn()
+    native_brightness.initialize()
 	HideFc3Hud()
 	ChangeHudColor()
 	
@@ -318,7 +329,21 @@ dev:listen_command(irads_axis_commands.HORIZONTAL)
 dev:listen_command(irads_axis_commands.VERTICAL)
 dev:listen_command(irads_axis_commands.ZOOM)
 
-function SetCommand(command,value) 
+for _,command in pairs(irads_image_commands) do dev:listen_command(command) end
+
+for _,command in pairs(left_cmdi_commands) do dev:listen_command(command) end
+for _,command in pairs(map_commands) do dev:listen_command(command) end
+
+function SetCommand(command,value)
+    if command==left_cmdi_commands.EO_TOGGLE or command==left_cmdi_commands.EO_SELECT or command==left_cmdi_commands.VSD_SELECT then
+        if value and value>0 then
+            if command==left_cmdi_commands.EO_TOGGLE then left_eo:set(1-left_eo:get())
+            else left_eo:set(command==left_cmdi_commands.EO_SELECT and 1 or 0) end
+        end
+        return -- display selection must not clear designation or dispatch sensor commands
+    end
+    if map_outline.set_command(command,value) then return end
+    if irads_image.set_command(command,value) then return end
     -- Forward exactly once. The EFM owns deadzone, rate, power and motion.
     local efm_axis = nil
     if command == irads_axis_commands.HORIZONTAL then efm_axis = f117_commands.IRADS_SLEW_HORIZONTAL
@@ -1086,6 +1111,10 @@ function BrightnessAtSpawn()
 
 	CDBrightness:set(LDBrightness:get())
 	RDBrightness:set(LDBrightness:get())
+    -- Side pages now have real image dimmers; 0 means full luminance.
+    local side=irads_image.default_side_brightness(get_absolute_model_time())
+    LDBrightness:set(1-side);RDBrightness:set(1-side);CDBrightness:set(1-side)
+    left_dim:set(1-side);right_dim:set(1-side)
 
 	local birth = LockOn_Options.init_conditions.birth_place
 	if birth == "GROUND_HOT" or birth == "AIR_HOT" then
@@ -1098,8 +1127,13 @@ function BrightnessAtSpawn()
 end
 
 function update()
+    left_dim:set(LDBrightness:get())
+    right_dim:set(RDBrightness:get())
     display_compositor.update()
+    native_brightness.update()
     irads_terrain.update()
+    irads_readouts.update()
+    map_outline.update()
     check_irads_terrain()
 
 	DigitalClock()

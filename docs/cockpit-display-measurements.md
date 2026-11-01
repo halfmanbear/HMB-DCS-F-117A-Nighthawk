@@ -6,7 +6,7 @@ world-space vertices and triangulated face areas. It does not alter or save the 
 
 ![Screen and HUD shapes at the same physical scale](assets/cockpit-display-boundaries.png)
 
-| Surface | Width x height envelope (mm) | Face area (cm²) | Mesh |
+| Surface | Width x height envelope (mm) | Face area (cmÂ²) | Mesh |
 | --- | --- | --- | --- |
 | Left MFD | 104.10 x 95.25 | 98.20 | `Cockpit.007`, left screen component |
 | Centre MFD | 175.02 x 148.18 | 254.00 | `Cockpit.043` |
@@ -21,7 +21,7 @@ MFD planarity residuals are below 0.001 mm; the far HUD pane residual is about
 0.014 mm. These values describe the model mesh precision, not manufacturing tolerances.
 
 The centre also has a parallel, overlapping mesh `Cockpit.044`, approximately
-174.92 x 148.05 mm and 254.00 cm². It is recorded as a secondary surface and
+174.92 x 148.05 mm and 254.00 cmÂ². It is recorded as a secondary surface and
 is not counted as another display. The HUD's thin front/back faces and narrow
 edge strips are likewise not counted as additional panes.
 
@@ -75,3 +75,23 @@ With the cockpit blend loaded, run `tools/measure_cockpit_displays.py` inside
 Blender. It writes `tools/data/cockpit_display_geometry.json`. From the mod folder,
 run `python tools/plot_cockpit_displays.py` to regenerate the diagram (requires
 Matplotlib). The editor only needs the exported JSON, PNG and its normal dependencies.
+
+## Side display depth clearance
+
+The saved side connector frames differ from their screen mesh normals by about
+0.264 degrees. Relative to the eye-facing connector normal, mesh vertices span
+approximately -0.330 to +0.179 mm. Depth-tested artwork at zero mounting offset
+therefore crosses the screen surface, consistent with the reported corner streaks.
+The operational VSD/HSD mounts now use `sx_l=-0.001` and `sy_l=0.0005`
+(1 mm aft, 0.5 mm up), giving approximately 0.94–1.45 mm clearance in these
+measurements. Depth testing stays enabled. These calculations use saved Blender
+geometry; DCS visual confirmation across head positions is still needed.
+IRADS and HUD mounting are unchanged.
+
+## OCIP content update
+
+The centre aperture now contains the Harris map outline; left CMDI starts in EO.
+The measured connectors and side clearance offsets are unchanged. The retained
+centre camera source draws beneath an opaque map aperture and supplies left EO.
+See [OCIP cockpit research](ocip-cockpit-research.md) for the source assessment
+and implementation limits.

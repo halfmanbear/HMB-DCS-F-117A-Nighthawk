@@ -50,8 +50,8 @@ mrad 0.000600000028498. No mesh-to-angle estimate is substituted.
 
 The accepted 20 x 15 degree design area, origin `{0,-50}` mrad, HUD mounting,
 collimator distance factor and finite two-pane glass mask are unchanged. HUD
-calibration is now disabled to expose the clean page. Centre calibration remains
-enabled; both side calibration indicators remain disabled. The source is still
+calibration is now disabled to expose the clean page. Calibration is globally disabled; the retained centre diagnostic is enabled
+only if the calibration master is explicitly switched on. The source is still
 editable under Layout Studio -> HUD.
 
 This implements the basic OCIP arrangement, not every HUD mode or INS system.
@@ -91,3 +91,73 @@ after the 2026-10-29 load crash in `text_using_parameter`; parameters can still
 be numeric zero before their first device update. Offline Lua/Python formatting
 does not reproduce the native C formatter ABI, so engine reload verification
 remains necessary.
+
+## Collimation and artwork correction, 2026-10-30
+
+The HUD root now explicitly sets `collimated=true`. Previously only descendants
+set it. Elements default to uncollimated and take their parent's flag, so the
+uncollimated root defeated the leaf flags; source-only checks
+of leaf settings and the 2D layout preview did not reproduce that behavior.
+The finite physical glass masks remain separate, uncollimated elements.
+
+Saved Layout Studio translations had also accumulated 25 increments of
+0.7156589039 mrad (17.8914725975 mrad, about 1.025 degrees) inside flight-vector
+strokes, zero/negative ladder strokes, and pitch labels. These displaced visible
+artwork from the correctly driven empty parent groups. The ladder's displacement
+rotated with bank while the flight-vector artwork's displacement stayed upright.
+Only those conformal artwork translations were removed; fixed readouts retain
+their saved positions. The existing ground-velocity projection and five-degree
+pitch controller math are retained. No additional empirical angle gain or offset
+is introduced.
+
+Regression checks now cover the entire collimation parent chain, the actual ring
+centre, horizon vertices against a level ground track over pitch/bank/drift,
+and signed ladder label alignment, in addition to the sensor projection tests.
+The corrected page still needs an in-game reload and head-movement/outside-horizon
+check; offline tests do not render the DCS collimator.
+
+## Native movement units and FPM averaging, 2026-10-30
+
+The next in-game capture exposed a separate scale error. `init_pos` and vertices
+are drawing coordinates rescaled by the page; generic movement-controller gains
+are raw metres. The earlier `1000*OCIP_U` controller gain was about 6.9866, whereas
+a tangent-plane flight-path slope needs the collimator distance, 0.600000028498 m.
+That amplified flight-vector and pitch-ladder translations by about 11.64 times.
+The page now uses `1000*OCIP_MRAD_SCALE` for those gains. All eight generic movement
+controllers on this HUD use the same correction, including the heading tape,
+vertical-speed pointer, approach bracket and future navigation cues. Fixed
+artwork positions, fonts, physical clipping and mounting remain unchanged.
+
+Generic movement controllers multiply the parameter by the supplied gain without
+page scaling, while the page rescales stored initial positions.
+The layout preview normalizes FOV scale to 1 and preserves the mrad/FOV ratio,
+which had hidden the incorrect use of drawing units for runtime movement.
+The new regression additionally loads the page with the actual logged engine
+scales and verifies its emitted native gains against the collimator distance.
+
+The flight-path source now averages world ground velocity with a first-order
+exponential filter: weight = 1 - exp(-dt / 0.25). The 0.25-second time constant
+reaches 63% of a velocity step in 0.25 s and about 95% in 0.75 s. Current heading,
+pitch and bank project that averaged velocity immediately; screen coordinates
+and attitude are not averaged. Initial samples, reacquisition after invalid data,
+and gaps longer than one second initialize directly from the new sample.
+`OCIP_data.lua` accepts an optional `vv_filter_time` for isolated projection tests;
+the production HUD uses the 0.25-second default.
+
+F-16 comparison: the supplied stock `HUD_common.lua` attaches its marker to a
+native `HUD_FPM_Pos` placeholder at zero local offset, and uses separate native
+pitch-ladder controllers. `HUD_init.lua` specifies its optical-centre correction
+(-5.2 degrees); `HUD_Page_defs.lua` specifies `boresightShiftY=98` mrad. Those
+F-16 airframe offsets are not copied to this cockpit. Our averaging coefficient is
+an explicit tuning choice, not a claimed reproduction of the F-16 filter.
+
+Tests cover native movement units, the capture's 494-knot / -4710-ft/min descent
+(about -5.38 degrees), 1/10/100 ms update intervals, velocity-step response,
+noise attenuation, immediate attitude projection and invalid-data recovery.
+Live DCS verification is still required for placement and the preferred feel.
+
+## Cockpit research context
+
+The later cockpit arrangement uses left-CMDI EO targeting and a central moving-map
+outline. This does not establish HUD infrared video capability. See the
+[source assessment and remaining uncertainties](ocip-cockpit-research.md).

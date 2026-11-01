@@ -23,7 +23,8 @@ RUNTIME_DIRS = {
     "UnitPayloads", "Weapons",
 }
 ROOT_FILES = {"comm.lua", "credits.txt", "entry.lua", "F-117-NightHawk.lua", "IRADS.lua", "Views.lua"}
-RUNTIME_EXTENSIONS = {".lua", ".dds", ".png", ".tga", ".edm", ".lods", ".owv", ".ogg", ".wav", ".miz", ".dlg", ".mo", ".ttf", ".otf"}
+DISPLAY_RUNTIME_FILES = {"bin/F117Displays.dll", "Cockpit/Scripts/Resources/Stroke/F117_stroke_font.svg"}
+RUNTIME_EXTENSIONS = {".svg", ".lua", ".dds", ".png", ".tga", ".edm", ".lods", ".owv", ".ogg", ".wav", ".sdef", ".miz", ".dlg", ".mo", ".ttf", ".otf"}
 VERSION = re.compile(r'(?m)^(\s*version\s*=\s*)([\"\x27])([0-9]+\.[0-9]+\.[0-9]+)\2(\s*,?\s*)$')
 PRIVATE_PATH = re.compile(r"(?i)(?:[a-z]:[\\/](?:Users|Saved Games)[\\/]|/home/(?!runner/)[^/\s]+/)")
 
@@ -52,7 +53,7 @@ def runtime_file(name):
     path = PurePosixPath(name)
     if path.is_absolute() or ".." in path.parts:
         return False
-    if name in ROOT_FILES:
+    if name in ROOT_FILES or name in DISPLAY_RUNTIME_FILES:
         return True
     if len(path.parts) < 2 or path.parts[0] not in RUNTIME_DIRS:
         return False
@@ -117,7 +118,7 @@ def package(root, dll, efm_root, channel, output, tag=""):
                 included.add(member.name)
                 target = f"{MOD_FOLDER}/{member.name}"
                 with tree.extractfile(member) as stream:
-                    if PurePosixPath(member.name).suffix.lower() in {".lua", ".dlg", ".lods", ".txt"}:
+                    if PurePosixPath(member.name).suffix.lower() in {".lua", ".dlg", ".lods", ".txt", ".dll"}:
                         content = stream.read()
                         check_private_paths(content, member.name)
                         if member.name == "entry.lua":
@@ -126,11 +127,12 @@ def package(root, dll, efm_root, channel, output, tag=""):
                     else:
                         with release.open(target, "w", force_zip64=True) as sink:
                             shutil.copyfileobj(stream, sink)
-            required = ROOT_FILES | {"Shapes/f-117-nighthawk.edm", "Shapes/f-117-nighthawk.lods",
+            required = ROOT_FILES | DISPLAY_RUNTIME_FILES | {"Shapes/f-117-nighthawk.edm", "Shapes/f-117-nighthawk.lods",
                                      "Cockpit/Shape/Cockpit_F-117.edm", "Cockpit/Scripts/device_init.lua"}
             missing = required - included
             if missing:
                 raise ValueError(f"Required runtime files are not committed: {', '.join(sorted(missing))}")
+            info["model_sha256"] = hashlib.sha256(release.read(f"{MOD_FOLDER}/Shapes/f-117-nighthawk.edm")).hexdigest()
             # These are loaded by the current cockpit; catch accidentally uncommitted modules.
             displays = git(root, "show", f'{info["mod_commit"]}:Cockpit/Scripts/Systems/Displays.lua')
             for module in ("IRADS_Terrain.lua", "IRADS_Diagnostics.lua"):

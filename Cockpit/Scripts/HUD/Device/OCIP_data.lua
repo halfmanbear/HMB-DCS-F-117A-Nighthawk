@@ -1,11 +1,16 @@
 -- OCIP-specific readouts. Does not alter the existing HUD/VSD/HSD parameters.
 -- Sensor angles are radians, speeds m/s, altitude metres, vertical speed m/s.
-return function(sensor)
+return function(sensor,options)
     local handles = {}
     local function set(name,value)
         if not handles[name] then handles[name]=get_param_handle("F117_OCIP_"..name) end
         handles[name]:set(value)
     end
+    -- Average ground velocity in world space, then project with current attitude.
+    -- Filtering screen coordinates would lag aircraft/head alignment in a turn.
+    options=options or {}
+    local filter_time=options.vv_filter_time or .25 -- seconds; 63% response in .25 s
+    local filtered_n,filtered_u,filtered_e
     local previous_ias,approach=nil,false
     local function finite(v) return type(v)=="number" and v==v and math.abs(v)<1e12 end
     local ladder={}
@@ -45,7 +50,18 @@ return function(sensor)
         if sensor.getSelfVelocity then vn,vu,ve=sensor.getSelfVelocity() end
         local valid=finite(vn) and finite(vu) and finite(ve)
         local x,y=0,0
+        valid=valid and vn*vn+vu*vu+ve*ve>25
         if valid then
+            if not filtered_n or filter_time<=0 or (finite(dt) and dt>1) then
+                filtered_n,filtered_u,filtered_e=vn,vu,ve
+            else
+                local elapsed=finite(dt) and math.max(0,dt) or 0
+                local weight=1-math.exp(-elapsed/filter_time)
+                filtered_n=filtered_n+(vn-filtered_n)*weight
+                filtered_u=filtered_u+(vu-filtered_u)*weight
+                filtered_e=filtered_e+(ve-filtered_e)*weight
+            end
+            vn,vu,ve=filtered_n,filtered_u,filtered_e
             local h=-sensor.getHeading()
             local ch,sh,cp,sp=math.cos(h),math.sin(h),math.cos(pitch),math.sin(pitch)
             local cr,sr=math.cos(roll),math.sin(roll)
@@ -57,6 +73,9 @@ return function(sensor)
             local up=level_up*cr+level_right*sr
             valid=forward>1 and vn*vn+vu*vu+ve*ve>25
             if valid then x=right/forward;y=up/forward end
+        end
+        if not valid then
+            filtered_n,filtered_u,filtered_e=nil,nil,nil
         end
         set("VV_X",x)
         set("VV_Y",y)
