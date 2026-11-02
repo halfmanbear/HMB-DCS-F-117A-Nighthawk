@@ -19,7 +19,8 @@ for band=0,65 do
     picture.vertices={{-1,1},{1,1},{1,-1},{-1,-1}}
     picture.indices={0,1,2,0,2,3}
     picture.tex_coords={{0,0},{1,0},{1,1},{0,1}}
-    picture.material="render_target_1"
+    picture.material=MakeMaterial("mfd0",{0,255,0,255})
+    picture.input_space_SRGB=true;picture.additive_alpha=true
     picture.use_mipfilter=false
     local p,c={},{}
     for i,v in ipairs(params) do p[i]=v end

@@ -21,8 +21,7 @@ creators[devices.WEAPONS]                = {"avSimpleWeaponSystem", LockOn_Optio
 
 indicators = {}
 
--- Retained camera-source indicator: target 0 supplies left CMDI EO.
--- The central map below covers this source surface with an opaque aperture.
+-- Centre green IRADS camera; target 0 also supplies the left grayscale repeater.
 -- Must be listed BEFORE the overlay so it renders underneath.
 indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/Indicator/DLIR_Camera_init.lua",
  devices.DISPLAYS,
@@ -84,7 +83,7 @@ indicators[#indicators + 1] = {
     }
 }
 
--- Right basic HSD on the calibrated right screen connector frame.
+-- Right colour CMDI, default MAP, on the calibrated connector frame.
 indicators[#indicators + 1] = {
     "ccIndicator", LockOn_Options.script_path.."MFD/Indicator/Right/Right_init.lua",
     devices.DISPLAYS,

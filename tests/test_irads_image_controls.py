@@ -80,7 +80,7 @@ class IRADSImageTests(unittest.TestCase):
         video=[e for e in elements if e['_etype']=='ceTexPoly']
         self.assertEqual(len(video),66)
         for band,e in enumerate(video):
-            self.assertEqual(e['material'],'render_target_1')
+            self.assertEqual(e['material'],dict(path='mfd0',color=[0,255,0,255]))
             self.assertEqual(e['controllers'][-2],['parameter_in_range',2,band-.1,band+.1])
             self.assertEqual(e['controllers'][-1][0],'set_contrast_raw')
             self.assertAlmostEqual(e['controllers'][-1][1],(.35+band*.01)/.8)

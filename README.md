@@ -26,7 +26,7 @@ At minimum, bind or verify these commands:
 
 - `Air-To-Ground Mode` - required to employ munitions
 - `Electro-Optical System On/Off` - required to enable the targeting MFD in Air-To-Ground mode
-- `IRADS FOV - Narrow` / `IRADS FOV - Wide` (or the `IRADS FOV (Wide / Medium / Narrow)` axis)
+- `IRADS FOV - Narrow` / `IRADS FOV - Wide` (or the `IRADS FOV (Wide / Narrow)` axis)
 - `Weapon Release` - for automatic bomb bay door opening on release, do not bind `Weapon Fire`
 - `Bomb Bay Door Toggle` - manual bay door override
 - `IRADS Laser Arm/Safe` - arms the EFM laser for laser-guided munitions
@@ -40,13 +40,30 @@ After updating, rebind any saved controls that used the old custom zoom IDs or
 stock laser / sensor axes. Use `Throttle Designator Controller` directions and
 `Depress / Slew Stop` to slew and designate; use `IRADS Designation Clear` to clear.
 `TDC Slew Horizontal` and `TDC Slew Vertical` now route directly to the EFM IRADS
-sensor. The zoom axis uses -1 = wide, 0 = medium and +1 = narrow, with hysteresis.
+sensor. The FOV axis selects wide/narrow; its centre retains the previous selection.
 The unsupported `Target Box Size` axis has been removed. `DLIR MFD Overlay Toggle`
 is available for keyboard and joystick assignment.
 
 Cockpit Lua development copies are maintained in the EFM repository's
 `Cockpit/Scripts` directory and deployed to the same paths in this mod. IRADS
-motion and zoom are handled by the EFM; cockpit Lua does not redispatch them.
+motion is handled by the EFM. Cockpit FOV controls dispatch absolute endpoint
+selections, avoiding the legacy intermediate zoom preset.
+
+## OCIP III displays
+
+Mission defaults: **left colour VSD | centre green IRADS | right colour MAP**.
+Under **F-117A Displays**, select VSD, grayscale EO/IRADS, MAP or HSD on the
+left CMDI; select MAP, HSD or VSD on the right. Ctrl+Shift+E toggles left EO/VSD.
+Format selection preserves sensor power, pointing and designation. MAP uses the
+existing navigation overlay and configured chart source; terrain imagery depends
+on that source being available.
+
+IRADS has two selectable FOVs: **wide and narrow**. Rebind saved FOV buttons to
+`IRADS FOV - Wide` / `IRADS FOV - Narrow`: these now use cockpit commands that
+select the installed EFM's endpoints directly. Legacy direct EFM command IDs can
+still access its old intermediate preset. The axis uses -1 wide and +1 narrow;
+its centre retains the previous selection, with hysteresis around zero. The
+existing endpoint optics are retained; no new historical FOV angles are asserted.
 
 ## Included content
 

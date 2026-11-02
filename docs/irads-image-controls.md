@@ -69,35 +69,30 @@ bindings above remain in effect. Log category `F117_BRIGHTNESS` reports
 DCS after replacing the DLL. Host tests run real DCS Lua 5.1 with instrumented
 renderer APIs; they verify the handover and lifecycle, not live rendered pixels.
 
-## Left CMDI EO selection
+## OCIP III display selection
 
-The left CMDI now defaults to EO targeting. Ctrl+Shift+E toggles EO and VSD.
-The keyboard and joystick profiles also expose Left CMDI Select EO and
-Left CMDI Select VSD under F-117A Displays for switch/hardware bindings.
-These select the display only: IRADS must still be powered with its existing
-control. Selecting EO while the sensor is off leaves the video area black.
+The left CMDI starts in colour VSD; the centre shows green IRADS and the right
+CMDI starts in colour MAP. Ctrl+Shift+E toggles left EO/VSD. Keyboard and joystick
+profiles expose Left CMDI Select VSD / EO / MAP / HSD and Right CMDI Select
+MAP / HSD / VSD under F-117A Displays. These are mod controls.
 
-EO samples the existing camera texture `mfd0` through its own material; it does
-not instantiate another sensor or register another render target. It must not use
-`render_target_1`: that `MFD` material receives brightness and contrast only on
-the indicator owning the target. Elsewhere both are
-zero and the shader flattens the picture to mid grey. The centre display now shows
-the Harris moving-map outline; it no longer shows targeting symbology.
-The targeting overlay is fitted to the smaller left aperture; its brightness
-follows the left display, including the existing mission-time night preset,
-with the native renderer or fallback dimmer. EO luminance is the lower of the
-left-display and IRADS brightness settings. Display selection
-preserves sensor power, zoom, pointing, and designation and defaults to EO
-on mission reload. The right CMDI has no EO selection.
+Left EO repeats the existing `mfd0` camera texture in grayscale, with a fitted
+sensor overlay. It creates no second sensor or camera render target. Centre video
+and symbols use green materials. The native compositor includes centre video and
+symbols together; the standalone target-zero camera remains the only source.
+Each side has one native brightness registration for all its formats.
 
-This implements the left-CMDI EO video path described in TO 1F-117A-1A,
-p. 4-12. The keyboard/hardware selector is a mod control, not a reconstruction
-of the physical OFF-NITE-AUTO-DAY-EO rotary switch. The reused overlay is our
-current IRADS presentation; it is not independently verified EO-format artwork.
-Offline checks cover selection, sensor isolation, visibility, geometry, and
-regressions. Live video refresh, stencil clipping, and native texture luminance
-on the left screen still require an in-DCS mission check.
+Selecting formats preserves sensor power, pointing, FOV and designation. EO with
+the sensor off leaves its video area black. Left EO luminance is the lower of
+left display and IRADS brightness. Left MAP/HSD/VSD use left display brightness;
+right formats use right brightness. IRADS image controls affect centre IRADS and
+the left EO repeater, independently of MAP.
 
-Research, central map controls, source assessment and remaining work are recorded
-in [OCIP cockpit research](ocip-cockpit-research.md). The central map uses its own
-brightness; the IRADS controls affect left targeting.
+FOV buttons and the axis select only wide/narrow endpoints. Saved direct EFM zoom
+bindings must be rebound to the current FOV commands; the installed EFM still
+retains a legacy intermediate preset internally. Endpoint optical values have not
+been recalibrated. See [README](../README.md#ocip-iii-displays).
+
+Offline checks cover format exclusivity, power gating, native write-only element
+properties, sensor-state isolation, FOV dispatch and brightness. Live imagery,
+colour, stencil clipping, native baking and VR require an in-DCS mission check.

@@ -8,11 +8,13 @@ purposes = {render_purpose.GENERAL,render_purpose.HUD_ONLY_VIEW}
 BASE = 1
 
 page_subsets = {
-    [BASE] = LockOn_Options.script_path.."MFD/Indicator/Map/Map_base_page.lua",
+    [BASE] = LockOn_Options.script_path.."MFD/Indicator/MFD_base_page.lua",
 }
 local display_config=dofile(LockOn_Options.script_path.."MFD/Indicator/render_config.lua")
 if display_config.bake_test and not display_config.enabled then
-    if display_config.bake_test_source=="text" then
+    if display_config.bake_test_source=="map" then
+        page_subsets[BASE]=LockOn_Options.script_path.."MFD/Indicator/Map/Map_base_page.lua"
+    elseif display_config.bake_test_source=="text" then
         page_subsets[BASE]=LockOn_Options.script_path.."MFD/Indicator/LCD/text_test_page.lua"
     elseif display_config.bake_test_source~="map" then
         page_subsets[BASE]=LockOn_Options.script_path.."MFD/Indicator/LCD/bake_test_page.lua"

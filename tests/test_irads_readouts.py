@@ -36,7 +36,7 @@ class IRADSReadoutTests(unittest.TestCase):
         self.module.update()
         self.assertEqual(self.v.F117_IRADS_RANGE_TEXT,'LR 03281')
         self.assertEqual(self.v.F117_IRADS_TIME_TEXT,'TTI 01:05')
-        self.assertEqual(self.v.F117_IRADS_MAG_TEXT,'80X')
+        self.assertEqual(self.v.F117_IRADS_MAG_TEXT,'NARROW')
         self.assertEqual(self.v.F117_IRADS_COORD_TEXT,"N LAT 42'53.04  E LNG 020'52.30")
 
     def test_rounding_hemispheres_and_relock_cache(self):

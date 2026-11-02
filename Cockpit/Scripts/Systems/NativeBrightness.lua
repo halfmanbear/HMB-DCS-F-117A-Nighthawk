@@ -24,9 +24,9 @@ function M.new()
     local function update()
         local enabled=false
         local left_gain=1-left:get()
-        if eo:get()>.5 then left_gain=math.min(left_gain,irads:get()) end
+        if eo:get()==1 then left_gain=math.min(left_gain,irads:get()) end
         if native then
-            local ok,ready,message=pcall(native.update,hud:get(),left_gain,1-right:get(),1-centre:get(),irads:get())
+            local ok,ready,message=pcall(native.update,hud:get(),left_gain,1-right:get(),irads:get(),irads:get())
             enabled=ok and ready==true
             report(ok and tostring(message) or "native brightness error: "..tostring(ready))
         end
@@ -37,7 +37,7 @@ function M.new()
         right_dim:set(enabled and 0 or right:get())
         video_dim:set(enabled and 0 or 1-irads:get())
         eo_dim:set(enabled and 0 or 1-left_gain)
-        map_dim:set(enabled and 0 or centre:get())
+        map_dim:set(enabled and 0 or right:get())
     end
     local function initialize()
         active:set(0)

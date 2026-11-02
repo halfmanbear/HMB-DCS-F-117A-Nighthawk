@@ -52,7 +52,7 @@ f117_commands =
     MASTER_ARM_TOGGLE    = 10122,
     WEAPON_STATION_NEXT   = 10123,
     WEAPON_STATION_PREV   = 10124,
-    IRADS_ZOOM_AXIS       = 10121, -- absolute axis: -1 wide, 0 medium, +1 narrow
+    IRADS_ZOOM_AXIS       = 10121, -- absolute axis: -1 wide, +1 narrow (cockpit selects endpoints only)
     AUTOTHROTTLE_ENGAGE     = 10125, -- A/T engage switch: CAS hold at current CAS
     AUTOTHROTTLE_DISCONNECT = 10126, -- inboard throttle A/T disengage button
     PAARS_TOGGLE            = 10127, -- stick ARS switch: automatic recovery on/off
@@ -107,7 +107,9 @@ irads_image_commands = {
 }
 
 -- Device-local display selection; independent of sensor power and tracking.
-left_cmdi_commands = { EO_TOGGLE=3011, EO_SELECT=3012, VSD_SELECT=3013 }
+left_cmdi_commands = { EO_TOGGLE=3011, EO_SELECT=3012, VSD_SELECT=3013, MAP_SELECT=3031, HSD_SELECT=3032 }
+right_cmdi_commands = { MAP_SELECT=3033, HSD_SELECT=3034, VSD_SELECT=3035 }
+irads_fov_commands = { WIDE=3036, NARROW=3037 }
 
 -- Central map outline controls; not a replica of the real bezel switch layout.
 map_commands = { RANGE_UP=3014, RANGE_DOWN=3015, ORIENTATION=3016,

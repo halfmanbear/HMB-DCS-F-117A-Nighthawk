@@ -26,8 +26,8 @@ PAGES = {
 ENTRIES = {
     'HUD': SCRIPTS / 'HUD/Indicator/HUD_base_page.lua',
     'MFD': SCRIPTS / 'MFD/Indicator/MFD_base_page.lua',
-    'Left MFD': SCRIPTS / 'MFD/Indicator/Left/Left_base_page.lua',
-    'Right MFD': SCRIPTS / 'MFD/Indicator/Right/Right_base_page.lua',
+    'Left MFD': SCRIPTS / 'MFD/Indicator/Left/Left_base_format.lua',
+    'Right MFD': SCRIPTS / 'MFD/Indicator/Right/Right_base_format.lua',
     'Central Map': SCRIPTS / 'MFD/Indicator/Map/Map_base_page.lua',
 }
 DRAFTS = set()
@@ -86,7 +86,7 @@ def measured_boundary(mode, units_per_metre=1):
     if not surface or mode=='HUD':return None
     return [(x*units_per_metre,y*units_per_metre) for x,y in surface['boundary_local_m']]
 DEFAULTS = {
-    'F117_LEFT_EO': 1, 'ONE': 1, 'F117_IRADS_CONTRAST_BAND': 45,
+    'F117_LEFT_EO': 0, 'F117_RIGHT_FORMAT': 2, 'ONE': 1, 'F117_IRADS_CONTRAST_BAND': 45,
     'F117_MAP_VALID': 1, 'F117_MAP_RANGE_TEXT': '25 NM', 'F117_MAP_ORIENTATION_TEXT': 'CNUP',
     'F117_MAP_GS_TEXT': 'GS 450', 'F117_MAP_HDG_TEXT': 'HDG 300 T',
     'F117_MAP_POSITION_TEXT': 'POSITION UNAVAILABLE',
@@ -103,7 +103,7 @@ DEFAULTS = {
     'nextWPRange': 18.4, 'nextWPName': 'D 39', 'nextWPType': 2,
     'F117_RELEASE_CUE_TTG': 30,
     'F117_IRADS_ALT_TEXT': 'ALT 19620', 'F117_IRADS_RANGE_TEXT': 'LR -----',
-    'F117_IRADS_TIME_TEXT': 'TTI --:--', 'F117_IRADS_MAG_TEXT': '1.4X',
+    'F117_IRADS_TIME_TEXT': 'TTI --:--', 'F117_IRADS_MAG_TEXT': 'WIDE',
     'F117_IRADS_COORD_TEXT': '', 'F117_IRADS_BRIGHTNESS': .65,
     'F117_OCIP_CAS': 314, 'F117_OCIP_ALT': 22200, 'F117_OCIP_HEADING': 300,
     'F117_OCIP_MACH': .71, 'F117_OCIP_VVI': -500,

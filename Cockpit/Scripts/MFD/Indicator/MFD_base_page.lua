@@ -3,13 +3,14 @@ dofile(LockOn_Options.common_script_path.."elements_defs.lua")
 
 local readability = dofile(LockOn_Options.script_path.."display_readability.lua")
 
--- Neutral white sensor-video symbology, matched to the supplied IRADS references.
-MFD_WHITE = MakeMaterial(nil, {230, 230, 230, 255})
+-- Green centre sensor display; the left CMDI repeater is grayscale.
+local sensor_colour=F117_IRADS_OVERLAY_OPTIONS and {230,230,230,255} or {0,255,0,255}
+MFD_WHITE = MakeMaterial(nil, sensor_colour)
 
 -- Font for symbology text
 MFD_FONT  = MakeFont(
     readability.font,
-    {230, 230, 230, 255}
+    sensor_colour
 )
 
 MFD_READABILITY = readability
@@ -21,4 +22,23 @@ MFD_SD_XS  = {0.004, 0.004, 0, 0}
 -- The overlay is a separate physical indicator. Do not inherit the sensor's
 -- FOV scale or resample its render target into this page.
 SetScale(METERS)
+local finish
+if not F117_IRADS_OVERLAY_OPTIONS then
+    finish=dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")("F117_IRADS_SOURCE")
+    F117_IRADS_REGISTERED=true
+    for band=0,65 do
+        local video=CreateElement "ceTexPoly"
+        video.name="F117_CENTRE_BAKED_VIDEO_"..band
+        video.vertices={{-.0881,.0748},{.0881,.0748},{.0881,-.0748},{-.0881,-.0748}}
+        video.indices={0,1,2,0,2,3};video.tex_coords={{0,0},{1,0},{1,1},{0,1}}
+        video.material=MakeMaterial("mfd0",{0,255,0,255})
+        video.input_space_SRGB=true;video.additive_alpha=true
+        video.element_params={"mainpower","F117_IRADS_POWER","F117_LCD_READY","F117_IRADS_DRAW_BRIGHTNESS","F117_IRADS_CONTRAST_BAND"}
+        video.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1},
+            {"parameter_in_range",2,.9,1.1},{"opacity_using_parameter",3},
+            {"parameter_in_range",4,band-.1,band+.1},{"set_contrast_raw",(.35+band*.01)/.80}}
+        Add(video)
+    end
+end
 dofile(LockOn_Options.script_path.."MFD/Indicator/MFD_indication_page.lua")
+if finish then F117_IRADS_REGISTERED=nil;finish() end

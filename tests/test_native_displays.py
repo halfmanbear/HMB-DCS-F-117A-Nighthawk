@@ -35,7 +35,7 @@ class NativeDisplayTests(unittest.TestCase):
                 self.assertNotIn('controllers',text)
                 self.assertNotIn('element_params',text)
             self.assertGreater(sum(e['_etype']=='ceSMultiLine' for e in elements),7)
-            self.assertFalse(any(e['_etype']=='ceTexPoly' for e in elements))
+            self.assertEqual(sum(e['_etype']=='ceTexPoly' for e in elements),0)
             self.assertTrue(any(e['name']=='F117_TEXT_TEST_REFERENCE' for e in elements))
             lua.execute('''
                 _handles={};_loads=0
@@ -92,7 +92,7 @@ class NativeDisplayTests(unittest.TestCase):
             elements=convert(lua.globals()._elements)
             self.assertTrue(any(e['name']=='F117_BAKE_TEST_SOURCE' for e in elements))
             self.assertEqual(sum(e['_etype']=='ceMeshPoly' for e in elements),7)
-            self.assertFalse(any(e['_etype']=='ceTexPoly' for e in elements))
+            self.assertEqual(sum(e['_etype']=='ceTexPoly' for e in elements),0)
             lua.execute('_elements={}')
             load(SCRIPTS/'MFD/Indicator/LCD/centre_page.lua')
             picture=next(e for e in convert(lua.globals()._elements) if e['_etype']=='ceTexPoly')
@@ -141,7 +141,7 @@ class NativeDisplayTests(unittest.TestCase):
             lua.globals().dofile=configured_load
             load(SCRIPTS/'MFD/Indicator/MFD_indication_init.lua')
             page=lua.globals().page_subsets[1]
-            self.assertTrue(page.endswith('/Map/Map_base_page.lua'))
+            self.assertTrue(page.endswith('/Map/Map_base_page.lua' if diagnostic else '/Indicator/MFD_base_page.lua'))
             load(page)
             elements=convert(lua.globals()._elements)
             self.assertEqual(any(e['name']=='F117_BAKE_TEST_SOURCE' for e in elements),diagnostic)
@@ -333,9 +333,9 @@ class NativeDisplayTests(unittest.TestCase):
         self.assertEqual(convert(lua.globals().purposes),[0,1])
         lua,load=runtime();load(SCRIPTS/'MFD/Indicator/DLIR_Camera_page.lua')
         video=next(e for e in convert(lua.globals()._elements) if e['name']=='dlir_picture')
-        self.assertEqual(video['material'],'render_target_1')
+        self.assertEqual(video['material'],dict(path='mfd0',color=[0,255,0,255]))
         model=Model('MFD',PAGES['MFD'].read_text())
-        self.assertFalse(any(e['_etype']=='ceTexPoly' for e in model.elements))
+        self.assertEqual(sum(e['_etype']=='ceTexPoly' for e in model.elements),66)
         lua,load=runtime();load(SCRIPTS/'MFD/Indicator/MFD_base_page.lua')
         self.assertEqual(lua.globals()._scale,lua.globals().METERS)
         config=load(SCRIPTS/'MFD/Indicator/render_config.lua')
@@ -376,7 +376,7 @@ class NativeDisplayTests(unittest.TestCase):
                 lua.execute('_elements={}')
                 load(SCRIPTS/'MFD/Indicator/MFD_base_page.lua')
                 elements=convert(lua.globals()._elements)
-                self.assertFalse(any(e['_etype']=='ceTexPoly' for e in elements))
+                self.assertEqual(sum(e['_etype']=='ceTexPoly' for e in elements),66)
                 self.assertEqual(lua.globals()._scale,lua.globals().METERS)
                 self.assertTrue(any(e['name']=='F117_IRADS_SOURCE' for e in elements))
                 self.assertTrue(any(e['_etype']=='ceSMultiLine' for e in elements))

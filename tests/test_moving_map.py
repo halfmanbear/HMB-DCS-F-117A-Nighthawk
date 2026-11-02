@@ -76,19 +76,21 @@ class MovingMapTests(unittest.TestCase):
         self.assertEqual(self.p.F117_MAP_GS_TEXT,'GS ---')
         self.assertEqual(self.p.F117_MAP_POSITION_TEXT,'POSITION UNAVAILABLE')
 
-    def test_central_registration_has_opaque_map_and_no_targeting_overlay(self):
+    def test_right_cmdi_has_opaque_map_and_centre_has_sensor_overlay(self):
         lua,load=runtime();load(S/'MFD/Indicator/MFD_indication_init.lua')
-        self.assertTrue(lua.globals().page_subsets[1].endswith('Map/Map_base_page.lua'))
+        self.assertTrue(lua.globals().page_subsets[1].endswith('Indicator/MFD_base_page.lua'))
         load(lua.globals().page_subsets[1])
+        self.assertTrue(any('F117_IRADS_COORD_TEXT' in e.get('element_params',[]) for e in convert(lua.globals()._elements)))
+        lua,load=runtime();load(S/'MFD/Indicator/Right/Right_base_page.lua')
         elements=convert(lua.globals()._elements)
-        images=[e for e in elements if e['_etype']=='ceTexPoly']
+        images=[e for e in elements if e['_etype']=='ceTexPoly' and 'MAP_SOURCE_IMAGE' in e['name']]
         self.assertEqual(len(images),1)
         # Not render_target_7: the map does not own that target, so its MFD shader
         # would receive zero brightness and contrast and draw flat grey.
         self.assertEqual(images[0]['material'],dict(path='mfd5',color=[255,255,255,255]))
         self.assertEqual(images[0]['element_params'],['F117_MAP_SOURCE_VISIBLE'])
         self.assertFalse(any('F117_IRADS_COORD_TEXT' in e.get('element_params',[]) for e in elements))
-        bg=next(e for e in elements if e['name']=='F117_MAP_BACKGROUND')
+        bg=next(e for e in elements if e['name']=='F117_right_MAP_F117_MAP_BACKGROUND')
         self.assertEqual(bg['material']['color'][3],255)
         self.assertFalse(bg['additive_alpha'])
         self.assertTrue(bg['z_enabled'])

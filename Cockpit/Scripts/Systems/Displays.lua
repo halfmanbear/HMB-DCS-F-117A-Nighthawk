@@ -12,6 +12,7 @@ local display_compositor = dofile(LockOn_Options.script_path.."Systems/DisplayCo
 local map_outline = dofile(LockOn_Options.script_path.."Systems/MovingMap.lua").new()
 local Page_changed = 0
 local left_eo = get_param_handle("F117_LEFT_EO")
+local fov_axis=-1
 
 -- params =====================================================
 -- LEFT DISPLAY ===================
@@ -39,7 +40,7 @@ local SRCH_TRCK_MODE = get_param_handle("SRCH_TRCK_MODE")
 local BOST_TOGGLE = get_param_handle("BOST_TOGGLE")
 local WHOT_TOGGLE = get_param_handle("WHOT_TOGGLE")
 local IFB_TOGGLE = get_param_handle("IFB_TOGGLE")
-local IRADS_ZOOM = get_param_handle("IRADS_ZOOM")  -- 1=WIDE(1.4x), 2=MED(10x), 3=NAR(80x)
+local IRADS_ZOOM = get_param_handle("IRADS_ZOOM")  -- 1=WIDE, 3=NARROW (installed EFM endpoint IDs)
 local MFD_OVERLAY = get_param_handle("MFD_OVERLAY") -- 1 = overlay on, 0 = off
 -- EMGY specific
 local LD_TEMP_TOGGLE = get_param_handle("LD_TEMP_TOGGLE")
@@ -246,7 +247,8 @@ dev:listen_command(87)	-- TGP on
 
 
 function post_initialize()	-- modes / toggle default settings
-    left_eo:set(1) -- User default: targeting/EO at mission start
+    left_eo:set(0) -- OCIP III default: primary flight data on the left
+    get_param_handle("F117_RIGHT_FORMAT"):set(2) -- digital moving map
     map_outline.initialize()
     display_compositor.initialize()
     irads_image.initialize()
@@ -275,7 +277,7 @@ function post_initialize()	-- modes / toggle default settings
 	BOST_TOGGLE:set(0) 			-- 1 = on , 0 = off
 	WHOT_TOGGLE:set(0)			-- 1 = on , 0 = off
 	IFB_TOGGLE:set(0) 			-- 1 = on , 0 = off
-	IRADS_ZOOM:set(1)			-- 1=WIDE(1.4x), 2=MED(10x), 3=NAR(80x)
+	IRADS_ZOOM:set(1)			-- 1=WIDE, 3=NARROW (installed EFM endpoint IDs)
 	MFD_OVERLAY:set(1)			-- 1 = on, 0 = off
 -- EMGY specific
 	LD_TEMP_TOGGLE:set(0)			-- 1 = on , 0 = off
@@ -333,14 +335,27 @@ for _,command in pairs(irads_image_commands) do dev:listen_command(command) end
 
 for _,command in pairs(left_cmdi_commands) do dev:listen_command(command) end
 for _,command in pairs(map_commands) do dev:listen_command(command) end
+for _,command in pairs(right_cmdi_commands) do dev:listen_command(command) end
+for _,command in pairs(irads_fov_commands) do dev:listen_command(command) end
 
 function SetCommand(command,value)
-    if command==left_cmdi_commands.EO_TOGGLE or command==left_cmdi_commands.EO_SELECT or command==left_cmdi_commands.VSD_SELECT then
+    if command==right_cmdi_commands.MAP_SELECT or command==right_cmdi_commands.HSD_SELECT or command==right_cmdi_commands.VSD_SELECT then
+        if value and value>0 then get_param_handle("F117_RIGHT_FORMAT"):set(command==right_cmdi_commands.MAP_SELECT and 2 or command==right_cmdi_commands.HSD_SELECT and 3 or 0) end
+        return
+    end
+    if command==left_cmdi_commands.EO_TOGGLE or command==left_cmdi_commands.EO_SELECT or command==left_cmdi_commands.VSD_SELECT or command==left_cmdi_commands.MAP_SELECT or command==left_cmdi_commands.HSD_SELECT then
         if value and value>0 then
-            if command==left_cmdi_commands.EO_TOGGLE then left_eo:set(1-left_eo:get())
-            else left_eo:set(command==left_cmdi_commands.EO_SELECT and 1 or 0) end
+            if command==left_cmdi_commands.EO_TOGGLE then left_eo:set(left_eo:get()==1 and 0 or 1)
+            else left_eo:set(command==left_cmdi_commands.EO_SELECT and 1 or command==left_cmdi_commands.MAP_SELECT and 2 or command==left_cmdi_commands.HSD_SELECT and 3 or 0) end
         end
         return -- display selection must not clear designation or dispatch sensor commands
+    end
+    if command==irads_fov_commands.WIDE or command==irads_fov_commands.NARROW then
+        if value and value>0 then
+            fov_axis=command==irads_fov_commands.NARROW and 1 or -1
+            dispatch_action(nil,f117_commands.IRADS_ZOOM_AXIS,fov_axis)
+        end
+        return
     end
     if map_outline.set_command(command,value) then return end
     if irads_image.set_command(command,value) then return end
@@ -348,7 +363,13 @@ function SetCommand(command,value)
     local efm_axis = nil
     if command == irads_axis_commands.HORIZONTAL then efm_axis = f117_commands.IRADS_SLEW_HORIZONTAL
     elseif command == irads_axis_commands.VERTICAL then efm_axis = f117_commands.IRADS_SLEW_VERTICAL
-    elseif command == irads_axis_commands.ZOOM then efm_axis = f117_commands.IRADS_ZOOM_AXIS end
+    elseif command == irads_axis_commands.ZOOM then
+        if type(value)~="number" or value~=value or math.abs(value)==math.huge then return end
+        -- Two detents with hysteresis; send only endpoints to the installed EFM.
+        if value<-.1 then fov_axis=-1 elseif value>.1 then fov_axis=1 end
+        dispatch_action(nil,f117_commands.IRADS_ZOOM_AXIS,fov_axis)
+        return
+    end
     if efm_axis then
         dispatch_action(nil, efm_axis, value)
         return
@@ -680,13 +701,13 @@ if get_param_handle("mainpower"):get() == 1 then
 				if SRCH_TRCK_MODE:get() == 2 then
 					SRCH_TRCK_MODE:set(1)  
 					dispatch_action(nil,10117) 	-- clear lock when exiting track
-					dispatch_action(nil,104) -- zoom out ldp
+					dispatch_action(nil,f117_commands.IRADS_ZOOM_AXIS,-1) -- wide FOV
 				end
 				
 			elseif (command == keys.LDSK_5) or (command == deviceCommands.LDSK_5) then	-- toggle TRACK
 				if SRCH_TRCK_MODE:get() == 1 then
 					SRCH_TRCK_MODE:set(2) 
-					dispatch_action(nil,103) -- zoom in ldp
+					dispatch_action(nil,f117_commands.IRADS_ZOOM_AXIS,1) -- narrow FOV
 				end	
 				
 			elseif (command == keys.LDSK_18) or (command == deviceCommands.LDSK_18) then	-- toggle boost (brightness)

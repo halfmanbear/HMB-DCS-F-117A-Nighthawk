@@ -1,0 +1,161 @@
+{
+  "source": "TO 1F-117A-1 Utility Flight Manual (flight test data, standard day, CG 43% MAC unless noted). Curves were read by eye from the charts, so allow about 0.1 g on them.",
+  "level_accel": {
+    "note": "Figures A9-4 to A9-10, two engines at maximum power, gear up. Times are minutes from the first speed, printed to 0.1 min.",
+    "tables": [
+      {"page": "A9-13", "alt_ft": 0, "kcas": [180, 250, 300, 350, 400, 450, 500, 525], "rows": [
+        {"weight_lb": 32000, "min": [0, 0.2, 0.3, 0.4, 0.5, 0.7, 0.9, 1.1], "fuel_lb": 334},
+        {"weight_lb": 40000, "min": [0, 0.2, 0.4, 0.5, 0.7, 0.9, 1.2, 1.4], "fuel_lb": 430},
+        {"weight_lb": 52000, "min": [0, 0.3, 0.6, 0.8, 1.0, 1.3, 1.7, 1.9], "fuel_lb": 594}]},
+      {"page": "A9-17", "alt_ft": 10000, "kcas": [180, 250, 300, 350, 400, 450, 495], "rows": [
+        {"weight_lb": 32000, "min": [0, 0.3, 0.4, 0.7, 0.9, 1.2, 1.8], "fuel_lb": 427},
+        {"weight_lb": 40000, "min": [0, 0.4, 0.6, 0.9, 1.2, 1.6, 2.4], "fuel_lb": 566},
+        {"weight_lb": 52000, "min": [0, 0.7, 1.1, 1.5, 1.9, 2.5, 3.7], "fuel_lb": 880}]},
+      {"page": "A9-21", "alt_ft": 20000, "kcas": [200, 250, 300, 350, 400, 424], "rows": [
+        {"weight_lb": 32000, "min": [0, 0.4, 0.8, 1.2, 1.8, 2.2], "fuel_lb": 369},
+        {"weight_lb": 40000, "min": [0, 0.7, 1.2, 1.8, 2.6, 3.2], "fuel_lb": 536},
+        {"weight_lb": 52000, "min": [0, 2.5, 3.7, 4.7, 5.9, 7.1], "fuel_lb": 1160}]},
+      {"page": "A9-25", "alt_ft": 30000, "kcas": [200, 250, 300, 347], "rows": [
+        {"weight_lb": 32000, "min": [0, 1.2, 2.4, 4.3], "fuel_lb": 447},
+        {"weight_lb": 36000, "min": [0, 2.1, 3.8, 6.6], "fuel_lb": 686}]}
+    ]
+  },
+  "idle_decel": {
+    "note": "Figure A9-11, page A9-27, two engines at idle, gear up, all gross weights. Times are minutes remaining until 200 KCAS.",
+    "weight_lb": 40000,
+    "rows": [
+      {"alt_ft": 0, "limit_mach": 0.85, "kcas": [250, 300, 350, 400, 450, 500], "min": [0.3, 0.6, 0.9, 1.2, 1.3, 1.6], "limit_min": 1.6},
+      {"alt_ft": 5000, "limit_mach": 0.88, "kcas": [250, 300, 350, 400, 450, 500], "min": [0.4, 0.7, 1.1, 1.4, 1.6, 1.7], "limit_min": 1.8},
+      {"alt_ft": 10000, "limit_mach": 0.90, "kcas": [250, 300, 350, 400, 450, 500], "min": [0.4, 0.8, 1.2, 1.5, 1.7, 1.8], "limit_min": 1.8},
+      {"alt_ft": 15000, "limit_mach": 0.90, "kcas": [250, 300, 350, 400, 450], "min": [0.5, 0.9, 1.3, 1.6, 1.8], "limit_min": 1.9},
+      {"alt_ft": 20000, "limit_mach": 0.90, "kcas": [250, 300, 350, 400], "min": [0.5, 1.1, 1.5, 1.8], "limit_min": 1.9},
+      {"alt_ft": 25000, "limit_mach": 0.90, "kcas": [250, 300, 350], "min": [0.6, 1.1, 1.5], "limit_min": 1.7},
+      {"alt_ft": 30000, "limit_mach": 0.90, "kcas": [250, 300], "min": [0.7, 1.3], "limit_min": 1.7}
+    ]
+  },
+  "climb": {
+    "note": "Figure A4-3, page A4-5, two engines at maximum power, gear up, 340 KCAS then Mach 0.78. Times in minutes from sea level; fuel in pounds.",
+    "cas_kt": 340,
+    "mach": 0.78,
+    "alt_ft": [5000, 10000, 15000, 20000, 25000, 30000, 35000],
+    "rows": [
+      {"weight_lb": 32000, "min": [0.5, 1.1, 1.8, 2.7, 4.0, 5.5, 8.3], "fuel_lb": [142, 288, 445, 621, 813, 995, 1252]},
+      {"weight_lb": 40000, "min": [0.6, 1.4, 2.3, 3.6, 5.4, 7.9], "fuel_lb": [184, 375, 583, 821, 1094, 1397]},
+      {"weight_lb": 52000, "min": [0.9, 2.0, 3.3, 5.3, 8.6], "fuel_lb": [256, 528, 832, 1203, 1712]}
+    ]
+  },
+  "service_ceiling": {
+    "note": "Figure A4-3, page A4-5. Initial weight less the fuel used to reach the ceiling. 100 ft/min at Mach 0.78 defines the ceiling.",
+    "mach": 0.78,
+    "rows": [
+      {"initial_weight_lb": 32000, "fuel_lb": 1912, "alt_ft": 38600},
+      {"initial_weight_lb": 36000, "fuel_lb": 2056, "alt_ft": 36380},
+      {"initial_weight_lb": 40000, "fuel_lb": 2264, "alt_ft": 34610},
+      {"initial_weight_lb": 44000, "fuel_lb": 2467, "alt_ft": 32550},
+      {"initial_weight_lb": 48000, "fuel_lb": 2679, "alt_ft": 30810},
+      {"initial_weight_lb": 52000, "fuel_lb": 2895, "alt_ft": 29150}
+    ]
+  },
+  "sustained_turn": {
+    "note": "Figure A9-12, page A9-28, standard day, maximum power, gear up. Read from the 32,000 lb baseline. The chart's guidelines follow n x weight = constant closely.",
+    "weight_lb": 32000,
+    "mach": [0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.85],
+    "rows": [
+      {"alt_ft": 0, "g": [3.26, 3.89, 4.23, 4.27, 4.09, 3.69, 2.78]},
+      {"alt_ft": 5000, "g": [2.74, 3.36, 3.73, 3.83, 3.76, 3.48, 2.95]},
+      {"alt_ft": 10000, "g": [2.27, 2.80, 3.21, 3.32, 3.29, 3.13, 2.75]},
+      {"alt_ft": 15000, "g": [1.86, 2.32, 2.68, 2.83, 2.83, 2.77, 2.58]},
+      {"alt_ft": 20000, "g": [1.49, 1.87, 2.20, 2.34, 2.37, 2.36, 2.22]},
+      {"alt_ft": 25000, "g": [1.19, 1.52, 1.74, 1.87, 1.88, 1.83, 1.74]},
+      {"alt_ft": 30000, "g": [1.00, 1.21, 1.39, 1.49, 1.50, 1.52, 1.39]},
+      {"alt_ft": 35000, "g": [null, null, 1.07, 1.16, 1.18, 1.15, 1.06]}
+    ]
+  },
+  "max_level_speed": {
+    "note": "Figure A9-13, page A9-30, standard day, maximum power. Below these thrust-limited points the chart follows the Mach 0.90 limit, so Mach 0.90 must be reachable. Sea level is limited to Mach 0.85.",
+    "thrust_limited": [
+      {"weight_lb": 32000, "alt_ft": 36800, "kcas": 283},
+      {"weight_lb": 32000, "alt_ft": 35200, "kcas": 304},
+      {"weight_lb": 42000, "alt_ft": 32600, "kcas": 312},
+      {"weight_lb": 52000, "alt_ft": 27400, "kcas": 349},
+      {"weight_lb": 52000, "alt_ft": 26500, "kcas": 364}
+    ],
+    "reaches_limit_mach": [
+      {"weight_lb": 32000, "alt_ft": 0, "mach": 0.85},
+      {"weight_lb": 52000, "alt_ft": 0, "mach": 0.85},
+      {"weight_lb": 32000, "alt_ft": 10000, "mach": 0.90},
+      {"weight_lb": 52000, "alt_ft": 10000, "mach": 0.90},
+      {"weight_lb": 32000, "alt_ft": 20000, "mach": 0.90},
+      {"weight_lb": 52000, "alt_ft": 20000, "mach": 0.90},
+      {"weight_lb": 32000, "alt_ft": 30000, "mach": 0.90}
+    ]
+  },
+  "trim_aoa": {
+    "note": "Indicated AOA from Figure A6-1 (page A6-3, gear up, CG 43%) and Figure 2-2 (page 2-13, gear down, CG 44%). Indicated AOA can differ from true AOA by an amount the manual doesn't give.",
+    "rows": [
+      {"weight_lb": 32000, "kcas": 222, "alt_ft": 0, "gear_down": false, "aoa": 4.9},
+      {"weight_lb": 32000, "kcas": 222, "alt_ft": 20000, "gear_down": false, "aoa": 4.9},
+      {"weight_lb": 40000, "kcas": 249, "alt_ft": 10000, "gear_down": false, "aoa": 4.9},
+      {"weight_lb": 52000, "kcas": 285, "alt_ft": 20000, "gear_down": false, "aoa": 4.8},
+      {"weight_lb": 30000, "kcas": 143, "alt_ft": 1000, "gear_down": true, "aoa": 9.5},
+      {"weight_lb": 40000, "kcas": 166, "alt_ft": 1000, "gear_down": true, "aoa": 9.5},
+      {"weight_lb": 50000, "kcas": 185, "alt_ft": 1000, "gear_down": true, "aoa": 9.5},
+      {"weight_lb": 30000, "kcas": 158, "alt_ft": 1000, "gear_down": true, "aoa": 8.0},
+      {"weight_lb": 40000, "kcas": 182, "alt_ft": 1000, "gear_down": true, "aoa": 8.0},
+      {"weight_lb": 50000, "kcas": 204, "alt_ft": 1000, "gear_down": true, "aoa": 8.0},
+      {"weight_lb": 30000, "kcas": 169, "alt_ft": 1000, "gear_down": true, "aoa": 7.0},
+      {"weight_lb": 40000, "kcas": 195, "alt_ft": 1000, "gear_down": true, "aoa": 7.0},
+      {"weight_lb": 50000, "kcas": 218, "alt_ft": 1000, "gear_down": true, "aoa": 7.0}
+    ]
+  },
+  "cruise_fuel_flow": {
+    "note": "Figure A6-1, page A6-3: fuel flow at the maximum endurance speed, pounds per hour per engine, gear up. In steady flight this measures drag times fuel consumption.",
+    "rows": [
+      {"weight_lb": 32000, "kcas": 222, "alt_ft": 0, "lb_hr_engine": 2320},
+      {"weight_lb": 32000, "kcas": 222, "alt_ft": 20000, "lb_hr_engine": 1960},
+      {"weight_lb": 40000, "kcas": 249, "alt_ft": 10000, "lb_hr_engine": 2590},
+      {"weight_lb": 52000, "kcas": 285, "alt_ft": 0, "lb_hr_engine": 3470},
+      {"weight_lb": 52000, "kcas": 285, "alt_ft": 20000, "lb_hr_engine": 3190}
+    ]
+  },
+  "roll_rate": {
+    "note": "Page 6-3: 1 g maximum roll rate about 80 deg/s at low speeds to about 190 deg/s above 300 KCAS. The manual doesn't define low speed, so 170 KCAS is a choice made here. Altitude and weight aren't given either.",
+    "alt_ft": 10000,
+    "weight_lb": 40000,
+    "rows": [
+      {"kcas": 170, "dps": 80},
+      {"kcas": 300, "dps": 190},
+      {"kcas": 400, "dps": 190},
+      {"kcas": 500, "dps": 190}
+    ]
+  },
+  "sideslip": {
+    "note": "Page 6-3: full pedal gives about 8 deg of steady sideslip at 170 KCAS and only 4 deg at 500 KCAS.",
+    "alt_ft": 5000,
+    "weight_lb": 40000,
+    "rows": [
+      {"kcas": 170, "deg": 8},
+      {"kcas": 500, "deg": 4}
+    ]
+  },
+  "aoa_limit": {
+    "note": "Figure 5-7, page 5-9, flight test limits on indicated AOA with full aft stick. Altitudes are chosen here so the 7 g limit doesn't act first.",
+    "weight_lb": 40000,
+    "rows": [
+      {"mach": 0.3, "alt_ft": 10000, "gear_down": false, "aoa": 12.6},
+      {"mach": 0.5, "alt_ft": 25000, "gear_down": false, "aoa": 12.6},
+      {"mach": 0.7, "alt_ft": 25000, "gear_down": false, "aoa": 11.5},
+      {"mach": 0.9, "alt_ft": 30000, "gear_down": false, "aoa": 8.2},
+      {"mach": 0.3, "alt_ft": 5000, "gear_down": true, "aoa": 14.6},
+      {"mach": 0.45, "alt_ft": 15000, "gear_down": true, "aoa": 14.0}
+    ]
+  },
+  "load_factor": {
+    "note": "Page 6-3: the flight controls allow 7 g above 500 KCAS at low altitude. Lower design limits also apply below 41,000 lb, but this tests only what full aft stick reaches.",
+    "alt_ft": 2000,
+    "weight_lb": 40000,
+    "rows": [
+      {"kcas": 550, "g": 7.0}
+    ]
+  }
+}
