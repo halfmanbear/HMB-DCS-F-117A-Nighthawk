@@ -184,6 +184,6 @@ F117_SIDE_DIM_PARAMETER="F117_LEFT_DIM_OPACITY"
 F117_SIDE_DIM_ROOT=ROOT.name
 dofile(LockOn_Options.script_path.."MFD/Indicator/side_display_dimmer.lua")
 
-dofile(LockOn_Options.script_path.."MFD/Indicator/Left/Left_eo_page.lua")
+-- EO is composed separately by CMDI_formats.lua.
 
 finish_native_brightness()

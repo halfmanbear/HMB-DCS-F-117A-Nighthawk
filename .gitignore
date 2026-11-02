@@ -24,6 +24,8 @@
 /dist/
 __pycache__/
 /tools/layout_editor_backups/
+/tools/fm_bench/.cache/
+/tools/fm_bench/results/
 
 # Local-only reference material (manual OCR text; not for distribution)
 /docs/reference/

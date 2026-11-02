@@ -17,7 +17,9 @@ FM = {
     -- Mass properties
     ---------------------------------------------------------------------------
     center_of_mass = {0.0, 0.1, 0.0}, -- Centre of mass for empty weight (earlier value {0.35, -0.10, 0.0})
-    moment_of_inertia = {3.0e5, 9.0e5, 6.8e5, 0.0}, -- kg m2: roll, yaw, pitch, Ixy. DCS has Y up and Z right, so Iy is yaw and Iz is pitch
+    -- kg m2: roll, yaw, pitch, Ixy. DCS has Y up and Z right, so Iy is yaw and Iz is pitch.
+    -- An estimate, about +/-30%: the manuals give no inertia, so these follow the F-15C, which has almost the same mass and size.
+    moment_of_inertia = {40000, 260000, 225000, 0.0},
 
     ---------------------------------------------------------------------------
     -- Systems
@@ -105,7 +107,7 @@ FM = {
             wheel_moment_of_inertia = 1.0, -- kg m2: about the wheel's rotation axis
             wheel_static_friction_factor = 0.80, -- Friction at rest along the aircraft's length, as a multiple of ground reaction force
             wheel_side_friction_factor = 0.45, -- As static friction, across the aircraft
-            wheel_roll_friction_factor = 0.05, -- As static friction, for the rolling wheel
+            wheel_roll_friction_factor = 0.04, -- As static friction, for the rolling wheel. Same as the stock F-15E and F-16C main wheels
             wheel_glide_friction_factor = 0.5, -- As static friction, when gliding (wet runway, locked brakes)
             wheel_brake_moment_max = 20000.0, -- Maximum wheel braking moment
             anti_skid_installed = true, -- Enables integrated wheel antiskid physics
@@ -150,7 +152,7 @@ FM = {
             wheel_moment_of_inertia = 1.0, -- kg m2: about the wheel's rotation axis
             wheel_static_friction_factor = 0.80, -- Friction at rest along the aircraft's length, as a multiple of ground reaction force
             wheel_side_friction_factor = 0.45, -- As static friction, across the aircraft
-            wheel_roll_friction_factor = 0.05, -- As static friction, for the rolling wheel
+            wheel_roll_friction_factor = 0.04, -- As static friction, for the rolling wheel. Same as the stock F-15E and F-16C main wheels
             wheel_glide_friction_factor = 0.5, -- As static friction, when gliding (wet runway, locked brakes)
             wheel_brake_moment_max = 20000.0, -- Maximum wheel braking moment
             anti_skid_installed = true, -- Enables integrated wheel antiskid physics

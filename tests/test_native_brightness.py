@@ -39,14 +39,14 @@ class NativeBrightnessTests(unittest.TestCase):
         self.assertEqual(v.F117_IRADS_DRAW_BRIGHTNESS,1)
         for param in ['F117_LEFT_DIM_OPACITY','F117_RIGHT_DIM_OPACITY','F117_IRADS_DIM_OPACITY']:
             self.assertEqual(v[param],0)
-        for actual,expected in zip(g.gains.values(),[.7,.12,.14,.1,.16]):
+        for actual,expected in zip(g.gains.values(),[.7,.12,.14,.16,.16]):
             self.assertAlmostEqual(actual,expected)
         g.ready=False;module.update()
         self.assertEqual(v.F117_NATIVE_BRIGHTNESS_ACTIVE,0)
         self.assertAlmostEqual(v.F117_IRADS_DRAW_BRIGHTNESS,.16)
         self.assertAlmostEqual(v.F117_LEFT_DIM_OPACITY,.88)
 
-    def test_eo_image_brightness_is_independent_of_central_map(self):
+    def test_eo_image_brightness_is_independent_of_right_map(self):
         lua=self.runtime();g=lua.globals()
         lua.execute('''
             ready=false
@@ -57,18 +57,18 @@ class NativeBrightnessTests(unittest.TestCase):
         module=lua.execute((SCRIPTS/'Systems/NativeBrightness.lua').read_text()).new()
         module.initialize();v=g['values']
         self.assertAlmostEqual(v.F117_LEFT_EO_DIM_OPACITY,.84)
-        self.assertAlmostEqual(v.F117_MAP_DIM_OPACITY,.9)
+        self.assertAlmostEqual(v.F117_MAP_DIM_OPACITY,.86)
         v.F117_IRADS_BRIGHTNESS=.4;module.update()
         self.assertAlmostEqual(v.F117_LEFT_EO_DIM_OPACITY,.6)
-        self.assertAlmostEqual(v.F117_MAP_DIM_OPACITY,.9)
+        self.assertAlmostEqual(v.F117_MAP_DIM_OPACITY,.86)
         g.ready=True;module.update()
         self.assertEqual(v.F117_LEFT_EO_DIM_OPACITY,0)
         self.assertEqual(v.F117_MAP_DIM_OPACITY,0)
         self.assertAlmostEqual(g.gains[2],.4)
-        self.assertAlmostEqual(g.gains[4],.1)
+        self.assertAlmostEqual(g.gains[4],.4)
         v.F117_LEFT_EO=0;module.update()
         self.assertAlmostEqual(g.gains[2],.8)
-        self.assertAlmostEqual(g.gains[4],.1)
+        self.assertAlmostEqual(g.gains[4],.4)
 
     def test_missing_loader_preserves_existing_controls(self):
         lua=self.runtime();lua.execute('package=nil')

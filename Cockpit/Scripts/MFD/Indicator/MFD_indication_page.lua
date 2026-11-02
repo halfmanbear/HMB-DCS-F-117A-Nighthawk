@@ -1,6 +1,6 @@
 -- Optional presentation settings for the left CMDI EO repeater.
 local options=F117_IRADS_OVERLAY_OPTIONS or {}
-local finish_native_brightness=options.repeater and function()end or dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")("F117_IRADS_SOURCE")
+local finish_native_brightness=(options.repeater or F117_IRADS_REGISTERED) and function()end or dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")("F117_IRADS_SOURCE")
 -- IRADS sensor overlay, styled from the mission capture and sensor-display diagram.
 -- Coordinates retain the established centre indicator mapping (aperture ~ +/-0.08).
 local strokes=dofile(LockOn_Options.script_path.."display_strokes.lua")

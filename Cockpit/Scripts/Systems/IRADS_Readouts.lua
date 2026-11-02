@@ -31,7 +31,7 @@ local function update()
         local seconds=math.floor(t+.5)
         time:set(string.format("TTI %02d:%02d",math.floor(seconds/60),seconds%60))
     else time:set("TTI --:--") end
-    local magnification={[1]="1.4X",[2]="10X",[3]="80X"}
+    local magnification={[1]="WIDE",[3]="NARROW"}
     mag:set(magnification[zoom:get()] or "")
     if not locked then
         coords:set("");lastX,lastZ,lastCoords=nil,nil,nil

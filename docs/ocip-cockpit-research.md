@@ -3,6 +3,15 @@
 Research reviewed 30 October 2026. This mod targets the later cockpit arrangement;
 individual sources describe different dates and upgrade standards.
 
+## Simulator configuration update, 2 November 2026
+
+The user-specified OCIP III configuration supersedes the earlier working layout
+below: left colour VSD, centre green IRADS, right colour digital moving map.
+Left alternatives are grayscale IRADS, MAP and HSD; right alternatives are HSD
+and VSD. IRADS controls select only wide/narrow endpoint presets. This is the
+simulator configuration requested for this project; the earlier source assessment
+below is retained as research history, including its disagreements about layout.
+
 ## Findings and source assessment
 
 | Source | Finding used | Limits |
@@ -16,9 +25,9 @@ individual sources describe different dates and upgrade standards.
 | [MiGFlug](https://migflug.com/aircraft/f-117-nighthawk/) | General corroboration of map and OCIP upgrades | Secondary overview, not evidence for exact display placement, controls or delivery logic. |
 | [1992 baseline Utility Flight Manual](https://pdfcoffee.com/1992-to-1f-117a-1-utility-flight-manual-usaf-series-f-117a-aircraft-3-pdf-free.html) | Earlier sensor-display and backup-video descriptions provide context | Public OCR is poor. Baseline and supplement must be read together; generic sensor-display terminology does not disprove later hardware replacement. |
 
-The working arrangement is centre moving map, left CMDI selectable EO/flight
+The earlier working arrangement was centre moving map, left CMDI selectable EO/flight
 formats, right CMDI flight/navigation/system formats, and HUD flight/attack
-symbology. Defaulting the left CMDI to EO is the user's requested mod preference,
+symbology. Defaulting the left CMDI to EO was an earlier mod preference,
 not a verified real-aircraft power-up selection. HUD infrared video has not been
 established by this research.
 

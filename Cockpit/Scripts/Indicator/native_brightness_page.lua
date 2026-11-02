@@ -1,6 +1,7 @@
 -- Register the actual material names, including Layout Studio color overrides.
 -- No native object addresses are passed through Lua.
 return function(marker)
+    if F117_CMDI_BUILDING then return function()end end
     local original_add=Add
     local materials,seen={},{}
     Add=function(element)

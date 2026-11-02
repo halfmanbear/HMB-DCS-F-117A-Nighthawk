@@ -154,6 +154,6 @@ Live DCS verification is still required for placement and the preferred feel.
 
 ## Cockpit research context
 
-The later cockpit arrangement uses left-CMDI EO targeting and a central moving-map
-outline. This does not establish HUD infrared video capability. See the
+The requested OCIP III simulator defaults are left VSD, centre green IRADS and
+right moving map, with optional left grayscale EO. This does not establish HUD infrared video capability. See the
 [source assessment and remaining uncertainties](ocip-cockpit-research.md).

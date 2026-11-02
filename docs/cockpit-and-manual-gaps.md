@@ -138,6 +138,8 @@ Page references below are **PDF page / printed page**.
 - Autothrottle CAS hold and PAARS (PDF 15–20, 52) – `docs/autothrottle-paars.md`
 - IRADS sensor display, designation, laser and weapon release (described in the
   weapons manual rather than this one)
+- Flight model fitted to the base manual's flight test data, scored by `tools/fm_bench`:
+  lift, drag, thrust, fuel flow, AOA limits, roll rates and sideslip.
 - Nosewheel steering ranges from the base manual, TO 1F-117A-1 page 1-29: 10 deg
   normally, 45 deg while the authority button is held (`N`). The paddle switch that
   disengages steering and lets the wheel swivel freely is not modelled.

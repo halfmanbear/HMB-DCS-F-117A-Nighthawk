@@ -90,8 +90,7 @@ IRADS and HUD mounting are unchanged.
 
 ## OCIP content update
 
-The centre aperture now contains the Harris map outline; left CMDI starts in EO.
-The measured connectors and side clearance offsets are unchanged. The retained
-centre camera source draws beneath an opaque map aperture and supplies left EO.
-See [OCIP cockpit research](ocip-cockpit-research.md) for the source assessment
-and implementation limits.
+OCIP III defaults are left colour VSD, centre green IRADS and right colour MAP.
+Left EO repeats the target-zero sensor in grayscale. MAP is fitted to the side
+apertures; connector mounts and clearance offsets are retained. The colour and
+clipping still need an in-DCS check after loading the revised cockpit.

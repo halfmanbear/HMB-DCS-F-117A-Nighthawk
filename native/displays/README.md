@@ -1,11 +1,8 @@
-> Current OCIP content: left CMDI defaults to EO; centre is a map outline.
-> The legacy `F117_IRADS_SOURCE` marker now belongs to the map parser. Its native
-> brightness gain is the centre display setting. Camera target 0 is retained
-> beneath the opaque centre map and sampled by left EO. The optional compositor
-> remains disabled, because turning it on produced a white centre image in DCS
-> (see [display pipeline](../../docs/display-readability.md#display-pipeline)).
-> Earlier IRADS-centre descriptions below document the original integration. See
-> [current routing and research](../../docs/ocip-cockpit-research.md).
+> Current OCIP III routing: left VSD, centre green IRADS, right MAP. Left also
+> selects grayscale EO, MAP and HSD; right selects HSD/VSD. The side source markers
+> name physical CMDIs, regardless of selected format. Centre native baking now
+> includes sensor video as well as symbols; target 0 remains its sole camera.
+> Colour, native bake output, clipping and VR require an in-DCS check.
 
 # F117Displays native compositor
 
