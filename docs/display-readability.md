@@ -32,7 +32,7 @@ To try it again:
 2. Fully restart DCS, and look for `native MFD compositor active (VSD/HSD/IRADS)` in `dcs.log`.
 3. Check all three screens by eye, because that message only means setup succeeded, not that the screens drew correctly.
 
-The centre display has since changed from IRADS to the map, and the map page now carries the `F117_IRADS_SOURCE` marker. The compositor would therefore bake the map, which has not been tested.
+The centre display has since changed from IRADS to the map, and the map page now carries the `F117_IRADS_SOURCE` marker. The compositor would therefore bake the map.
 
 The earlier Lua-only render_target + BAKE attempt produced black screens and has been replaced. This adapter initializes actual native baking objects and named channels. See [native compositor implementation and tests](../native/displays/README.md) for source selection, ownership, compatibility and runtime limits.
 

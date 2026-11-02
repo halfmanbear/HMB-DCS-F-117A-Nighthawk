@@ -1,7 +1,7 @@
 // Private CockpitBase layouts are accepted only for the hash checked above.
 // No hooks, vtable replacement, baker activation or DCS binary modification.
 namespace {
-constexpr size_t IndicatorParserOffset=1144; // ccIndicator::draw / initialize
+constexpr size_t IndicatorParserOffset=1144; // parser the indicator uses when drawing
 struct BrightnessAPI {
     void* (*context)()=nullptr;
     void* (*element)(void*,const char*)=nullptr;

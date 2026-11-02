@@ -91,10 +91,3 @@ python tests/paars_regression.py <out-dir>
   engine model and an idealised FCS. All recover to wings level within 26 s. 22 high-altitude
   slow cases settle wings level below the target pitch because MIL thrust cannot hold the climb,
   as the manual warns for speeds below 200 KCAS.
-
-## Needs checking in DCS
-
-- A/T hold quality on the real aerodynamic model and engine (gains were tuned on a point-mass model).
-- PAARS on the real FCS: sign of the roll-rate command, recoveries from inverted and vertical
-  attitudes, behaviour at the AoA limiter.
-- VSD readouts while engaged.

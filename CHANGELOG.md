@@ -1,0 +1,97 @@
+## IRADS designation and delivery update (28 October 2026)
+
+The installed delivery-v6 build adds actual point-lock/release status, Master Arm / Safe,
+and Weapon Station Next/Previous. Master Arm starts SAFE. Designate terrain with TDC Depress;
+POINT and RNG reflect EFM lock state. Active slew exits point track.
+Laser Arm plus a valid powered designation automatically creates code-1688 illumination.
+JDAM launches receive the designated world coordinate snapshot and do not require laser.
+LGB release requires a live laser spot; retain illumination until impact.
+Hold CCRP consent: the EFM opens the bay and releases one supported selected store only
+when the release gates pass and DCS accepts the launch. No untargeted Lua fallback remains.
+The selected station/profile refreshes for mixed loads, depletion and rearm.
+EST TOF is predicted flight time, not confirmed tracking of the released weapon or impact.
+Delivery behavior still needs a live DCS check. See local F117-mod-status.html for findings.
+
+
+## Guided release-zone correction (28 October 2026)
+
+The current guided-zone-v7 build separates the ballistic CCRP cue from the provisional
+guided-store release window. The old narrow unguided impact gate could hold guided
+weapons indefinitely outside the flight path. ALIGN TARGET now identifies excessive
+lateral offset; OUT OF RANGE identifies the estimated range window. Turn toward the
+designated target and hold consent while approaching. JDAM uses an approximate
+30-degree alignment limit, LGB 15 degrees. These are tuning assumptions pending
+live DCS guidance/release validation. All other release gates remain active.
+
+
+## Point lock, auto-step and pickle update (28 October 2026)
+
+Current build: point-pickle-v8. Final rendered camera LOS is stabilized directly
+onto the saved fixed world designation after native motor/frame updates. Each
+accepted native release automatically selects the next loaded supported station.
+Holding pickle still permits only one accepted release; release and press again
+for the next store. Weapon Release (Pickle) now uses generic commands 350/351.
+Keyboard default: Right Alt + Space. Plain Space is restored to Weapon Fire.
+The saved keyboard Space-to-bomb override was removed; unrelated bindings remain.
+Offline tracking/store/input/delivery tests and Release x64 build pass.
+
+
+## Render-stage lock and JDAM envelope update (28 October 2026)
+
+Current build: render-dlz-v9. Native camera pose extrapolation is suppressed only
+while constructing a point-locked camera or capturing its terrain intersection;
+the original native timestamp is restored immediately. This addresses the stage
+that could overwrite v8 cached aim. Final-render ray diagnostics are logged.
+JDAM min/max release range now comes from each local weapon definition launch
+tables, interpolated by height above target and true airspeed; no out-of-grid
+extrapolation. MFD MIN/MAX are horizontal metres; RNG remains slant range.
+Automatic store step and generic pickle work. New tracking
+and release-window changes pass offline tests and need DCS confirmation.
+Weapon guidance/aerodynamics were not changed; steep flight/fin motion still
+needs observation after an earlier release.
+
+
+## Terrain-validated IRADS lock (28 October 2026)
+
+Current build: terrain-lock-v11. Flat-road diagnostics measured native saved
+points 826Ã¢â‚¬â€œ898 m above Terrain.GetHeight. Designation now intersects a snapshot
+of the rendered ray with DCS terrain in cockpit Lua, then commits a matching
+validated result to the EFM. Pending/no-hit targets cannot arm laser or pass
+release gates. The v10 camera-point hook remains removed. Offline checks pass.
+Confirmed the v11 terrain lock works in DCS; repeated accepted points match
+terrain height to the logs' printed 0.001 m precision. Separate weapon impact,
+laser acquisition and fuselage visibility checks are not implied.
+
+## OCIP display arrangement (30 October 2026)
+
+The left CMDI now starts in IRADS EO/targeting mode. Ctrl+Shift+E toggles EO/VSD;
+IRADS power still uses its existing control. The central screen shows a Harris
+moving-map outline with live ownship data and a valid designated IRADS point.
+The right HSD is unchanged.
+
+- Ctrl+Shift+[ / ]: central map range decrease/increase (10, 25, 50, 100, 140 NM).
+- Ctrl+Shift+M: centered/decentered north-up/track-up orientation cycle.
+- Dedicated EO/VSD and map actions are under **F-117A Displays** in Controls.
+
+The central page now follows the supplied manual map figures, with planned
+waypoint/threat symbols and manual panning. Planning data is explicitly supplied
+in `Cockpit/Scripts/Systems/MapMission.lua` (empty by default); automatic mission
+route import and Harris-specific elevation shading remain unimplemented.
+Geographic backgrounds now use the experimental common DCS chart backend. See [OCIP cockpit research](docs/ocip-cockpit-research.md)
+for sources, confirmed facts, interpretation and validation limits.
+
+
+The generic DCS theatre-chart backend is now enabled experimentally. It uses
+an isolated common chart device, with native build checks and camera-readiness
+gating. Correct chart pixels and refresh still need an in-DCS check. Disable
+`Cockpit/Scripts/MFD/Indicator/Map/Charts/config.lua` to restore the fallback.
+The shared view contract and native rendering findings are documented in
+[native map rendering](docs/native-map-rendering.md).
+
+## Stock JDAMs (2 November 2026)
+
+The GBU-31(V)1/B, GBU-31(V)3/B and GBU-32(V)2/B now use the stock DCS weapons, replacing
+the mod's own copies. Pylons, default payloads and bundled missions use the stock IDs. Your
+own missions that use `GBU31_JDAM`, `GBU31_V3B_JDAM` or `GBU32_JDAM` need re-arming. The
+release ranges are unchanged, and the GBU-31(V)1/B weighs 934 kg instead of 925 kg.
+Release of all three stock JDAMs is confirmed in DCS.

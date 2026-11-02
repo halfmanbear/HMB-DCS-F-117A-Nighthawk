@@ -132,7 +132,7 @@ struct Owner {
     bool bound=false, active=false, failed=false;
     bool modeSet=false, diagnostic=false;
 };
-// Native ccIndicatorBake's vector-deleting destructor uses a 0x1D0 stride.
+// The native destructor expects this array element size.
 static constexpr size_t BakerSize=0x1d0;
 static constexpr int General=0, HudOnly=1, Bake=100;
 

@@ -1,8 +1,6 @@
 -- Named textures are produced by F117Displays.dll/ccIndicatorBake.
 -- Camera target 0 remains reserved for the EFM/IRADS camera bridge.
 return {
-    -- Keep the established direct video/overlay path. Native bake activation
-    -- produced a white centre image in DCS; init success did not verify pixels.
     enabled=false,
     -- Opt-in centre holder test: static colour/UV card, no native baking.
     -- Keep enabled=false; see docs/compositor-diagnostics.md.

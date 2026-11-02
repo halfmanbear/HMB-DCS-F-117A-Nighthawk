@@ -84,9 +84,6 @@ make_flyable("F-117-NightHawk", support_cockpit, FM, current_mod_path .. "/comm.
 -- and declare_sensor() is unavailable here. Sensor declaration must be handled
 -- by referencing an already-declared DCS-core sensor in the aircraft Sensors table.
 
-dofile(current_mod_path .. "/Weapons/gbu-31.lua")
-dofile(current_mod_path .. "/Weapons/gbu-31v3b.lua")
-dofile(current_mod_path .. "/Weapons/gbu-32.lua")
 dofile(current_mod_path .. "/Weapons/agm-65d.lua")
 dofile(current_mod_path .. "/Weapons/agm-65l.lua")
 dofile(current_mod_path .. "/Weapons/agm-154.lua")

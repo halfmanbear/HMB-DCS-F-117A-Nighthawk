@@ -17,8 +17,8 @@ local unitPayloads = {
     [2] = {
       ["name"] = "JDAM – 2× GBU-31(V)3/B",
       ["pylons"] = {
-        [1] = { ["CLSID"] = "GBU31_V3B_JDAM", ["num"] = 1 },
-        [2] = { ["CLSID"] = "GBU31_V3B_JDAM", ["num"] = 2 },
+        [1] = { ["CLSID"] = "{GBU-31V3B}", ["num"] = 1 },
+        [2] = { ["CLSID"] = "{GBU-31V3B}", ["num"] = 2 },
       },
       ["tasks"] = {
         [1] = 30,

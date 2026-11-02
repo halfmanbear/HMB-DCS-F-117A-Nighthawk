@@ -285,9 +285,9 @@ F_117_NightHawk = {
                 {CLSID = "{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}"}, --GBU-10
                 {CLSID = "{DB769D48-67D7-42ED-A2BE-108D566C8B1E}"}, --GBU-12
                 -- JDAMs (late-career / plausible)
-                {CLSID = "GBU31_JDAM"},                             --GBU-31
-                {CLSID = "GBU31_V3B_JDAM"},                         --GBU-31(V)3/B
-                {CLSID = "GBU32_JDAM"},                             --GBU-32
+                {CLSID = "{GBU-31}"},                               --GBU-31(V)1/B
+                {CLSID = "{GBU-31V3B}"},                            --GBU-31(V)3/B
+                {CLSID = "{GBU_32_V_2B}"},                          --GBU-32(V)2/B
                 -- Maverick (hypothetical)
                 {CLSID = "AGM_65_D"},                               --Maverick D 
                 {CLSID = "AGM_65_L"},                               --Maverick E/L2
@@ -321,9 +321,9 @@ F_117_NightHawk = {
                 {CLSID = "{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}"}, --GBU-10
                 {CLSID = "{DB769D48-67D7-42ED-A2BE-108D566C8B1E}"}, --GBU-12
                 -- JDAMs (late-career / plausible)
-                {CLSID = "GBU31_JDAM"},                             --GBU-31
-                {CLSID = "GBU31_V3B_JDAM"},                         --GBU-31(V)3/B
-                {CLSID = "GBU32_JDAM"},                             --GBU-32
+                {CLSID = "{GBU-31}"},                               --GBU-31(V)1/B
+                {CLSID = "{GBU-31V3B}"},                            --GBU-31(V)3/B
+                {CLSID = "{GBU_32_V_2B}"},                          --GBU-32(V)2/B
                 -- Maverick (hypothetical)
                 {CLSID = "AGM_65_D"},                               --Maverick D 
                 {CLSID = "AGM_65_L"},                               --Maverick E/L2

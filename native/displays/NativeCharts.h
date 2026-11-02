@@ -60,8 +60,8 @@ bool findChartSource(void* context,void*& found,int depth=0) {
 }
 bool chartClose(double a,double b) {return std::isfinite(a) && std::fabs(a-b)<1.;}
 bool cameraMatches(const unsigned char* indicator,const ChartView& view) {
-    // ccKneeboard::update_camera stores camera world position at 752/760;
-    // the copied orthographic left/right/bottom/top volume starts at 896.
+    // The native camera update stores the camera position and the copied
+    // orthographic volume on the indicator; compare them with the requested view.
     return *reinterpret_cast<const int*>(indicator+928)==9 &&
         chartClose(*reinterpret_cast<const float*>(indicator+752),view.x) &&
         chartClose(*reinterpret_cast<const float*>(indicator+760),view.z) &&

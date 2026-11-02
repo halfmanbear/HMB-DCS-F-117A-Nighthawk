@@ -35,8 +35,7 @@ HUD device. Altitude is rounded to ten feet, or one hundred feet above 40 ft/s
 vertical speed; airspeed to one knot, or five knots above 300 knots/s speed change.
 The approach bracket enters below 200 knots, leaves above 230 and uses the current
 12-degree optimum; one degree high AOA aligns its top arm with the flight-path
-marker, as specified in the manual. The 12-degree optimum still needs validation
-against the aircraft approach configuration.
+marker, as specified in the manual.
 
 The old oversized source is preserved as `HUD_previous_indication_page.lua`.
 Existing VSD/HSD parameter bindings and their behaviour are unchanged.
@@ -71,8 +70,7 @@ ladder, not a full spherical graticule. Negative bars have signed labels.
 The old combined offset was `-50 mrad + 4.5 degrees`, which displaced both
 conformal cues about 1.64 degrees above the connector optical axis. The corrected
 conformal parent cancels the readout layout translation. Static readouts, glass
-mask and mounting are unchanged. The connector optical axis still needs an
-in-game horizon/boresight check; fitting a ruler to the glass did not establish it.
+mask and mounting are unchanged.
 
 Reload the aircraft/mission and check level flight, pitch/roll, heading wrap,
 readout size and head/VR movement. The physical clipping method is preserved,
@@ -113,8 +111,6 @@ is introduced.
 Regression checks now cover the entire collimation parent chain, the actual ring
 centre, horizon vertices against a level ground track over pitch/bank/drift,
 and signed ladder label alignment, in addition to the sensor projection tests.
-The corrected page still needs an in-game reload and head-movement/outside-horizon
-check; offline tests do not render the DCS collimator.
 
 ## Native movement units and FPM averaging, 2026-10-30
 

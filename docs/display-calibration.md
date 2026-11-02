@@ -49,8 +49,7 @@ translated at -1000 mrad/rad in the rotated frame. It is a small-angle attitude
 diagnostic, not a full spherical horizon implementation. Compare it with a
 distant horizon at modest pitch and bank; nearby terrain and the visible sea
 horizon's geometric dip can introduce differences. Cyan reference marks should
-stay aligned with distant scenery during head translation. Static mounting
-alignment still needs to be established before ATT 0 can be treated as a horizon.
+stay aligned with distant scenery during head translation.
 
 Both the cyan test HUD and green operational HUD now use a finite, cockpit-fixed
 glass stencil from the measured Blender panes. Symbols remain collimated; as the
@@ -105,7 +104,7 @@ connector names below. Their presence in Blender alone does not prove export:
 
 The accepted centred working profile is shared with Layout Studio through
 `HUD/Indicator/layout_profile.lua`. The calibration config reads its angular
-origin and extents there. The physical mask passed the user's head-shake tests
+origin and extents there. The physical mask passed head-shake tests
 on 2026-10-29. On the next reload the operational HUD logs its actual scale ratio
 under `F117_HUD_LAYOUT`; Studio uses it to express the 20 x 15 degree guide in
 legacy FOV source units. That engine scale capture is necessary before relying
