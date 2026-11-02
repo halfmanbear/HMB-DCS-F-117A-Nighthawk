@@ -2,7 +2,8 @@
 
 Snapshot: 30 October 2026. Two parts:
 
-1. **Clickable cockpit** – investigated, then put **on hold**. What exists, what
+1. **Clickable cockpit** – investigated, then put **on hold**. Includes the planned
+   display connector rename. What exists, what
    is missing, and how to resume.
 2. **Manual gap list** – what `Lockheed F-117A Nighthawk Utility Flight Manual.pdf`
    describes that the mod does not yet implement, ranked by importance.
@@ -66,6 +67,51 @@ Start with one switch, tested end to end: `Switch_07` → nav lights.
 
 The cockpit panel inventory (below) lists what to make clickable next.
 
+### Planned: rename the display connectors
+
+Added 2 November 2026. Do this during the next cockpit re-export, such as step 1
+above. It changes no behaviour, so it isn't worth a re-export on its own. Allow
+about an hour plus a test flight.
+
+The current names are inherited and misleading: `PLASHKA` is Russian for a small
+plate, `ILS` is the Russian abbreviation for HUD, `RADAR` marks a display on an
+aircraft with no radar, and the `1` is all that identifies the left display.
+
+| Display | Current prefix | New prefix | Name in TO 1F-117A-1A |
+|---|---|---|---|
+| HUD | `ILS-PLASHKA` | `HUD` | Head-up display |
+| Centre | `MFD-PLASHKA` | `SD` | Sensor Display (SD) |
+| Left | `MFD-PLASHKA` with a `1` suffix | `CMDI-L` | Left color multipurpose display indicator |
+| Right | `RADAR-PLASHKA` | `CMDI-R` | Right color multipurpose display indicator |
+
+Keep the `-CENTER`, `-DOWN` and `-RIGHT` endings, because they give each display
+its origin and axes. For example, `MFD-PLASHKA-DOWN1` becomes `CMDI-L-DOWN`.
+
+Name connectors after the physical display, not its format. Avoid `VSD`, `HSD`,
+`IRADS` and `MAP`, because formats change: the left CMDI already switches between
+EO and VSD. `SD` is a judgement call: a Harris moving map is reported to have
+replaced the central sensor display, and no official name for that unit has been
+found. Use the same pattern for any new display connectors.
+
+Steps:
+
+1. In `Cockpit_F-117.blend`, rename the connectors without moving them, so the
+   display calibration stays valid, then export the cockpit.
+2. Update the names in `Cockpit/Scripts/device_init.lua`, and remove its comment
+   describing the HUD connectors as a stand-in.
+3. Update `tools/check_display_calibration.py`, `tools/measure_cockpit_displays.py`
+   and `tools/data/cockpit_display_geometry.json`.
+4. Update `docs/display-calibration.md`, `docs/cockpit-display-measurements.md`,
+   `docs/layout-editor.md`, `docs/left-vsd-design.md` and `docs/right-hsd-design.md`.
+5. Update the EFM repo's `Cockpit/Scripts/device_init.lua`, which holds the same
+   HUD and centre names.
+6. Run `python -m pytest tests -q` and `python tools/check_display_calibration.py`.
+7. Fly and confirm that all four displays draw in the right place and `dcs.log`
+   reports the native compositor as active.
+
+Check `ILS-PLASHKA-UP` and `RADAR-PLASHKA-UP` while renaming: both are in the model,
+but no script here uses them.
+
 ---
 
 ## Part 2: Flight manual gaps
@@ -92,6 +138,9 @@ Page references below are **PDF page / printed page**.
 - Autothrottle CAS hold and PAARS (PDF 15–20, 52) – `docs/autothrottle-paars.md`
 - IRADS sensor display, designation, laser and weapon release (described in the
   weapons manual rather than this one)
+- Nosewheel steering ranges from the base manual, TO 1F-117A-1 page 1-29: 10 deg
+  normally, 45 deg while the authority button is held (`N`). The paddle switch that
+  disengages steering and lets the wheel swivel freely is not modelled.
 
 All three displays still show dashes for navigation data (destination, range,
 TTG, course, DME) because nothing supplies it. **Navigation is the main gap.**

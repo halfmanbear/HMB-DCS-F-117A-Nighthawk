@@ -42,6 +42,7 @@ join(res.keyCommands,{
 {combos = {{key = '3', reformers = {'LAlt'}}},down = f117_commands.PAARS_TOGGLE, name = _('PAARS Automatic Recovery (ARS Switch)'), category = {_('Autopilot'), _('HOTAS'), _('F-117A Essential System Controls')}},
 {combos = {{key = 'J'}}, down = f117_commands.AUTOTHROTTLE_ENGAGE, name = _('Autothrottle Engage / Disengage'), category = _('Autopilot')},
 {combos = {{key = 'J', reformers = {'LCtrl'}}}, down = f117_commands.AUTOTHROTTLE_DISCONNECT, name = _('Autothrottle Disengage Button'), category = {_('Autopilot'), _('Throttle Grip'), _('HOTAS')}},
+{combos = {{key = 'N'}}, down = f117_commands.NWS_AUTHORITY_ON, up = f117_commands.NWS_AUTHORITY_OFF, name = _('Nosewheel Steering Authority (Hold for 45 deg Range)'), category = {_('Systems'), _('HOTAS')}},
 
 -- Systems
 {combos = {{key = 'R', reformers = {'LCtrl'}}}, down = iCommandPlaneAirRefuel, name = _('Refueling Hatch'), category = {_('Systems'), _('F-117A Essential System Controls')}},

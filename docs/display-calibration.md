@@ -161,4 +161,4 @@ milliradian HUD produces enormous glyphs that can wash out the cockpit view.
 
 ## Native renderer migration
 
-Calibration indicators are now disabled by default in Calibration/config.lua. With the native compositor off, which is the current setting in render_config.lua, six indicators are registered: the five originals plus the chart source. The centre diagnostic adds one. Turning the compositor on adds three readiness-gated holders, and direct drawing remains the fallback until native initialization succeeds. HUD mounting and finite-glass masks are unchanged. See display-readability.md.
+Calibration indicators are now disabled by default in Calibration/config.lua. With the native compositor on, which is the current setting in render_config.lua, nine indicators are registered: the five originals, three readiness-gated holders and the chart source. Direct drawing remains the fallback until native initialization succeeds. With the compositor off, six are registered, and the centre diagnostic adds one. HUD mounting and finite-glass masks are unchanged. See display-readability.md.

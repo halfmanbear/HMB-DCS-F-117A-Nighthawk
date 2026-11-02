@@ -1,7 +1,7 @@
 """Preview the current F-117 HUD using the maintained Layout Studio renderer.
 
-python hud_preview.py --roll 30 --pitch -5
-python hud_preview.py --output tmp/hud-preview.png
+python tools/hud_preview.py --roll 30 --pitch -5
+python tools/hud_preview.py --output tmp/hud-preview.png
 Requires lupa and Pillow, as listed in tools/layout_editor_requirements.txt.
 """
 from pathlib import Path
@@ -9,8 +9,7 @@ import argparse
 import math
 import sys
 
-ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT / 'tools'))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from layout_editor import DEFAULTS, Model, PAGES, Renderer, default_view, hud_working_area
 
 

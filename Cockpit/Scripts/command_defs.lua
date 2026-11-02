@@ -56,6 +56,8 @@ f117_commands =
     AUTOTHROTTLE_ENGAGE     = 10125, -- A/T engage switch: CAS hold at current CAS
     AUTOTHROTTLE_DISCONNECT = 10126, -- inboard throttle A/T disengage button
     PAARS_TOGGLE            = 10127, -- stick ARS switch: automatic recovery on/off
+    NWS_AUTHORITY_ON        = 10128, -- stick NWS authority button pressed: 45 deg steering range
+    NWS_AUTHORITY_OFF       = 10129, -- stick NWS authority button released: back to 10 deg
 }
 
 

@@ -74,15 +74,9 @@ make_view_settings("F-117-NightHawk", ViewSettings, SnapViews)
 local support_cockpit = current_mod_path .. "/Cockpit/Scripts/"
 make_flyable("F-117-NightHawk", support_cockpit, FM, current_mod_path .. "/comm.lua")
 
--- IRADS sensor registration not possible from entry.lua: the environment has no pcall,
--- no _G["db"], and declare_sensor() is unavailable. Registration is skipped.
--- The DLIR camera uses a body-mounted camera indicator instead (DLIR_Camera_init.lua).
+-- The AI uses the IRADS sensor DCS already declares; the player's IRADS is created by the EFM.
 
 -------------------------------------------------------------------------------
-
--- NOTE: entry.lua runs in a restricted DCS Lua state that has no pcall, no _G["db"],
--- and declare_sensor() is unavailable here. Sensor declaration must be handled
--- by referencing an already-declared DCS-core sensor in the aircraft Sensors table.
 
 dofile(current_mod_path .. "/Weapons/agm-65d.lua")
 dofile(current_mod_path .. "/Weapons/agm-65l.lua")

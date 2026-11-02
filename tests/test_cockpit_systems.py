@@ -134,8 +134,22 @@ class CockpitSystemsTests(unittest.TestCase):
         self.assertIn('Preview source edits', messages[-1])
         self.assertEqual(editor.text(), changed)
 
+    def test_nosewheel_steering_limits_and_authority_button_are_consistent(self):
+        lua=LuaRuntime(unpack_returned_tuples=True)
+        lua.execute((ROOT/'FM/config.lua').read_text(encoding='utf-8'))
+        yaw_limit=lua.globals().FM.suspension[1].yaw_limit
+        self.assertAlmostEqual(yaw_limit,math.radians(45))
+        aircraft=(ROOT/'F-117-NightHawk.lua').read_text(encoding='utf-8')
+        self.assertIn(f'tand_gear_max = {math.tan(yaw_limit):.1f},',aircraft)
+        defs=(SCRIPTS/'command_defs.lua').read_text(encoding='utf-8')
+        self.assertIn('NWS_AUTHORITY_ON        = 10128',defs)
+        self.assertIn('NWS_AUTHORITY_OFF       = 10129',defs)
+        for device in ('keyboard','joystick'):
+            profile=(ROOT/'Input/F-117-NightHawk'/device/'default.lua').read_text(encoding='utf-8')
+            self.assertIn('down = f117_commands.NWS_AUTHORITY_ON, up = f117_commands.NWS_AUTHORITY_OFF',profile)
+
     def test_legacy_preview_renders_the_current_hud_without_a_gui(self):
-        spec = importlib.util.spec_from_file_location('hud_preview', ROOT / 'hud_preview.py')
+        spec = importlib.util.spec_from_file_location('hud_preview', ROOT / 'tools/hud_preview.py')
         preview = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(preview)
         image, model, hits = preview.render_preview(roll=30, pitch=-5, size=300)

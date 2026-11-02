@@ -1,21 +1,31 @@
 """OCIP angular geometry, validity and sensor-unit behaviour."""
 import math
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from lupa import LuaRuntime
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
 from layout_editor import Model,PAGES,DEFAULTS,move_source
 
+# The HUD scale line DCS logs when the F-117 spawns.
+HUD_SCALE_LOG='F117_HUD_LAYOUT (Main): v1 fov_scale=0.085879072547 mrad_scale=0.000600000028498\n'
+
 
 class OcipHudTests(unittest.TestCase):
     def test_designer_drag_converts_source_units_to_mrad(self):
-        model=Model('HUD',PAGES['HUD'].read_text())
-        target=next(e for e in model.elements if e['name']=='OCIP_CAS')
-        edited=move_source(model.source,target,.025,-.01)
-        updated=Model('HUD',edited)
+        # The editor reads this scale from dcs.log, so use a fixed copy rather than the live log.
+        with tempfile.TemporaryDirectory() as folder:
+            log=Path(folder)/'dcs.log'
+            log.write_text(HUD_SCALE_LOG)
+            with patch('layout_editor.DCS_LOG',log):
+                model=Model('HUD',PAGES['HUD'].read_text())
+                target=next(e for e in model.elements if e['name']=='OCIP_CAS')
+                edited=move_source(model.source,target,.025,-.01)
+                updated=Model('HUD',edited)
         moved=next(e for e in updated.elements if e['name']=='OCIP_CAS')
         self.assertAlmostEqual(moved['init_pos'][0]-target['init_pos'][0],.025,places=7)
         self.assertAlmostEqual(moved['init_pos'][1]-target['init_pos'][1],-.01,places=7)
