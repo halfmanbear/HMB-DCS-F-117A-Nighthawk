@@ -1,6 +1,6 @@
 # Centre holder diagnostic
 
-The direct-drawing baseline log, user reference screenshot and config are saved
+The direct-drawing baseline log, reference screenshot and config are saved
 locally in `tmp/compositor-baseline-20261101/`. The screenshot is supplied as an
 appearance reference; its filename date differs from the log date. It is not a
 capture of a compositor run.
@@ -47,7 +47,7 @@ material selection and the absence of native compositor calls, not DCS pixels.
 
 ### Observed result: 2026-11-01 17:52
 
-The user screenshot shows the four quadrants in the expected orientation,
+The screenshot shows the four quadrants in the expected orientation,
 the white marker at upper left, the black cross and aperture clipping. Left EO,
 right HSD and HUD remain visible. At 17:51:55.281 the captured log reports
 `centre holder static-texture test active; native compositor disabled; direct sources retained`.
@@ -115,7 +115,7 @@ pattern does not sample its texture.
 
 The log confirms centre native bake activation at 17:57:59.459 with marker
 `F117_BAKE_TEST_SOURCE`, context `00007FFF8C41B5F0`, zero-based source index 1,
-texture `F117_LCD_CENTRE` and resolution 256. The user screenshot shows the
+texture `F117_LCD_CENTRE` and resolution 256. The screenshot shows the
 four-colour mesh pattern, black cross and upper-left white marker. Its colours
 look darker than the static-texture test; colour accuracy is not established.
 No missing `F117_LCD_CENTRE` texture message was found. Evidence is retained

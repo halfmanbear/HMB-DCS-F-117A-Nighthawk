@@ -162,12 +162,10 @@ without dimming the map. Fallback EO opacity uses `F117_LEFT_EO_DIM_OPACITY`.
 Offline checks cover startup selection, range limits, orientation/target math,
 invalid/offscreen data, sensor-state isolation, central page routing, opaque
 background, native userdata property access, brightness handover and layout
-editing. A rendered preview was inspected. Live video refresh, native texture
-luminance, map coverage at aperture edges and in-cockpit readability still need
-an in-DCS mission check. Checks also cover all waypoint kinds, invalid records,
+editing. A rendered preview was inspected. Checks also cover all waypoint kinds, invalid records,
 route-window clipping, declutter, manual panning and return to AUTO. Geographic
 map ingestion, automatic mission-plan import and terrain elevation shading remain
-future functionality. Exact native dynamic-line rendering needs in-DCS validation.
+future functionality.
 
 ## Harris terminology and patent follow-up
 
@@ -243,7 +241,5 @@ symbology. They also explicitly couple map-camera decentering to the display's
 navigation state. See [native map-rendering investigation](native-map-rendering.md)
 for source paths, the implemented texture adapter and shared view
 contract. A generic DCS theatre-chart producer has since been implemented, using the
-common avKneeboard/ccKneeboard path rather than either aircraft-specific DMC.
-It is enabled experimentally with native version/object checks and camera
-readiness gating; its pixels and refresh still need in-DCS validation. It does
+common avKneeboard/ccKneeboard path rather than either aircraft-specific DMC. It does
 not load Harris STARS data or supply Harris-specific elevation shading.

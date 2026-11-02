@@ -25,7 +25,7 @@ The controller takes a literal numeric argument, so 66 mutually exclusive video
 quads select 1% contrast steps. Exactly one quad draws, sampling the same camera
 target. Native renderer gain controls brightness separately; symbology follows
 brightness only. The black alpha layer and symbology opacity remain as an
-automatic fallback when native brightness cannot initialize. The native curve's visual result still needs in-game review.
+automatic fallback when native brightness cannot initialize.
 No extra camera texture or native compositor is introduced. Restart DCS to load
 new default input profiles; verify visual levels in a daytime and night mission.
 

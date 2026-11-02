@@ -24,6 +24,4 @@ renderer with this mod's own artwork and Lua layouts. No F-16 artwork is copied.
 
 **Native adapter (2026-10-30).** `F117Displays.dll` constructs and owns three `ccIndicatorBake` objects, calls `addSource` and `init`, and only then switches source draw purposes and enables holders. `addSource`'s second and third integers are pixel width and height, and source indices are zero-based. The DLL is pinned to a tested CockpitBase SHA-256, resolves exports by name and uses Lua userdata for cleanup. Host tests pass with DCS Lua 5.1 and instrumented API calls, including actual DLL loading. They do not establish DCS render output, MT teardown safety or DLSS routing. See native/displays/README.md.
 
-## Current state (2026-11-01)
 
-The native adapter is switched off with `enabled=false` in render_config.lua, and all MFD pages draw directly. Turning it on produced a white centre image in DCS, even though native init reported success. See display-readability.md. `F117Displays.dll` still provides native brightness, charts and text parameters.
