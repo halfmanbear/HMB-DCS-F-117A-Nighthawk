@@ -68,7 +68,7 @@ def validate():
     for path in [*SCRIPTS.glob('display_*.lua'),SCRIPTS/'materials.lua',SCRIPTS/'Systems/DisplayCompositor.lua',SCRIPTS/'Systems/Displays.lua',*(SCRIPTS/'MFD/Indicator/LCD').glob('*.lua'),SCRIPTS/'MFD/Indicator/render_config.lua',SCRIPTS/'device_init.lua', *(SCRIPTS/'HUD/Device').glob('*.lua'), *CAL.glob('*.lua'), *(SCRIPTS/'HUD/Indicator').glob('*.lua'), *(SCRIPTS/'MFD/Indicator/Left').glob('*.lua'), *(SCRIPTS/'MFD/Indicator/Right').glob('*.lua')]:
         compile_lua(path.read_text(encoding='utf-8-sig'))
 
-    for enabled,count in [(False,6),(True,7)]:
+    for enabled,count in [(False,9),(True,10)]:
         lua,load = runtime(enabled)
         load(SCRIPTS/'device_init.lua')
         indicators=lua.globals().indicators

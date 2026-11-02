@@ -219,8 +219,7 @@ class NativeDisplayTests(unittest.TestCase):
                 ''')
             else:
                 lua.execute('package={loadlib=function()return nil,"missing DLL" end}')
-            # Exercise the optional bootstrap explicitly; shipping config keeps
-            # direct drawing until native pixel output is verified in DCS.
+            # Exercise the bootstrap with enabled forced on, independent of the shipping config.
             original_load=load
             def enabled_load(path):
                 value=original_load(path)
@@ -244,8 +243,8 @@ class NativeDisplayTests(unittest.TestCase):
         # merely assigning render_target does not supply that compositor.
         lua,load=runtime(False);load(SCRIPTS/'device_init.lua')
         registered=convert(lua.globals().indicators)
-        self.assertEqual(len(registered),6)
-        self.assertEqual(sum('/LCD/' in indicator[1] for indicator in registered),0)
+        self.assertEqual(len(registered),9)
+        self.assertEqual(sum('/LCD/' in indicator[1] for indicator in registered),3)
         for source in ['Left/Left_init.lua','Right/Right_init.lua','MFD_indication_init.lua']:
             lua,load=runtime();load(SCRIPTS/'MFD/Indicator'/source)
             g=lua.globals()
@@ -286,10 +285,15 @@ class NativeDisplayTests(unittest.TestCase):
         for index in [0,1]:
             mount=registered[index][3][1]
             self.assertEqual([mount[k] for k in ['sx_l','sy_l','sz_l']],[0,0,0])
+        # A side holder replaces its source page on screen, so it needs the same clearance.
+        holders={Path(row[1]).stem:row[3][1] for row in registered if '/LCD/' in row[1]}
+        for kind,index in [('left',3),('right',4)]:
+            self.assertEqual(holders[f'{kind}_init'],registered[index][3][1])
+        self.assertEqual([holders['centre_init'][k] for k in ['sx_l','sy_l','sz_l']],[0,0,0])
 
     def test_complete_resource_registration_and_glyphs(self):
         lua,load=runtime(False);load(SCRIPTS/'device_init.lua')
-        self.assertEqual(len(lua.globals().indicators),6)
+        self.assertEqual(len(lua.globals().indicators),9)
         resources=convert(lua.globals().symbologyPaths)
         self.assertEqual(resources,[(SCRIPTS/'Resources/Stroke').as_posix()])
         font=convert(load(SCRIPTS/'display_font.lua'))
@@ -335,7 +339,9 @@ class NativeDisplayTests(unittest.TestCase):
         lua,load=runtime();load(SCRIPTS/'MFD/Indicator/MFD_base_page.lua')
         self.assertEqual(lua.globals()._scale,lua.globals().METERS)
         config=load(SCRIPTS/'MFD/Indicator/render_config.lua')
-        self.assertFalse(config.enabled)
+        self.assertTrue(config.enabled)
+        self.assertFalse(config.bake_test)
+        self.assertFalse(config.holder_test)
         self.assertTrue(any(e['_etype']=='ceSMultiLine' for e in model.elements))
 
     def test_centre_page_loads_with_native_write_only_table_properties(self):

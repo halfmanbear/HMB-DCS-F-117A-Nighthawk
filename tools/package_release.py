@@ -22,7 +22,7 @@ RUNTIME_DIRS = {
     "Missions", "Options", "Shapes", "Sounds", "Textures", "Theme",
     "UnitPayloads", "Weapons",
 }
-ROOT_FILES = {"comm.lua", "credits.txt", "entry.lua", "F-117-NightHawk.lua", "IRADS.lua", "Views.lua"}
+ROOT_FILES = {"comm.lua", "credits.txt", "entry.lua", "F-117-NightHawk.lua", "Views.lua"}
 DISPLAY_RUNTIME_FILES = {"bin/F117Displays.dll", "Cockpit/Scripts/Resources/Stroke/F117_stroke_font.svg"}
 RUNTIME_EXTENSIONS = {".svg", ".lua", ".dds", ".png", ".tga", ".edm", ".lods", ".owv", ".ogg", ".wav", ".sdef", ".miz", ".dlg", ".mo", ".ttf", ".otf"}
 VERSION = re.compile(r'(?m)^(\s*version\s*=\s*)([\"\x27])([0-9]+\.[0-9]+\.[0-9]+)\2(\s*,?\s*)$')

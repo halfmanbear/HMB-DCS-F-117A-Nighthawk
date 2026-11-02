@@ -98,15 +98,19 @@ indicators[#indicators + 1] = {
 -- Source indicators retain GENERAL drawing if the module cannot initialize.
 local display_config=dofile(LockOn_Options.script_path.."MFD/Indicator/render_config.lua")
 if display_config.enabled or display_config.holder_test or display_config.bake_test then
-    local function holder(kind,connectors)
+    local function holder(kind,connectors,mount)
         indicators[#indicators+1]={"ccIndicator",
             LockOn_Options.script_path.."MFD/Indicator/LCD/"..kind.."_init.lua",
-            devices.DISPLAYS,{connectors,{sx_l=0,sy_l=0,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0}}}
+            devices.DISPLAYS,{connectors,mount}}
     end
-    holder("centre",{"MFD-PLASHKA-CENTER","MFD-PLASHKA-DOWN","MFD-PLASHKA-RIGHT"})
+    holder("centre",{"MFD-PLASHKA-CENTER","MFD-PLASHKA-DOWN","MFD-PLASHKA-RIGHT"},
+        {sx_l=0,sy_l=0,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0})
     if display_config.enabled then
-        holder("left",{"MFD-PLASHKA-CENTER1","MFD-PLASHKA-DOWN1","MFD-PLASHKA-RIGHT1"})
-        holder("right",{"RADAR-PLASHKA-CENTER","RADAR-PLASHKA-DOWN","RADAR-PLASHKA-RIGHT"})
+        -- Same clearance as the side source pages, or the screen mesh cuts through the image.
+        holder("left",{"MFD-PLASHKA-CENTER1","MFD-PLASHKA-DOWN1","MFD-PLASHKA-RIGHT1"},
+            {sx_l=-0.001,sy_l=0.0005,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0})
+        holder("right",{"RADAR-PLASHKA-CENTER","RADAR-PLASHKA-DOWN","RADAR-PLASHKA-RIGHT"},
+            {sx_l=-0.001,sy_l=0.0005,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0})
     end
 end
 

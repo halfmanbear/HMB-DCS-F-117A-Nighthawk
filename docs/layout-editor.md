@@ -129,7 +129,7 @@ collimation, combiner optics and the pilot's eye position may differ. The MFD
 camera image and flight/device systems are not simulated. Check final font sizes,
 clipping and optical alignment in DCS before considering a layout finished.
 
-The original `hud_preview.py` is kept as a separate older tool.
+`tools/hud_preview.py` renders the HUD from the command line with the same renderer.
 
 ## Left and right display status
 
