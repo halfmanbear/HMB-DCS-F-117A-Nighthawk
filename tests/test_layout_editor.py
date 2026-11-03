@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-from layout_editor import DEFAULTS, Model, PAGES, Renderer, move_source, transform_selection, recolor_selection, Editor, measured_boundary, measured_surfaces, hud_working_area, MODE_PARAMS, PREVIEW_ONLY, SURFACES, SCREENS, SCREEN_SURFACE, DEFAULT_SCREEN, context_params, page_scale, layout_boundary
+from layout_editor import DEFAULTS, POWER_OFF, Model, PAGES, Renderer, move_source, transform_selection, recolor_selection, Editor, measured_boundary, measured_surfaces, hud_working_area, MODE_PARAMS, PREVIEW_ONLY, SURFACES, SCREENS, SCREEN_SURFACE, DEFAULT_SCREEN, context_params, page_scale, layout_boundary
 
 
 class LayoutEditorTests(unittest.TestCase):
@@ -115,7 +115,7 @@ class LayoutEditorTests(unittest.TestCase):
         self.assertIn('287',texts)
         self.assertIn('18420',texts)
         self.assertIn('042',texts)
-        self.assertFalse(any(s[3] for _,s in model.scene(dict(DEFAULTS,mainpower=0))))
+        self.assertFalse(any(s[3] for _,s in model.scene(dict(DEFAULTS,**POWER_OFF))))
         model.scene(dict(DEFAULTS,ROLL_HUD=.3,PITCH_HUD=.1))
         self.assertEqual(model.warnings,set())
 
@@ -175,7 +175,7 @@ class LayoutEditorTests(unittest.TestCase):
         turned=[s for e,s in scene if s[3] and e['_etype']!='ceSimple' and abs(s[2]+math.pi/2)<1e-9]
         self.assertEqual(len(turned),4)
         self.assertFalse([s for e,s in model.scene(dict(nav,F117_NAV_REL_COURSE=0)) if s[3] and e['_etype']!='ceSimple' and abs(s[2]+math.pi/2)<1e-9])
-        self.assertFalse(any(s[3] for _,s in model.scene(dict(DEFAULTS,mainpower=0))))
+        self.assertFalse(any(s[3] for _,s in model.scene(dict(DEFAULTS,**POWER_OFF))))
         self.assertEqual(model.warnings,set())
 
     def test_map_legends_follow_the_video_layout(self):
@@ -247,7 +247,7 @@ class LayoutEditorTests(unittest.TestCase):
 
     def test_parent_power_hides_children(self):
         model=self.load('MFD')
-        self.assertFalse(any(s[3] for _,s in model.scene(dict(DEFAULTS,mainpower=0))))
+        self.assertFalse(any(s[3] for _,s in model.scene(dict(DEFAULTS,**POWER_OFF))))
 
     def test_drag_updates_actual_text_source(self):
         model=self.load('MFD')

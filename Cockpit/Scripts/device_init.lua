@@ -18,6 +18,7 @@ creators[devices.DISPLAYS]               = {"avLuaDevice", LockOn_Options.script
 creators[devices.FC3]                    = {"avLuaDevice", LockOn_Options.script_path.."Systems/FC3.lua"}
 creators[devices.GAUGES]                 = {"avLuaDevice", LockOn_Options.script_path.."Systems/Gauges.lua"}
 creators[devices.WEAPONS]                = {"avSimpleWeaponSystem", LockOn_Options.script_path.."Systems/Weapons.lua"}
+creators[devices.ELECTRICAL]             = {"avLuaDevice", LockOn_Options.script_path.."Systems/Electrical.lua"}
 
 indicators = {}
 

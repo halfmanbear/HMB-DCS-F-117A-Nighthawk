@@ -3,7 +3,8 @@ dofile(LockOn_Options.script_path .. "devices.lua")
 dev = GetSelf()
 local update_time_step = 0.001 --update will be called 1000 times per second
 make_default_activity(update_time_step)
-local sensor_data = get_base_data()
+-- Display data aligns after power-up; see Systems/AlignedSensor.lua.
+local sensor_data = dofile(LockOn_Options.script_path.."Systems/AlignedSensor.lua")(get_base_data())
 local update_ocip = dofile(LockOn_Options.script_path.."HUD/Device/OCIP_data.lua")(sensor_data)
 
 -- Conversions
@@ -70,8 +71,7 @@ dev:listen_command(408) -- off Alt hold
 
 function post_initialize()
 
-        -- F-117 has no modelled electrical system; power is always on at spawn.
-        get_param_handle("mainpower"):set(1)
+        -- mainpower and display power come from Systems/Electrical.lua.
 
         local F117_Type = get_aircraft_type()
         get_param_handle("F117_TYPE"):set(3)

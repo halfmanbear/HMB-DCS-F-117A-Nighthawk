@@ -44,10 +44,53 @@ sensor. The FOV axis selects wide/narrow; its centre retains the previous select
 The unsupported `Target Box Size` axis has been removed. `DLIR MFD Overlay Toggle`
 is available for keyboard and joystick assignment.
 
-Cockpit Lua development copies are maintained in the EFM repository's
-`Cockpit/Scripts` directory and deployed to the same paths in this mod. IRADS
+The EFM repository's `Cockpit/Scripts` directory keeps copies of some cockpit
+Lua files. This mod's files are the ones DCS loads, so change them here and copy
+them over; `tests/test_efm_lua_copies.py` fails when a copy falls behind. IRADS
 motion is handled by the EFM. Cockpit FOV controls dispatch absolute endpoint
 selections, avoiding the legacy intermediate zoom preset.
+
+## Cold start
+
+A cold start is dark. `Electric Power Switch` (RShift+L) turns the battery on;
+nothing powers without it. With the battery on, any of these powers the
+displays:
+
+- `APU Start / Stop` (RShift+U): the APU, which takes about 8 s to come up.
+- `Ground Power Connect / Disconnect` (RCtrl+RShift+P): the ground crew's power
+  cart.
+- An engine generator, which comes on line at 56 % core rpm.
+
+The displays then boot one at a time: the DEP, the HUD fading in, then the left
+CMDI, the SD and the right CMDI. Each CMDI, the SD and the DEP show a self-test
+and auto-cal screen first. The attitude, heading and air data then slew to the
+true values while the gyros erect and the heading aligns, which takes about
+30 s for attitude and 50 s for heading. The boot screens are illustrative: the
+references don't document the real ones. Without the APU or ground power, the
+displays go dark when the engines are shut down, and boot again on the next
+start.
+
+Each engine's air turbine starter needs start air from the APU, the ground
+crew's air cart (`Ground Air Connect / Disconnect`, RCtrl+RShift+A) or
+crossbleed from the other engine once it runs. Without start air a start is
+refused with `ENGINE START NEEDS START AIR`. The carts connect only while the
+aircraft is stopped on the ground, and taxiing away disconnects them.
+
+- `Engines Start` (RShift+Home) starts the right engine, then the left on
+  crossbleed or the start air. Each starter takes the start air in turn.
+- `Engine Left Start` (RAlt+Home) and `Engine Right Start` (RCtrl+Home) start one
+  engine; the matching End keys stop it. `Engines Stop` (RShift+End) stops both.
+
+The starter turns the core to light-off at 15 %. The engine lights and
+accelerates, the starter disengages at 54 %, and the engine settles at ground
+idle about 30 s after its start. The APU and carts can go once the engines run.
+An engine still turning above 15 % (spooling down, or windmilling after a
+flameout) relights without start air.
+
+EGT peaks at about 600 °C during a start and settles at about 420 °C at idle.
+Oil pressure peaks at about 85 psi and settles at 70 psi, and fuel flow is
+600 lb/hr per engine during the start (TO 1F-117A-1 page 2-7). Hot and air
+starts begin powered and aligned.
 
 ## OCIP III displays
 

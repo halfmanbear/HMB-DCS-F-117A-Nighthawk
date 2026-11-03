@@ -9,7 +9,7 @@ local finish_native_brightness=dofile(LockOn_Options.script_path.."Indicator/nat
 local SD,SM=DEP_SD,DEP_SD_SMALL
 local ROOT=CreateElement "ceSimple"
 ROOT.name="F117_DEP_SOURCE"
-ROOT.element_params={"mainpower","F117_DEP_DRAW_BRIGHTNESS"}
+ROOT.element_params={"F117_ON_DEP","F117_DEP_DRAW_BRIGHTNESS"}
 ROOT.controllers={{"parameter_in_range",0,0.9,1.1},{"opacity_using_parameter",1}}
 Add(ROOT)
 local function props(e,parent,level,params,controllers)
@@ -125,4 +125,7 @@ end
 line({{LEFT,0},{RIGHT,0}},"rule",nil,.00045)
 for i=2,#EDGES-1 do line({{EDGES[i],BOTTOM},{EDGES[i],TOP}},"rule",nil,.00020) end
 line({{EDGES[7],BOTTOM/2},{EDGES[8],BOTTOM/2}},"rule",nil,.00020)
+dofile(LockOn_Options.script_path.."Indicator/boot_page.lua"){
+    display="DEP",title="DEP",name="F117_DEP_BOOT",font=DEP_FONTS.legend,line_material=DEP_MATERIALS.rule,
+    half_w=.0760,half_h=.0120,sd=DEP_SD,text_scale=DEP_READABILITY.mfd_text_scale,row=true}
 finish_native_brightness()

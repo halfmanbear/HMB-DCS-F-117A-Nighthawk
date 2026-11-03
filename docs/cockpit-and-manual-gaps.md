@@ -185,7 +185,7 @@ TTG, course, DME) because nothing supplies it. **Navigation is the main gap.**
 | 18 | Sensor / visual / IRADS-map updates, MARK points 94–98, altitude calibration | PDF 56–58 / 4-43…4-45 | Only useful if INS drift is modelled |
 | 19 | Return-to-Base degraded mode and computer failure matrix | PDF 39, 41 / 4-26, 4-28 | Failure modelling |
 | 20 | VTR recorder (RCRD / STBY), TM/SRCH | PDF 55 / 4-42 | Cosmetic / weapons manual |
-| 21 | Normal procedures: FCS prestart BIT, APU start (battery → BIT → APU → wait 3 s after APU OFF light) | PDF 10–11 / 2-1…2-2 | Needs APU/EPU/electrics that the EFM does not model; base manual needed |
+| 21 | Normal procedures: FCS prestart BIT, APU start (battery → BIT → APU → wait 3 s after APU OFF light) | PDF 10–11 / 2-1…2-2 | Display power only is modelled in Lua (`Systems/Electrical.lua`): battery, APU, ground power cart, engine generators, staggered display boot and attitude/heading/air data alignment. The boot screens are illustrative. No FCS BIT, APU OFF light or EPU. The EFM runs each engine start on start air from the APU, the air cart or crossbleed, one starter at a time, with EGT, oil pressure and fuel flow from page 2-7 |
 | 22 | Emergency procedures: engine fire, oil pressure, starter engaged, AMAD oil, ECS overheat, fuel pressure low, INS failure → DR mode | PDF 12–13 / 3-1…3-2 | INS-failure W symbol is already in the HUD |
 
 ### Concrete values to use when implementing

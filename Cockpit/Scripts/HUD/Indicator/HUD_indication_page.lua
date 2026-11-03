@@ -15,7 +15,8 @@ root.name="OCIP_ROOT"
 root.collimated=true
 root.z_enabled=false
 root.init_pos={layout.origin_mrad[1]*U,layout.origin_mrad[2]*U,0}
-root.element_params={"mainpower","F117_HUD_DRAW_BRIGHTNESS"}
+-- F117_ON_HUD: display power (Systems/Electrical.lua); the boot fade is in the brightness.
+root.element_params={"F117_ON_HUD","F117_HUD_DRAW_BRIGHTNESS"}
 root.controllers={{"parameter_in_range",0,.9,1.1},{"opacity_using_parameter",1}}
 Add(root)
 local function props(e,parent,level,params,controllers)

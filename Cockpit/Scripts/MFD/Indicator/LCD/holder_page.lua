@@ -29,6 +29,8 @@ e.material=MakeMaterial(texture,{255,255,255,255})
 e.h_clip_relation=h_clip_relations.COMPARE;e.level=1
 e.collimated=false;e.z_enabled=true;e.additive_alpha=false
 e.use_mipfilter=false
-e.element_params={"mainpower",gate}
-e.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1}}
+-- Shown from backlight through operational so baked boot screens appear.
+local display=({left="CMDI_L",right="CMDI_R",centre="SD"})[F117_LCD_KIND]
+e.element_params={"F117_PWR_"..display,gate}
+e.controllers={{"parameter_in_range",0,.9,3.1},{"parameter_in_range",1,.9,1.1}}
 Add(e)

@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
 from check_display_calibration import runtime
-from layout_editor import Model,PAGES,DEFAULTS,convert,measured_surfaces
+from layout_editor import Model,PAGES,DEFAULTS,POWER_OFF,convert,measured_surfaces
 SCRIPTS=ROOT/'Cockpit/Scripts'
 
 def composite(side='Left'):
@@ -24,11 +24,12 @@ class LeftEOTests(unittest.TestCase):
             function make_default_activity()end
             function dispatch_action(...)calls[#calls+1]={...}end
             function get_absolute_model_time()return 43200 end
+            function get_base_data()return {} end
             LockOn_Options.init_conditions={birth_place="GROUND_COLD"}
         ''')
         def modules(path):
             if '/Systems/' in str(path):
-                if str(path).endswith('Displays.lua'):return load(path)
+                if str(path).endswith(('Displays.lua','AlignedSensor.lua')):return load(path)
                 if str(path).endswith('IRADS_Diagnostics.lua'):return lua.eval('function()end')
                 return lua.eval('{new=function()return {initialize=function()end,update=function()end,set_command=function()return false end}end,initialize=function()end,update=function()end,set_command=function()return false end,default_side_brightness=function()return 1 end}')
             return load(path)
@@ -102,7 +103,7 @@ class LeftEOTests(unittest.TestCase):
                         for x,y in e.get('vertices',[]):
                             self.assertLess(abs(x),.053);self.assertLess(abs(y),.05)
 
-            self.assertFalse(any(s[3] for e,s in model.scene(dict(DEFAULTS,mainpower=0))))
+            self.assertFalse(any(s[3] for e,s in model.scene(dict(DEFAULTS,**POWER_OFF))))
 
     def test_video_samples_camera_texture_not_the_owners_mfd_material(self):
         # Native set_mat_params sends MFD brightness/contrast only when the material

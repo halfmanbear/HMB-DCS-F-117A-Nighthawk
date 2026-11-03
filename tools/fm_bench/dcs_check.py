@@ -174,7 +174,8 @@ def build_mission(template, target, fuel_kg, runway_start=False):
     tas = mach_from_cas(START_KCAS, h) * isa(h)[3]
     found = False
     for side in ('blue', 'red', 'neutrals'):
-        countries = mission['coalition'][side]['country']
+        coalition = mission['coalition'][side]
+        countries = coalition['country'] if coalition else None
         for c in (list(countries) if countries else []):
             country = countries[c]
             for category in ('plane', 'helicopter', 'vehicle', 'ship', 'static'):

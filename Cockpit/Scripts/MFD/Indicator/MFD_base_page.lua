@@ -33,7 +33,7 @@ if not F117_IRADS_OVERLAY_OPTIONS then
         video.indices={0,1,2,0,2,3};video.tex_coords={{0,0},{1,0},{1,1},{0,1}}
         video.material=MakeMaterial("mfd0",readability.irads_video_colour)
         video.input_space_SRGB=true;video.additive_alpha=true
-        video.element_params={"mainpower","F117_IRADS_POWER","F117_LCD_READY","F117_IRADS_DRAW_BRIGHTNESS","F117_IRADS_CONTRAST_BAND"}
+        video.element_params={"F117_ON_SD","F117_IRADS_POWER","F117_LCD_READY","F117_IRADS_DRAW_BRIGHTNESS","F117_IRADS_CONTRAST_BAND"}
         video.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1},
             {"parameter_in_range",2,.9,1.1},{"opacity_using_parameter",3},
             {"parameter_in_range",4,band-.1,band+.1},{"set_contrast_raw",(.35+band*.01)/.80}}
@@ -41,4 +41,9 @@ if not F117_IRADS_OVERLAY_OPTIONS then
     end
 end
 dofile(LockOn_Options.script_path.."MFD/Indicator/MFD_indication_page.lua")
+if not F117_IRADS_OVERLAY_OPTIONS then
+    dofile(LockOn_Options.script_path.."Indicator/boot_page.lua"){
+        display="SD",title="SD",name="F117_SD_BOOT",font=MFD_FONT,line_material=MFD_WHITE,
+        half_w=.0881,half_h=.0748,sd={.0011,.0011,0,0},text_scale=readability.mfd_text_scale}
+end
 if finish then F117_IRADS_REGISTERED=nil;finish() end

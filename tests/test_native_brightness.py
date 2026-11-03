@@ -15,8 +15,29 @@ class NativeBrightnessTests(unittest.TestCase):
                 set=function(_,v)values[name]=v end} end
             values.CDBrightness=.9;values.HUDBrightness=.7;values.LDBrightness=.88
             values.RDBrightness=.86;values.F117_IRADS_BRIGHTNESS=.16
+            -- Displays fully powered up (Systems/Electrical.lua).
+            for _,d in ipairs({"HUD","CMDI_L","CMDI_R","SD","DEP"}) do values["F117_FADE_"..d]=1 end
         ''')
         return lua
+
+    def test_power_up_fades_scale_each_channel(self):
+        lua=self.runtime();g=lua.globals()
+        lua.execute('''
+            ready=true
+            values.F117_FADE_HUD=.5;values.F117_FADE_CMDI_L=0;values.F117_FADE_CMDI_R=.25
+            values.F117_FADE_SD=0;values.F117_FADE_DEP=1
+            package={loadlib=function()return function()return {
+                update=function(...)gains={...};return ready,'status' end}end end}
+        ''')
+        module=lua.execute((SCRIPTS/'Systems/NativeBrightness.lua').read_text()).new()
+        module.initialize()
+        for actual,expected in zip(g.gains.values(),[.35,0,.035,0,0,.7]):
+            self.assertAlmostEqual(actual,expected)
+        g.ready=False;module.update();v=g['values']
+        self.assertAlmostEqual(v.F117_HUD_DRAW_BRIGHTNESS,.35)
+        self.assertAlmostEqual(v.F117_LEFT_DIM_OPACITY,1)
+        self.assertAlmostEqual(v.F117_RIGHT_DIM_OPACITY,1-.14*.25)
+        self.assertAlmostEqual(v.F117_IRADS_DIM_OPACITY,1)
 
     def test_native_handover_and_runtime_fallback_do_not_double_dim(self):
         lua=self.runtime();g=lua.globals()
