@@ -54,7 +54,7 @@ local RWR_BACKGROUND = get_param_handle("RWR_BACKGROUND")
 local RDR_BACKGROUND = get_param_handle("RDR_BACKGROUND")
 
 local PLAYER_SELECTED_STATION = get_param_handle("PLAYER_SELECTED_STATION")
-local F117_CCRP_PROFILE = get_param_handle("F117_CCRP_PROFILE") -- auto-detected: 0=GBU-31(V)1/B, 1=GBU-31(V)3/B, 2=GBU-32(V)2/B, 3=GBU-12, 4=GBU-27
+local F117_CCRP_PROFILE = get_param_handle("F117_CCRP_PROFILE") -- auto-detected by Weapons.lua classify(): 0-13, see the list there
 local LDBrightness  = get_param_handle("LDBrightness")
 local left_dim=get_param_handle("F117_LEFT_DIM_OPACITY")
 local right_dim=get_param_handle("F117_RIGHT_DIM_OPACITY")

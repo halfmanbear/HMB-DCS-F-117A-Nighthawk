@@ -28,14 +28,34 @@ local function tokens(value, result, seen)
     end
 end
 
+-- Store profiles. The index is F117_CCRP_PROFILE and must match the order of
+-- kCcrpStoreModels in the EFM. Profiles 0-4 never move.
+--  0 GBU-31(V)1/B  1 GBU-31(V)3/B  2 GBU-32(V)2/B  3 GBU-12  4 GBU-27
+--  5 GBU-10  6 Mk-82  7 Mk-84  8 CBU-105  9 AGM-154A  10 AGM-154B  11 AGM-154C
+--  12 AGM-65D  13 AGM-65E (laser)
+local function any(s,...)
+    for _,needle in ipairs({...}) do if s:find(needle,1,true) then return true end end
+    return false
+end
+
 local function classify(info)
     local t={}; tokens(info,t,{})
     local s=string.lower(table.concat(t," | "))
-    if s:find("gbu31_v3b",1,true) or s:find("gbu_31_v_3b",1,true) or s:find("gbu-31-v3b",1,true) or s:find("gbu-31v3",1,true) then return 1 end
-    if s:find("gbu32",1,true) or s:find("gbu_32",1,true) or s:find("gbu-32",1,true) then return 2 end
-    if s:find("gbu_27",1,true) or s:find("gbu-27",1,true) or s:find("ef0a9419",1,true) then return 4 end
-    if s:find("gbu_12",1,true) or s:find("gbu-12",1,true) or s:find("db769d48",1,true) then return 3 end
-    if s:find("gbu31",1,true) or s:find("gbu_31",1,true) or s:find("gbu-31",1,true) then return 0 end
+    -- Most specific first: the GBU-31 and GBU-10 are built on the Mk-84 body.
+    if any(s,"gbu31_v3b","gbu_31_v_3b","gbu-31-v3b","gbu-31v3") then return 1 end
+    if any(s,"gbu32","gbu_32","gbu-32") then return 2 end
+    if any(s,"gbu_27","gbu-27","ef0a9419") then return 4 end
+    if any(s,"gbu_12","gbu-12","db769d48") then return 3 end
+    if any(s,"gbu31","gbu_31","gbu-31") then return 0 end
+    if any(s,"gbu_10","gbu-10","51f9aae5") then return 5 end
+    if any(s,"agm_154c","agm-154c","9bcc2a2b") then return 11 end
+    if any(s,"agm_154b","agm-154b") then return 10 end
+    if any(s,"agm_154a","agm-154a","agm_154","agm-154") then return 9 end
+    if any(s,"agm_65e","agm-65e","agm_65l","agm-65l","f16a4de0") then return 13 end
+    if any(s,"agm_65d","agm-65d","444ba8ae") then return 12 end
+    if any(s,"cbu_105","cbu-105") then return 8 end
+    if any(s,"mk_84","mk-84","ab8b8299") then return 7 end
+    if any(s,"mk_82","mk-82","bce4e030") then return 6 end
     local weapon=info.weapon
     if type(weapon)=="table" then
         local stock = {[38]=3,[43]=4,[85]=0,[92]=1}

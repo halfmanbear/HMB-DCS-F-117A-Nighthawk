@@ -6,14 +6,15 @@ Model hashes are SHA256, shortened to 12 characters except in the current state.
 
 ## Current state
 
-As of 2026-11-01. None of this is committed yet.
+As of 2026-11-03. None of this is committed yet.
 
 | Part | Location | Identity |
 |---|---|---|
 | Exterior model | `Shapes/f-117-nighthawk.edm` | `b314ca7fa7f66af7d663a3da017bc41776c8b392fff3bf86b5a9157b371117ac` |
 | Damage table | `F-117-NightHawk.lua` | 25 cells, `00a6e68c8947` |
-| EFM source | `EFM Source Code/F_117_NightHawk.cpp` in the EFM repository | `43bf632` plus uncommitted changes, `9f2ca3c9379f` |
-| EFM binary | Build output, loaded through the local proxy | `d5e7019fdf70`, built 2026-11-01 13:50 |
+| EFM source | `EFM Source Code/F_117_NightHawk.cpp` in the EFM repository | `d241a56` plus uncommitted changes, `b09f58c2f0cf` |
+| EFM binary | Build output, loaded through the local proxy | `32d64e264d8a`, built 2026-11-03 16:10 |
+| Store profiles | `Cockpit/Scripts/Systems/Weapons.lua` `classify()` and the EFM `kCcrpStoreModels` | 14 profiles in the same order; `tests/test_store_profiles.py` checks both |
 | Blender scene | `F-117 Damage Sections`, in the two projects listed below | Stamped with the model hash |
 
 ## Blender projects
