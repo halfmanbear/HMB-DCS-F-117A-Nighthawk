@@ -36,7 +36,7 @@ artwork. They are **not valid navigation, guidance or advisory indications**.
 The illustrated `ICE`, `ALIGN`, `CONS` and `ALERT` labels are not live warnings.
 
 **Registered as the default in-game left display** through `Left_init.lua` and
-`device_init.lua`, on the calibrated `MFD-PLASHKA-CENTER1 / DOWN1 / RIGHT1`
+`device_init.lua`, on the calibrated `CMDI-L-CENTER / DOWN / RIGHT`
 connector frame. Reload the aircraft/mission to load it. The left calibration
 overlay is disabled in `Calibration/config.lua`; the HUD and centre
 calibration overlays remain enabled. The right HSD is now registered too. Disabling calibration globally

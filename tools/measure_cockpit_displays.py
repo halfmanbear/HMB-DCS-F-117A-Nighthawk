@@ -85,15 +85,19 @@ if abs(scale-1)>1e-6:raise RuntimeError('Unexpected scene unit scale; verify met
 out=project.parent.parent/'tools/data/cockpit_display_geometry.json'
 surfaces={}
 for label,center,down,right in [
-    ('MFD','MFD-PLASHKA-CENTER','MFD-PLASHKA-DOWN','MFD-PLASHKA-RIGHT'),
-    ('Left MFD','MFD-PLASHKA-CENTER1','MFD-PLASHKA-DOWN1','MFD-PLASHKA-RIGHT1'),
-    ('Right MFD','RADAR-PLASHKA-CENTER','RADAR-PLASHKA-DOWN','RADAR-PLASHKA-RIGHT')]:
+    ('MFD','SD-CENTER','SD-DOWN','SD-RIGHT'),
+    ('Left MFD','CMDI-L-CENTER','CMDI-L-DOWN','CMDI-L-RIGHT'),
+    ('Right MFD','CMDI-R-CENTER','CMDI-R-DOWN','CMDI-R-RIGHT')]:
     if label=='MFD':name='Cockpit.043';points,faces=components(name)[0]
     else:
         name='Cockpit.007'
         candidates=[c for c in components(name) if len(c[0])==20]
         points,faces=max(candidates,key=lambda c:c[0][:,1].mean()) if label=='Left MFD' else min(candidates,key=lambda c:c[0][:,1].mean())
     surfaces[label]=measure(name,points,faces,dict(center=center,down=down,right=right))
+# The DEP glass is the higher of the two 16-vertex strips in Cockpit.007,
+# between the HUD and the centre display.
+points,faces=max((c for c in components('Cockpit.007') if len(c[0])==16),key=lambda c:c[0][:,2].mean())
+surfaces['DEP']=measure('Cockpit.007',points,faces,dict(center='DEP-CENTER',down='DEP-DOWN',right='DEP-RIGHT'))
 points,faces=components('Cockpit.044')[0]
 surfaces['Centre secondary surface']=measure('Cockpit.044',points,faces)
 glass=components('Cockpit glass.001')

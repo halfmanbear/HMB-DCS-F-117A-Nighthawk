@@ -6,10 +6,10 @@ void check(bool ok,const char* message) {
     if (!ok) {std::fprintf(stderr,"FAIL: %s\n",message);std::exit(1);}
 }
 struct FakeIndicator {const char* marker;unsigned char memory[1300];};
-FakeIndicator displays[5]={};
-void* displayPointers[5]={};
+FakeIndicator displays[BrightnessChannelCount]={};
+void* displayPointers[BrightnessChannelCount]={};
 unsigned char brightnessContext[0x148]={};
-float applied[5]={},videoSetting=0;
+float applied[BrightnessChannelCount]={},videoSetting=0;
 int configuredCount=0;
 bool resolveMaterials=true;
 void (*getfield)(lua_State*,int,const char*)=nullptr;
@@ -32,13 +32,13 @@ void fakeRead(void* parser,void* config) {
     if (resolveMaterials) *reinterpret_cast<size_t*>(static_cast<unsigned char*>(parser)+80)+=*static_cast<size_t*>(config);
 }
 void fakeGain(void* parser,float gain) {
-    for (size_t i=0;i<5;++i) if (parser==reinterpret_cast<unsigned char*>(&displays[i])+IndicatorParserOffset) {
+    for (size_t i=0;i<BrightnessChannelCount;++i) if (parser==reinterpret_cast<unsigned char*>(&displays[i])+IndicatorParserOffset) {
         applied[i]=gain;return;
     }
     check(false,"renderer belongs to the discovered marker");
 }
 void fakeShader(void* parser,float setting) {
-    check(parser==reinterpret_cast<unsigned char*>(&displays[4])+IndicatorParserOffset,"video shader receives camera parser");
+    check(parser==reinterpret_cast<unsigned char*>(&displays[VideoChannel])+IndicatorParserOffset,"video shader receives camera parser");
     videoSetting=setting;
 }
 }
@@ -62,30 +62,35 @@ int main(int argc,char** argv) {
         lua.settop(state,0);
         check(brightnessChannels[index].materials.size()==1,"materials deduplicated");
     };
-    for (size_t i=0;i<5;++i) {
+    for (size_t i=0;i<BrightnessChannelCount;++i) {
         displays[i].marker=brightnessChannels[i].marker;
-        displayPointers[4-i]=&displays[i];registerPage(i);
+        displayPointers[BrightnessChannelCount-1-i]=&displays[i];registerPage(i);
     }
-    Vector view{displayPointers,displayPointers+5,displayPointers+5};
+    Vector view{displayPointers,displayPointers+BrightnessChannelCount,displayPointers+BrightnessChannelCount};
     std::memcpy(brightnessContext+0xb0,&view,sizeof(view));
     brightnessAPI={fakeContext,fakeElement,fakeConfig,fakeConfigDestroy,fakeRead,fakeGain,fakeShader};
     brightnessBound=true;
     auto update=[&](double hud=.7) {
         lua.settop(state,0);lua.pushcclosure(state,updateBrightness,0);
-        for (double gain:{hud,.12,.14,.16,.16}) pushnumber(state,gain);
-        check(pcall(state,5,2,0)==0,"brightness update returns normally");
+        for (double gain:{hud,.12,.14,.16,.16,.18}) pushnumber(state,gain);
+        check(pcall(state,static_cast<int>(BrightnessChannelCount),2,0)==0,"brightness update returns normally");
         bool ok=toboolean(state,-2)!=0;lua.settop(state,0);return ok;
     };
-    check(update() && configuredCount==5,"all five native parsers configured");
+    check(BrightnessChannelCount==6 && !std::strcmp(brightnessChannels[5].marker,"F117_DEP_SOURCE"),"DEP is the sixth channel");
+    check(update() && configuredCount==6,"all six native parsers configured");
     check(std::fabs(applied[0]-.7f)<1e-6f && std::fabs(applied[1]-.12f)<1e-6f &&
-          std::fabs(applied[2]-.14f)<1e-6f && std::fabs(applied[3]-.16f)<1e-6f,"independent gains and marker discovery");
+          std::fabs(applied[2]-.14f)<1e-6f && std::fabs(applied[3]-.16f)<1e-6f && std::fabs(applied[5]-.18f)<1e-6f,"independent gains and marker discovery");
     check(std::fabs((1.f+1.6f*(videoSetting-.5f))-.16f)<1e-6f,"camera shader preserves luminance gain");
-    check(update() && configuredCount==5,"updates do not append duplicate native material lists");
+    check(update() && configuredCount==6,"updates do not append duplicate native material lists");
     check(!update(std::nan("")) && std::fabs(applied[0]-.7f)<1e-6f,"nonfinite input leaves native state intact");
     displays[2].marker="missing";
     check(!update() && applied[0]==1.f && videoSetting==.5f,"missing page resets live native gains before fallback");
     displays[2].marker=brightnessChannels[2].marker;
     check(update(),"late source can retry");
+    displays[5].marker="missing";
+    check(!update() && applied[0]==1.f && applied[1]==1.f,"missing DEP page resets the other gains before fallback");
+    displays[5].marker=brightnessChannels[5].marker;
+    check(update() && std::fabs(applied[5]-.18f)<1e-6f,"DEP page can arrive late");
     resolveMaterials=false;registerPage(1);
     check(!update() && applied[0]==1.f,"unresolved materials retain fallback");
     int failedCount=configuredCount;
@@ -97,12 +102,12 @@ int main(int argc,char** argv) {
     for (const auto& channel:brightnessChannels) check(!channel.materials.empty(),"page state closure keeps registered names");
     configuredCount=0;
     for (auto& channel:brightnessChannels) channel.configured=nullptr;
-    check(update() && configuredCount==5,"brightness activates after every page state has closed");
+    check(update() && configuredCount==6,"brightness activates after every page state has closed");
     std::vector<std::string> saved;
     saved.swap(brightnessChannels[1].materials);
     lua.settop(state,0);lua.pushcclosure(state,updateBrightness,0);
-    for (int i=0;i<5;++i) pushnumber(state,.5);
-    check(pcall(state,5,2,0)==0 && !toboolean(state,-2),"missing materials report failure");
+    for (size_t i=0;i<BrightnessChannelCount;++i) pushnumber(state,.5);
+    check(pcall(state,static_cast<int>(BrightnessChannelCount),2,0)==0 && !toboolean(state,-2),"missing materials report failure");
     check(std::strstr(lua.tolstring(state,-1,nullptr),"F117_VSD_SOURCE")!=nullptr,"status names the blocking page");
     lua.settop(state,0);
     saved.swap(brightnessChannels[1].materials);
@@ -125,9 +130,9 @@ int main(int argc,char** argv) {
     LuaFunction open=nullptr;
     check(adapter && symbol(adapter,"luaopen_f117_brightness",open),"built brightness export");
     state=newState();check(open(state)==1,"actual DLL API table");
-    getfield(state,-1,"update");for (int i=0;i<5;++i) pushnumber(state,.5);
-    check(pcall(state,5,2,0)==0 && !toboolean(state,-2),"unsupported native runtime falls back");
+    getfield(state,-1,"update");for (size_t i=0;i<BrightnessChannelCount;++i) pushnumber(state,.5);
+    check(pcall(state,static_cast<int>(BrightnessChannelCount),2,0)==0 && !toboolean(state,-2),"unsupported native runtime falls back");
     closeState(state);FreeLibrary(adapter);
-    std::puts("PASS: native brightness discovery, material registration, gains, camera conversion, retries, fallback, page state closure and DLL export");
+    std::puts("PASS: native brightness discovery (six channels including DEP), material registration, gains, camera conversion, retries, fallback, page state closure and DLL export");
     return 0;
 }

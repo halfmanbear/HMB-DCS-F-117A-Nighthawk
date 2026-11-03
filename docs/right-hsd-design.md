@@ -18,7 +18,7 @@ OSB actions and navigation calculations are not added by this page.
 
 Registered as the default right display in `device_init.lua`, through
 `MFD/Indicator/Right/Right_init.lua`, using the calibrated
-`RADAR-PLASHKA-CENTER / DOWN / RIGHT` connector frame. Right calibration is
+`CMDI-R-CENTER / DOWN / RIGHT` connector frame. Right calibration is
 disabled in `Calibration/config.lua` to prevent overlap. The historical RADAR
 anchor name identifies the screen location. Depth testing is enabled, and the
 rounded safe area fits the measured 104.1 x 95.3 mm aperture.

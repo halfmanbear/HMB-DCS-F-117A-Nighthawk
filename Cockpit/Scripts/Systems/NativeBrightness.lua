@@ -12,6 +12,8 @@ function M.new()
     local eo_dim=get_param_handle("F117_LEFT_EO_DIM_OPACITY")
     local map_dim=get_param_handle("F117_MAP_DIM_OPACITY")
     local hud_draw=get_param_handle("F117_HUD_DRAW_BRIGHTNESS")
+    -- The DEP follows the HUD brightness control (manual 4-4).
+    local dep_draw=get_param_handle("F117_DEP_DRAW_BRIGHTNESS")
     local irads_draw=get_param_handle("F117_IRADS_DRAW_BRIGHTNESS")
     local left_dim=get_param_handle("F117_LEFT_DIM_OPACITY")
     local right_dim=get_param_handle("F117_RIGHT_DIM_OPACITY")
@@ -26,12 +28,13 @@ function M.new()
         local left_gain=1-left:get()
         if eo:get()==1 then left_gain=math.min(left_gain,irads:get()) end
         if native then
-            local ok,ready,message=pcall(native.update,hud:get(),left_gain,1-right:get(),irads:get(),irads:get())
+            local ok,ready,message=pcall(native.update,hud:get(),left_gain,1-right:get(),irads:get(),irads:get(),hud:get())
             enabled=ok and ready==true
             report(ok and tostring(message) or "native brightness error: "..tostring(ready))
         end
         active:set(enabled and 1 or 0)
         hud_draw:set(enabled and 1 or hud:get())
+        dep_draw:set(enabled and 1 or hud:get())
         irads_draw:set(enabled and 1 or irads:get())
         left_dim:set(enabled and 0 or left:get())
         right_dim:set(enabled and 0 or right:get())

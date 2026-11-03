@@ -3,7 +3,7 @@
 Snapshot: 30 October 2026. Two parts:
 
 1. **Clickable cockpit** – investigated, then put **on hold**. Includes the planned
-   display connector rename. What exists, what
+   display connector rename (done 3 November 2026). What exists, what
    is missing, and how to resume.
 2. **Manual gap list** – what `Lockheed F-117A Nighthawk Utility Flight Manual.pdf`
    describes that the mod does not yet implement, ranked by importance.
@@ -67,11 +67,12 @@ Start with one switch, tested end to end: `Switch_07` → nav lights.
 
 The cockpit panel inventory (below) lists what to make clickable next.
 
-### Planned: rename the display connectors
+### Rename the display connectors
 
-Added 2 November 2026. Do this during the next cockpit re-export, such as step 1
-above. It changes no behaviour, so it isn't worth a re-export on its own. Allow
-about an hour plus a test flight.
+Added 2 November 2026. Done 3 November 2026 in the blend, scripts, tools and
+docs, together with a new `DEP` connector triple. After re-export, the HUD and all
+three displays drew in place in flight, and `dcs.log` reported the native
+compositor as active.
 
 The current names are inherited and misleading: `PLASHKA` is Russian for a small
 plate, `ILS` is the Russian abbreviation for HUD, `RADAR` marks a display on an
@@ -83,6 +84,7 @@ aircraft with no radar, and the `1` is all that identifies the left display.
 | Centre | `MFD-PLASHKA` | `SD` | Sensor Display (SD) |
 | Left | `MFD-PLASHKA` with a `1` suffix | `CMDI-L` | Left color multipurpose display indicator |
 | Right | `RADAR-PLASHKA` | `CMDI-R` | Right color multipurpose display indicator |
+| DEP | (new) | `DEP` | Data entry panel |
 
 Keep the `-CENTER`, `-DOWN` and `-RIGHT` endings, because they give each display
 its origin and axes. For example, `MFD-PLASHKA-DOWN1` becomes `CMDI-L-DOWN`.
@@ -109,8 +111,8 @@ Steps:
 7. Fly and confirm that all four displays draw in the right place and `dcs.log`
    reports the native compositor as active.
 
-Check `ILS-PLASHKA-UP` and `RADAR-PLASHKA-UP` while renaming: both are in the model,
-but no script here uses them.
+`ILS-PLASHKA-UP` and `RADAR-PLASHKA-UP` are now `HUD-UP` and `CMDI-R-UP`. Both are
+in the model, but no script here uses them.
 
 ---
 
@@ -154,7 +156,7 @@ TTG, course, DME) because nothing supplies it. **Navigation is the main gap.**
 | # | Feature | Manual | Current state | Size |
 |---|---|---|---|---|
 | 1 | **Flight plan / waypoints + destination steering** (DEST, CRS LINE, CRS SEL, MAN HDG) | PDF 44–49 / 4-31…4-36 | None. HUD destination box, HSD course pointer, RNG/TTG have validity flags waiting for a source | Days |
-| 2 | **Data Entry Panel (DEP)** main menu, submenus and keypad | PDF 42–43 / 4-29…4-30, FO-3 (PDF 80–87) | None | Days |
+| 2 | **Data Entry Panel (DEP)** main menu, submenus and keypad | PDF 42–43 / 4-29…4-30, FO-3 (PDF 80–87) | **Started 3 Nov 2026**: main menu drawn on the DEP glass, reverse video per `F117_DEP_*` parameter (SPD/CAS from the autothrottle); no buttons, submenus or keypad yet – `docs/layout-editor.md` | Days |
 | 3 | **Autopilot per OCIP**: CH1/DUAL/CH2, no-reference PITCH/ROLL lights, stick de-reference, paddle disconnect, coupled steering | PDF 15–17 / 4-2…4-4 | EFM has FC3-style alt / attitude / alt+roll hold only | 1–2 days |
 | 4 | **Autothrottle** (CAS/Mach/GS/AOA hold, A/T DISC light, inboard throttle disengage button) | PDF 15–17, 52 / 4-2, 4-39 | **Done 30 Oct 2026** (CAS hold; Mach/GS/AOA need the DEP) – `docs/autothrottle-paars.md` | – |
 | 5 | **TACAN and ILS steering** on HUD (Fig 4-5, 4-6), VSD (loc/GS indicators) and HSD (bearing pointer, DME) | PDF 23–24, 50–51 / 4-10…4-11, 4-37…4-38 | None | 1–2 days |

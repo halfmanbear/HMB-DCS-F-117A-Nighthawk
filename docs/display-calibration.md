@@ -97,8 +97,8 @@ If a side display stays completely blank, inspect `Saved Games/DCS/Logs/dcs.log`
 for indicator errors and verify that the cockpit **EDM export** includes the
 connector names below. Their presence in Blender alone does not prove export:
 
-- Left: `MFD-PLASHKA-CENTER1`, `MFD-PLASHKA-DOWN1`, `MFD-PLASHKA-RIGHT1`.
-- Right: `RADAR-PLASHKA-CENTER`, `RADAR-PLASHKA-DOWN`, `RADAR-PLASHKA-RIGHT`.
+- Left: `CMDI-L-CENTER`, `CMDI-L-DOWN`, `CMDI-L-RIGHT`.
+- Right: `CMDI-R-CENTER`, `CMDI-R-DOWN`, `CMDI-R-RIGHT`.
 
 ## Head movement and VR clipping
 

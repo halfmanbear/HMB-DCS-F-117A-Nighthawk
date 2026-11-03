@@ -65,20 +65,20 @@ def validate():
     # Compile every affected Lua file using the Lua parser, without running it.
     lua = LuaRuntime()
     compile_lua = lua.eval('function(s) local f,e=load(s); assert(f,e) end')
-    for path in [*SCRIPTS.glob('display_*.lua'),SCRIPTS/'materials.lua',SCRIPTS/'Systems/DisplayCompositor.lua',SCRIPTS/'Systems/Displays.lua',*(SCRIPTS/'MFD/Indicator/LCD').glob('*.lua'),SCRIPTS/'MFD/Indicator/render_config.lua',SCRIPTS/'device_init.lua', *(SCRIPTS/'HUD/Device').glob('*.lua'), *CAL.glob('*.lua'), *(SCRIPTS/'HUD/Indicator').glob('*.lua'), *(SCRIPTS/'MFD/Indicator/Left').glob('*.lua'), *(SCRIPTS/'MFD/Indicator/Right').glob('*.lua')]:
+    for path in [*SCRIPTS.glob('display_*.lua'),SCRIPTS/'materials.lua',SCRIPTS/'Systems/DisplayCompositor.lua',SCRIPTS/'Systems/Displays.lua',*(SCRIPTS/'MFD/Indicator/LCD').glob('*.lua'),SCRIPTS/'MFD/Indicator/render_config.lua',SCRIPTS/'device_init.lua', *(SCRIPTS/'HUD/Device').glob('*.lua'), *CAL.glob('*.lua'), *(SCRIPTS/'HUD/Indicator').glob('*.lua'), *(SCRIPTS/'MFD/Indicator/Left').glob('*.lua'), *(SCRIPTS/'MFD/Indicator/Right').glob('*.lua'), *(SCRIPTS/'DEP/Indicator').glob('*.lua')]:
         compile_lua(path.read_text(encoding='utf-8-sig'))
 
-    for enabled,count in [(False,9),(True,10)]:
+    for enabled,count in [(False,10),(True,11)]:
         lua,load = runtime(enabled)
         load(SCRIPTS/'device_init.lua')
         indicators=lua.globals().indicators
         assert len(indicators)==count, (enabled,len(indicators))
         assert Path(indicators[4][2]).name == 'Left_init.lua'
         assert [indicators[4][4][1][i] for i in range(1,4)] == [
-            'MFD-PLASHKA-CENTER1','MFD-PLASHKA-DOWN1','MFD-PLASHKA-RIGHT1']
+            'CMDI-L-CENTER','CMDI-L-DOWN','CMDI-L-RIGHT']
         assert Path(indicators[5][2]).name == 'Right_init.lua'
         assert [indicators[5][4][1][i] for i in range(1,4)] == [
-            'RADAR-PLASHKA-CENTER','RADAR-PLASHKA-DOWN','RADAR-PLASHKA-RIGHT']
+            'CMDI-R-CENTER','CMDI-R-DOWN','CMDI-R-RIGHT']
         if enabled:
             assert [Path(indicators[i][2]).stem for i in range(6,7)] == [
                 'centre_init']

@@ -87,8 +87,11 @@ workflow does not build it. Commit a rebuilt copy when the native code changes.
 
 The same DLL also exports `luaopen_f117_brightness`. Shipping display pages
 register their actual materials with this module; `Systems/NativeBrightness.lua`
-updates native renderer gain for the HUD and all MFDs even while compositor
-`enabled=false`. The module checks the same CockpitBase hash, discovers current
+updates native renderer gain for the HUD, all MFDs and the DEP even while compositor
+`enabled=false`. Channels, in update order: `OCIP_ROOT` (HUD), `F117_VSD_SOURCE`,
+`F117_HSD_SOURCE`, `F117_IRADS_SOURCE`, `dlir_picture` (camera) and `F117_DEP_SOURCE`.
+The DEP takes the HUD brightness control. All six pages must be found before any
+gain is applied. The module checks the same CockpitBase hash, discovers current
 indicators by page markers, and uses the parser embedded at +1144. Registration
 uses native `read_from_state`; its material count is checked before activation.
 Ordinary materials use `change_brightness`; the camera target additionally uses
@@ -106,7 +109,7 @@ compositor remains disabled; this export does not change its readiness, purposes
 or resources.
 
 The build now also runs `test_brightness.cpp` against DCS Lua, covering material
-capture/deduplication, source order, all five gains, video conversion, idempotent
+capture/deduplication, source order, all six gains (including the DEP), video conversion, idempotent
 configuration, missing source fallback, failed material resolution, retry, page
 state closure
 and the actual DLL export. See `docs/irads-image-controls.md` for controls

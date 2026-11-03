@@ -70,7 +70,7 @@ On success, `F117_NATIVE_BRIGHTNESS_ACTIVE=1` and legacy dimmer opacity becomes
 zero. HUD/IRADS drawing opacity becomes one; their actual brightness handles
 remain unchanged for manual controls. The mission-time defaults and keyboard
 bindings above remain in effect. Log category `F117_BRIGHTNESS` reports
-`native HUD/MFD renderer brightness active` or the fallback reason. Fully restart
+`native HUD/MFD/DEP renderer brightness active` or the fallback reason. Fully restart
 DCS after replacing the DLL. Host tests run real DCS Lua 5.1 with instrumented
 renderer APIs; they verify the handover and lifecycle, not live rendered pixels.
 
