@@ -4,7 +4,7 @@ local finish_native_brightness=dofile(LockOn_Options.script_path.."Indicator/nat
 local SD,SM,VAL=HSD_SD,HSD_SD_SMALL,HSD_SD_VALUE
 local ROOT=CreateElement "ceSimple"
 ROOT.name="F117_HSD_SOURCE"
-ROOT.element_params={"mainpower"}
+ROOT.element_params={"F117_ON_CMDI_R"}
 ROOT.controllers={{"parameter_in_range",0,0.9,1.1}}
 Add(ROOT)
 local function props(e,parent,level,params,controllers)

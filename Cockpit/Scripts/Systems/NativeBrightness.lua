@@ -18,6 +18,10 @@ function M.new()
     local left_dim=get_param_handle("F117_LEFT_DIM_OPACITY")
     local right_dim=get_param_handle("F117_RIGHT_DIM_OPACITY")
     local video_dim=get_param_handle("F117_IRADS_DIM_OPACITY")
+    -- Power-up fades from Systems/Electrical.lua scale every channel.
+    local fade={}
+    for _,name in ipairs({"HUD","CMDI_L","CMDI_R","SD","DEP"}) do fade[name]=get_param_handle("F117_FADE_"..name) end
+    local function f(name) local v=fade[name]:get();return v<0 and 0 or v>1 and 1 or v end
     local function report(message)
         if message==last_message then return end
         last_message=message
@@ -25,22 +29,28 @@ function M.new()
     end
     local function update()
         local enabled=false
+        local fl,fr,fs=f("CMDI_L"),f("CMDI_R"),f("SD")
+        local hud_gain,dep_gain=hud:get()*f("HUD"),hud:get()*f("DEP")
         local left_gain=1-left:get()
         if eo:get()==1 then left_gain=math.min(left_gain,irads:get()) end
+        left_gain=left_gain*fl
+        local right_gain=(1-right:get())*fr
+        local irads_gain=irads:get()*fs
         if native then
-            local ok,ready,message=pcall(native.update,hud:get(),left_gain,1-right:get(),irads:get(),irads:get(),hud:get())
+            -- Channel order: HUD, CMDI-L, CMDI-R, SD symbology, SD video, DEP.
+            local ok,ready,message=pcall(native.update,hud_gain,left_gain,right_gain,irads_gain,irads_gain,dep_gain)
             enabled=ok and ready==true
             report(ok and tostring(message) or "native brightness error: "..tostring(ready))
         end
         active:set(enabled and 1 or 0)
-        hud_draw:set(enabled and 1 or hud:get())
-        dep_draw:set(enabled and 1 or hud:get())
-        irads_draw:set(enabled and 1 or irads:get())
-        left_dim:set(enabled and 0 or left:get())
-        right_dim:set(enabled and 0 or right:get())
-        video_dim:set(enabled and 0 or 1-irads:get())
+        hud_draw:set(enabled and 1 or hud_gain)
+        dep_draw:set(enabled and 1 or dep_gain)
+        irads_draw:set(enabled and 1 or irads_gain)
+        left_dim:set(enabled and 0 or 1-(1-left:get())*fl)
+        right_dim:set(enabled and 0 or 1-right_gain)
+        video_dim:set(enabled and 0 or 1-irads_gain)
         eo_dim:set(enabled and 0 or 1-left_gain)
-        map_dim:set(enabled and 0 or right:get())
+        map_dim:set(enabled and 0 or 1-right_gain)
     end
     local function initialize()
         active:set(0)

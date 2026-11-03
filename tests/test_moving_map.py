@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
 from check_display_calibration import runtime
-from layout_editor import Model,PAGES,DEFAULTS,convert
+from layout_editor import Model,PAGES,DEFAULTS,POWER_OFF,convert
 S=ROOT/'Cockpit/Scripts'
 
 class MovingMapTests(unittest.TestCase):
@@ -100,7 +100,7 @@ class MovingMapTests(unittest.TestCase):
         self.assertTrue(bg['z_enabled'])
         self.assertEqual(len(bg['indices']),3*(len(bg['vertices'])-2))
         model=Model('Central Map',PAGES['Central Map'].read_text())
-        self.assertFalse(any(s[3] for _,s in model.scene(dict(DEFAULTS,mainpower=0))))
+        self.assertFalse(any(s[3] for _,s in model.scene(dict(DEFAULTS,**POWER_OFF))))
 
     def test_planning_symbols_and_clipped_crossing_route(self):
         plan=self.lua.eval('{route={{x=-100000,z=2000},{x=100000,z=2000}},threats={{x=1000,z=2000,code="6"},{x=1000,z=2000,code="bogus"}}}')

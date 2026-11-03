@@ -9,7 +9,7 @@ from lupa import LuaRuntime
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from layout_editor import Model,PAGES,DEFAULTS,move_source
+from layout_editor import Model,PAGES,DEFAULTS,POWER_OFF,move_source
 
 # The HUD scale line DCS logs when the F-117 spawns.
 HUD_SCALE_LOG='F117_HUD_LAYOUT (Main): v1 fov_scale=0.085879072547 mrad_scale=0.000600000028498\n'
@@ -53,7 +53,7 @@ class OcipHudTests(unittest.TestCase):
             self.assertAlmostEqual(bracket[1]+arm*math.radians(1)*1000*unit,vv[1])
         for cue in ['OCIP_DESTINATION','OCIP_OFFSET','OCIP_IRADS_CURSOR']:
             self.assertFalse(state(cue)[3])
-        self.assertFalse(any(s[3] for e,s in model.scene(dict(DEFAULTS,mainpower=0)) if e.get('collimated')))
+        self.assertFalse(any(s[3] for e,s in model.scene(dict(DEFAULTS,**POWER_OFF)) if e.get('collimated')))
 
     def test_collimation_is_set_at_every_hud_parent(self):
         model=Model('HUD',PAGES['HUD'].read_text())

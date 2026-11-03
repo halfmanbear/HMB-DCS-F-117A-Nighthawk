@@ -4,7 +4,7 @@ local finish=dofile(LockOn_Options.script_path.."Indicator/native_brightness_pag
 local strokes=dofile(LockOn_Options.script_path.."display_strokes.lua")
 local ROOT=CreateElement "ceSimple"
 ROOT.name="F117_IRADS_SOURCE"
-ROOT.element_params={"mainpower"};ROOT.controllers={{"parameter_in_range",0,.9,1.1}}
+ROOT.element_params={"F117_ON_SD"};ROOT.controllers={{"parameter_in_range",0,.9,1.1}}
 Add(ROOT)
 local display_config=dofile(LockOn_Options.script_path.."MFD/Indicator/render_config.lua")
 if display_config.bake_test and not display_config.enabled and display_config.bake_test_source=="map" then

@@ -1,3 +1,55 @@
+## Engine starts on start air, two engines, ground carts (3 November 2026)
+
+Needs the matching EFM build.
+
+- **Two engines.** The EFM now models each engine separately: its own N2, thrust,
+  start, flameout and damage. `Engine Left Start` / `Engine Right Start`
+  (RAlt+Home / RCtrl+Home) and their stops work, and `Engines Start`
+  (RShift+Home) starts the right engine, then the left.
+- **Start air.** Each starter needs start air from the APU, the ground crew's
+  air cart or crossbleed from the other running engine, and the start air feeds
+  one starter at a time. Without it the cockpit shows
+  `ENGINE START NEEDS START AIR - APU OR AIR CART`.
+- **Start sequence.** The starter motors the core to light-off at 15 % core rpm,
+  the engine lights and accelerates, and the starter disengages at 54 %,
+  reaching ground idle about 30 s after the start. N2 now spools down after a
+  shutdown instead of dropping to zero, and an engine still above 15 % relights
+  without start air.
+- **Ground carts.** `Ground Power Connect / Disconnect` (RCtrl+RShift+P) and
+  `Ground Air Connect / Disconnect` (RCtrl+RShift+A), new, connect only while
+  stopped on the ground. Ground power keeps the displays up through an engine
+  shutdown without the APU.
+- **Indications.** Engine data now follows TO 1F-117A-1 page 2-7:
+  - EGT peaks at about 600 °C during a start and settles at about 420 °C at
+    idle. It read 690 °C before.
+  - Fuel flow is the flow the EFM actually burns: 600 lb/hr per engine during a
+    start and about 790 lb/hr at idle. Before, it reported about 4,200 per engine
+    at idle, in lb/hr where DCS expects kg/s.
+  - Oil pressure peaks at about 85 psi and settles at 70 psi.
+  - The generators come on line at 56 % core rpm instead of 50 %.
+
+## Cold-start display power, boot and alignment (3 November 2026)
+
+Cold starts are now dark. Previously every display was forced on at spawn. The
+battery (`Electric Power Switch`, RShift+L) gates everything. With it on, the APU
+(`APU Start / Stop`, new, RShift+U, about 8 s to come up) or an engine above 56 % core rpm
+powers the bus. The displays boot on a staggered timeline:
+
+1. The DEP.
+2. The HUD, fading in.
+3. The left CMDI.
+4. The SD.
+5. The right CMDI.
+
+The CMDIs, SD and DEP show a self-test / auto-cal screen first. The boot screens
+are illustrative. Attitude, heading, altitude and vertical speed start wrong and
+slew to the true values with a slight overshoot. That applies to the HUD, VSD,
+HSD and map.
+
+The EFM and weapons always use true data. Hot and air starts are powered and
+aligned from spawn. The cold-start HUD brightness is no longer zeroed, because
+there is no HUD brightness bind yet. Lesson 1 now starts with the battery and APU.
+
 ## Every pylon store releases, and new Nevada missions (3 November 2026)
 
 All 14 stores on the pylon list now release from the bays: the five original JDAM and

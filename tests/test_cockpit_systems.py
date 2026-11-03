@@ -16,7 +16,7 @@ class CockpitSystemsTests(unittest.TestCase):
     def runtime(self):
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute("""
-            values={};args={};vn=200;vu=0;ve=0;ias=100;baro=1000;radar=100
+            values={F117_ADC_BLEND=1,mainpower=1};args={};vn=200;vu=0;ve=0;ias=100;baro=1000;radar=100
             sensor=setmetatable({
                 getSelfVelocity=function()return vn,vu,ve end,
                 getSelfAirspeed=function()return 150,0,0 end,
@@ -55,7 +55,7 @@ class CockpitSystemsTests(unittest.TestCase):
         hud_update = g['update']
 
         def modules(path):
-            if '/Systems/' in str(path) and not str(path).endswith('/Displays.lua'):
+            if '/Systems/' in str(path) and not str(path).endswith(('/Displays.lua','/AlignedSensor.lua')):
                 if str(path).endswith('IRADS_Diagnostics.lua'):
                     return lua.eval('function()end')
                 return lua.eval("""{new=function()return {

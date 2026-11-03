@@ -3,7 +3,7 @@ dofile(LockOn_Options.common_script_path.."elements_defs.lua")
 SetScale(FOV)
 local readability=dofile(LockOn_Options.script_path.."display_readability.lua")
 
-local params={"F117_IRADS_POWER","mainpower"}
+local params={"F117_IRADS_POWER","F117_ON_SD"}
 local controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1}}
 if F117_COMPOSITE_PAGE then
     params[3]="F117_LCD_READY"

@@ -19,3 +19,5 @@ devices["WEAPONS"]				    = counter()
 
 -- Dedicated generic chart device; append to preserve all existing IDs.
 devices["MAP_CHARTS"] = counter()
+-- Display power bus, display boot and alignment; appended to preserve IDs.
+devices["ELECTRICAL"] = counter()

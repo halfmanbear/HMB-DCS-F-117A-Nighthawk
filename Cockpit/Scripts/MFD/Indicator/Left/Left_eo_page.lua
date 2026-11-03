@@ -3,7 +3,7 @@
 SetScale(METERS)
 local root=CreateElement "ceSimple"
 root.name="F117_LEFT_EO_ROOT"
-root.element_params={"mainpower","F117_LEFT_EO"}
+root.element_params={"F117_ON_CMDI_L","F117_LEFT_EO"}
 root.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1}}
 Add(root)
 -- The picture and the IRADS symbols are the centre display's layout drawn at one

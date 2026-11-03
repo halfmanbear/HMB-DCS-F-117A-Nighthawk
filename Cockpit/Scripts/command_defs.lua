@@ -25,6 +25,9 @@ Keys = {
     IRADSZoomIn      = __custom_counter(), -- 10008
     IRADSZoomOut     = __custom_counter(), -- 10009
     MFDOverlayToggle = __custom_counter(), -- 10010
+    APUToggle        = __custom_counter(), -- 10011
+    GroundPowerToggle = __custom_counter(), -- 10012
+    GroundAirToggle  = __custom_counter(), -- 10013
 }
 
 -- Global EFM commands (no cockpit_device_id). Member names follow the FA-18C

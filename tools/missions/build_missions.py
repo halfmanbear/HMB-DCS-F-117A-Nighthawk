@@ -57,7 +57,9 @@ ROUTE = [
 # Key reminders used in several briefings. Keep these in step with
 # Input/F-117-NightHawk/keyboard/default.lua.
 KEYS_FLIGHT = """\
-Engines start / stop: RShift+Home / RShift+End
+Battery: RShift+L   APU start / stop: RShift+U
+Ground power / ground air cart: RCtrl+RShift+P / RCtrl+RShift+A
+Engines start / stop: RShift+Home / RShift+End (left RAlt+Home, right RCtrl+Home)
 Canopy: LCtrl+C   Gear: G (LCtrl+G up, LShift+G down)
 Nosewheel steering 45 degree range: hold N
 Wheel brakes: W   Drag chute: P
@@ -275,8 +277,12 @@ def lesson_1():
     for name, lat, lon in ROUTE:
         b.waypoint(name, lat, lon, 18000)
     b.home()
-    b.say('time', 'Lesson 1. Start both engines with RShift+Home, then taxi to the runway.\n'
-          'Hold N for full nosewheel steering while you taxi.', 30, at=8)
+    b.say('time', 'Lesson 1. Battery on with RShift+L, then start the APU with RShift+U.\n'
+          'Watch the displays boot and the attitude and heading settle as they align.', 30, at=8)
+    b.say('time', 'Start the engines with RShift+Home. The right engine starts on APU air,\n'
+          'then the left. Both reach idle in about a minute.', 30, at=40)
+    b.say('time', 'Engines at idle. Shut down the APU with RShift+U, then taxi to the runway.\n'
+          'Hold N for full nosewheel steering while you taxi.', 30, at=105)
     b.say('airborne', 'Airborne. Gear up with LCtrl+G. Climb to 18,000 ft and fly to waypoint 1, GOLDFIELD.\n'
           'The HSD and the map show the route. Engage the autopilot with A if you want it.')
     for i, (name, lat, lon) in enumerate(ROUTE, start=1):
@@ -287,7 +293,8 @@ def lesson_1():
           'Lesson 1 complete.', 30, flag='lesson_complete')
     b.save(TRAINING / 'F-117A - Lesson 1 - Cold Start and Night Navigation.miz',
            'Night familiarisation sortie from Tonopah Test Range.\n\n'
-           'You start in the canyon hangars, cold and dark. Start the engines, taxi, take off and fly the\n'
+           'You start in the canyon hangars, cold and dark. Switch on the battery and start the APU,\n'
+           'let the displays boot and align, then start the engines, taxi, take off and fly the\n'
            'route GOLDFIELD - SARCOBATUS - PAHUTE - KAWICH at 18,000 ft, then return and land.\n\n'
            'Instructions appear on screen at each step.\n\n' + KEYS_FLIGHT,
            'Start, take off, fly the four-point route and land at Tonopah Test Range.')

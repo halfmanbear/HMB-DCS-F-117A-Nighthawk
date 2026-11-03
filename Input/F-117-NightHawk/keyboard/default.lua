@@ -91,6 +91,11 @@ join(res.keyCommands,{
 {combos = {{key = 'Back'}}, down = f117_commands.IRADS_DESIGNATION_CLEAR, name = _('IRADS Designation Clear'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {combos = {{key = 'L', reformers = {'LShift'}}}, down = f117_commands.IRADS_LASER_ARM_TOGGLE, name = _('IRADS Laser Arm/Safe'), category = {_('Weapons'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
 {down = Keys.MFDOverlayToggle, name = _('DLIR MFD Overlay Toggle'), category = {_('Sensors'), _('F-117A IRADS')}},
+-- Battery is the stock Electric Power Switch (RShift+L). The APU or an engine then powers the displays.
+{combos = {{key = 'U', reformers = {'RShift'}}}, down = Keys.APUToggle, name = _('APU Start / Stop'), category = _('Systems')},
+-- Ground crew carts, on the ground and stopped: external electrical power, and start air for the engines.
+{combos = {{key = 'P', reformers = {'RCtrl','RShift'}}}, down = Keys.GroundPowerToggle, name = _('Ground Power Connect / Disconnect'), category = _('Systems')},
+{combos = {{key = 'A', reformers = {'RCtrl','RShift'}}}, down = Keys.GroundAirToggle, name = _('Ground Air Connect / Disconnect'), category = _('Systems')},
 
 -- Weapons
 {combos = {{key = 'Space', reformers = {'RAlt'}}}, down = iCommandPlanePickleOn, up = iCommandPlanePickleOff, name = _('Weapon Release (Pickle)'), category = {_('Weapons'), _('F-117A Essential System Controls')}},

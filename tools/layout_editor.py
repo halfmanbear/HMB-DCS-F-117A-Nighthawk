@@ -182,6 +182,12 @@ DEFAULTS = {
 DEFAULTS.update(F117_MAP_SOURCE_VISIBLE=0,F117_MAP_FUNCTION_TEXT='FUNC',F117_MAP_FUNCTION=0,F117_MAP_MANUAL=0,F117_MAP_DATABASE_TEXT='DMAP',
     F117_MAP_CRS_TEXT='CRS 300',F117_MAP_RANGE=25,F117_MAP_TDC_TEXT='TDC0',
     F117_MAP_BGD_TEXT='BGD 0',F117_MAP_REFEL_TEXT='REFEL',F117_MAP_ELEVATION_FT=3000)
+# Display power (Systems/Electrical.lua): preview every display operational.
+for _display in ('HUD','CMDI_L','SD','CMDI_R','DEP'):
+    DEFAULTS.update({'F117_PWR_'+_display:3,'F117_ON_'+_display:1,'F117_FADE_'+_display:1,
+        'F117_BOOT_STAGE_'+_display:0,'F117_BOOT_PROGRESS_'+_display:100})
+# Every display unpowered, for previews and tests of the dark cockpit.
+POWER_OFF={k+d:0 for k in ('F117_PWR_','F117_ON_') for d in ('HUD','CMDI_L','SD','CMDI_R','DEP')}
 # Mission route readouts (Systems/Navigation.lua); sample values for previews.
 DEFAULTS.update(F117_NAV_VALID=1,F117_NAV_REL_COURSE=0,F117_NAV_D_TEXT='D  03',
     F117_NAV_TTG_TEXT='TTG 13:47',F117_NAV_RNG_TEXT='RNG 108.4',F117_NAV_CRS_TEXT='CRS 345')

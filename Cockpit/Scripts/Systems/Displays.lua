@@ -9,8 +9,10 @@ local check_irads_terrain = dofile(LockOn_Options.script_path.."Systems/IRADS_Di
 local native_brightness = dofile(LockOn_Options.script_path.."Systems/NativeBrightness.lua").new()
 local display_compositor = dofile(LockOn_Options.script_path.."Systems/DisplayCompositor.lua").new()
 -- Local variables ==================
-local navigation = dofile(LockOn_Options.script_path.."Systems/Navigation.lua").new()
-local map_outline = dofile(LockOn_Options.script_path.."Systems/MovingMap.lua").new(nil,nil,navigation)
+-- Map and HSD heading align after power-up with the HUD (Systems/AlignedSensor.lua).
+local aligned_sensor = dofile(LockOn_Options.script_path.."Systems/AlignedSensor.lua")(get_base_data())
+local navigation = dofile(LockOn_Options.script_path.."Systems/Navigation.lua").new(aligned_sensor)
+local map_outline = dofile(LockOn_Options.script_path.."Systems/MovingMap.lua").new(aligned_sensor,nil,navigation)
 local Page_changed = 0
 local left_eo = get_param_handle("F117_LEFT_EO")
 local fov_axis=-1
@@ -1141,14 +1143,10 @@ function BrightnessAtSpawn()
     LDBrightness:set(1-side);RDBrightness:set(1-side);CDBrightness:set(1-side)
     left_dim:set(1-side);right_dim:set(1-side)
 
-	local birth = LockOn_Options.init_conditions.birth_place
-	if birth == "GROUND_HOT" or birth == "AIR_HOT" then
-		dev:performClickableAction(deviceCommands.HUD_Brightness, 1, true)
-		HUDBrightness:set(1)
-	elseif birth == "GROUND_COLD" then
-		dev:performClickableAction(deviceCommands.HUD_Brightness, 0, true)
-		HUDBrightness:set(0)
-	end
+	-- Cold starts are dark through display power (Systems/Electrical.lua), not
+	-- the HUD brightness control: there is no HUD brightness bind yet.
+	dev:performClickableAction(deviceCommands.HUD_Brightness, 1, true)
+	HUDBrightness:set(1)
 end
 
 function update()

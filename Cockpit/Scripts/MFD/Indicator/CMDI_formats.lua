@@ -3,8 +3,12 @@
 return function(side)
     local marker=side=="left" and "F117_VSD_SOURCE" or "F117_HSD_SOURCE"
     local finish=dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")(marker)
+    -- Display power from Systems/Electrical.lua: F117_ON_<D> is 1 once operational,
+    -- F117_PWR_<D> covers the boot screen as well.
+    local display=side=="left" and "CMDI_L" or "CMDI_R"
+    local power="F117_ON_"..display
     local owner=CreateElement "ceSimple";owner.name=marker
-    owner.element_params={"mainpower"};owner.controllers={{"parameter_in_range",0,.9,1.1}};Add(owner)
+    owner.element_params={"F117_PWR_"..display};owner.controllers={{"parameter_in_range",0,.9,3.1}};Add(owner)
     local parameter=side=="left" and "F117_LEFT_EO" or "F117_RIGHT_FORMAT"
     local original_add=Add
     local original_create=CreateElement
@@ -23,7 +27,7 @@ return function(side)
         Add=original_add;CreateElement=original_create
         local prefix="F117_"..side.."_"..kind.."_"
         local gate=CreateElement "ceSimple";gate.name=prefix.."GATE"
-        gate.element_params={"mainpower",parameter}
+        gate.element_params={power,parameter}
         gate.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,id-.1,id+.1}}
         original_add(gate)
         -- All geometry and controller distances use physical metres.
@@ -41,7 +45,15 @@ return function(side)
             end
             -- Side format roots are gated here, independent of the original side.
             if kind=="VSD" and e.name==prefix.."F117_VSD_SOURCE" then
-                e.element_params={"mainpower"};e.controllers={{"parameter_in_range",0,.9,1.1}}
+                e.element_params={power};e.controllers={{"parameter_in_range",0,.9,1.1}}
+            end
+            -- Formats written for another display follow this side's power.
+            if e.element_params then
+                local p={}
+                for i,v in ipairs(e.element_params) do
+                    p[i]=(v=="mainpower" or (type(v)=="string" and v:match("^F117_ON_"))) and power or v
+                end
+                e.element_params=p
             end
             if kind=="HSD" or kind=="MAP" or kind=="VSD" then
                 for i,p in ipairs(e.element_params or {}) do
@@ -68,5 +80,9 @@ return function(side)
     F117_CMDI_SIDE=nil
     page("HSD",3,"MFD/Indicator/Right/Right_base_format.lua",1)
     F117_CMDI_BUILDING=nil
+    dofile(LockOn_Options.script_path.."Indicator/boot_page.lua"){
+        display=display,title=side=="left" and "CMDI-L" or "CMDI-R",name="F117_"..side.."_BOOT",
+        font=VSD_FONTS.green,line_material=VSD_MATERIALS.green,
+        half_w=.050,half_h=.046,sd=VSD_SD,text_scale=VSD_READABILITY.mfd_text_scale}
     finish()
 end

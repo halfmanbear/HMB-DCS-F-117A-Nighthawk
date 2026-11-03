@@ -61,11 +61,12 @@ class DEPTests(unittest.TestCase):
         for legend in ['CAS', 'LVL']:
             self.assertIn(legend, values)
         gates = {e['element_params'][0] for e in elements
-                 if e['_etype'] == 'ceSimple' and e.get('controllers') and e.get('name') != 'F117_DEP_SOURCE'}
+                 if e['_etype'] == 'ceSimple' and e.get('controllers') and e.get('name') != 'F117_DEP_SOURCE'
+                 and not e.get('name', '').startswith('F117_DEP_BOOT')}
         self.assertEqual(len(gates), 15)
         self.assertIn('F117_AT_ENGAGED', gates)
         root = next(e for e in elements if e.get('name') == 'F117_DEP_SOURCE')
-        self.assertEqual(root['element_params'], ['mainpower', 'F117_DEP_DRAW_BRIGHTNESS'])
+        self.assertEqual(root['element_params'], ['F117_ON_DEP', 'F117_DEP_DRAW_BRIGHTNESS'])
 
     def test_page_registers_its_materials_for_native_brightness(self):
         lua, load = runtime()
@@ -81,7 +82,7 @@ class DEPTests(unittest.TestCase):
         self.assertEqual(g.captured_marker, 'F117_DEP_SOURCE')
         used = {e['material'] for e in convert(g._elements) if e.get('material')}
         self.assertEqual(sorted(convert(g.captured)), sorted(used))
-        self.assertEqual(len(used), 6)  # glass, cell, engaged, rule; legend and engaged fonts
+        self.assertEqual(len(used), 7)  # glass, cell, engaged, rule, boot backlight; legend and engaged fonts
 
     def test_artwork_stays_on_the_measured_glass(self):
         (x0, y0), (x1, y1) = surface()['bounds_local_m']
