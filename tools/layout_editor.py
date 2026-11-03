@@ -300,7 +300,15 @@ class Model:
                 else:
                     self.warnings.add(str(op))
             if show_all:
-                visible, opacity = True, 1
+                # Black brightness dimmers cover the whole display; forcing them
+                # opaque would black out the preview, so they keep their opacity.
+                mat = e.get('material')
+                rgb = sequence(mat.get('color'))[:3] if isinstance(mat, dict) else []
+                dimmer = rgb == [0, 0, 0] and any(
+                    c and c[0] == 'opacity_using_parameter' for c in sequence(e.get('controllers')))
+                visible = True
+                if not dimmer:
+                    opacity = 1
             parent = self.by_name.get(e.get('parent_element'))
             if parent:
                 px, py, pa, pv, po, _, _ = resolve(parent, active)
