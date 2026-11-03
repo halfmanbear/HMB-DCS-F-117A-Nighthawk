@@ -22,6 +22,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import efm as efm_module  # noqa: E402
+sys.path.insert(0, str(HERE.parent))
+from missions.miz import serialize as _lua  # noqa: E402
 from scorecard import RESULTS, read_inertia  # noqa: E402
 from sim import (CMD_PITCH_AXIS, CMD_ROLL_AXIS, CMD_THROTTLE_AXIS, CMD_YAW_AXIS, DT, FT_TO_M, KT_TO_MPS, LB_TO_KG,  # noqa: E402
                  RAD, Sim, isa, mach_from_cas)
@@ -159,22 +161,6 @@ function hook.onSimulationFrame()
 end
 DCS.setUserCallbacks(hook)
 """
-
-
-def _lua(value, indent=0):
-    """Write a mission table back out as Lua."""
-    if type(value).__name__ == '_LuaTable':
-        pad = '\t' * (indent + 1)
-        items = []
-        for key in value:
-            label = f'[{key}]' if isinstance(key, (int, float)) else f'["{key}"]'
-            items.append(f'{pad}{label} = {_lua(value[key], indent + 1)},')
-        return '{\n' + '\n'.join(items) + '\n' + '\t' * indent + '}'
-    if isinstance(value, bool):
-        return 'true' if value else 'false'
-    if isinstance(value, (int, float)):
-        return repr(value)
-    return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n') + '"'
 
 
 def build_mission(template, target, fuel_kg, runway_start=False):

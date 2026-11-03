@@ -364,9 +364,9 @@ F_117_NightHawk = {
                 {CLSID = "{GBU-31V3B}"},                            --GBU-31(V)3/B
                 {CLSID = "{GBU_32_V_2B}"},                          --GBU-32(V)2/B
                 -- Maverick (hypothetical)
-                {CLSID = "AGM_65_D"},                               --Maverick D
-                {CLSID = "AGM_65_L"},                               --Maverick E/L2
-                -- JSOW (hypothetical) AI only
+                {CLSID = "{444BA8AE-82A7-4345-842E-76154EFCCA47}"}, --AGM-65D Maverick (IIR)
+                {CLSID = "{F16A4DE0-116C-4A71-97F0-2CF85B0313EF}"}, --AGM-65E Maverick (laser)
+                -- JSOW (hypothetical)
                 {CLSID = "{AGM-154A}"},                             --JSOW AGM_154_A
                 {CLSID = "{AGM-154B}"},                             --JSOW AGM_154_B
                 {CLSID = "{9BCC2A2B-5708-4860-B1F1-053A18442067}"}, --JSOW AGM_154_C_JSOW
@@ -400,9 +400,9 @@ F_117_NightHawk = {
                 {CLSID = "{GBU-31V3B}"},                            --GBU-31(V)3/B
                 {CLSID = "{GBU_32_V_2B}"},                          --GBU-32(V)2/B
                 -- Maverick (hypothetical)
-                {CLSID = "AGM_65_D"},                               --Maverick D
-                {CLSID = "AGM_65_L"},                               --Maverick E/L2
-                -- JSOW (hypothetical) AI only
+                {CLSID = "{444BA8AE-82A7-4345-842E-76154EFCCA47}"}, --AGM-65D Maverick (IIR)
+                {CLSID = "{F16A4DE0-116C-4A71-97F0-2CF85B0313EF}"}, --AGM-65E Maverick (laser)
+                -- JSOW (hypothetical)
                 {CLSID = "{AGM-154A}"},                             --JSOW AGM_154_A
                 {CLSID = "{AGM-154B}"},                             --JSOW AGM_154_B
                 {CLSID = "{9BCC2A2B-5708-4860-B1F1-053A18442067}"}, --JSOW AGM_154_C_JSOW

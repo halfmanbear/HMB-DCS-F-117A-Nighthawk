@@ -235,7 +235,8 @@ box(.036,-.0335,.023,.0045)
 text("DME",.036,-.0335,SM) -- no TACAN receiver: no distance value
 -- Store legend (Weapons.lua): the selected store, or the store just fired,
 -- crossed out with thin red lines until the next station step or designation.
-for profile,name in pairs({[0]="GBU31",[1]="GBU31V3",[2]="GBU32",[3]="GBU12",[4]="GBU27"}) do
+for profile,name in pairs({[0]="GBU31",[1]="GBU31V3",[2]="GBU32",[3]="GBU12",[4]="GBU27",[5]="GBU10",[6]="MK82",[7]="MK84",
+    [8]="CBU105",[9]="AGM154A",[10]="AGM154B",[11]="AGM154C",[12]="AGM65D",[13]="AGM65E"}) do
     text(name,.036,-.0375,SM,nil,{"F117_VSD_STORE"},{{"parameter_in_range",0,profile-.1,profile+.1}})
 end
 local fired=when("F117_VSD_STORE_FIRED")

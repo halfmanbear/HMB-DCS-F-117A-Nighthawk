@@ -103,7 +103,8 @@ local status={
 for code,label in pairs(status) do
     text(label,.073,-.049,SMALL,"RightCenter",{"F117_RELEASE_STATUS"},{{"parameter_in_range",0,code-.1,code+.1}})
 end
-local stores={[0]="GBU-31V1",[1]="GBU-31V3",[2]="GBU-32",[3]="GBU-12",[4]="GBU-27"}
+local stores={[0]="GBU-31V1",[1]="GBU-31V3",[2]="GBU-32",[3]="GBU-12",[4]="GBU-27",[5]="GBU-10",
+    [6]="MK-82",[7]="MK-84",[8]="CBU-105",[9]="AGM-154A",[10]="AGM-154B",[11]="AGM-154C",[12]="AGM-65D",[13]="AGM-65E"}
 for code,label in pairs(stores) do
     text(label,.073,-.055,SMALL,"RightCenter",{"F117_CCRP_PROFILE"},{{"parameter_in_range",0,code-.1,code+.1}})
 end
