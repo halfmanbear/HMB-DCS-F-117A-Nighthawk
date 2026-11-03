@@ -219,7 +219,7 @@ def score(targets, results, groups):
             got = results[('limit', row['mach'], row['gear_down'])]
             gear = 'gear down' if row['gear_down'] else 'gear up'
             rows.append(_row('Angle of attack limit', f"Mach {row['mach']}, {gear}", 'deg', row['aoa'], got['aoa'], 0.7))
-            # The manual says the limit is reached with little or no overshoot. A small 6 Hz swing remains at the limit.
+            # The manual says the limit is reached with little or no overshoot.
             rows.append(_row('Overshoot past the AOA limit', f"Mach {row['mach']}, {gear}", 'deg', 0.0, max(0.0, got['peak'] - row['aoa']), 1.5))
             rows.append(_row('Load factor swing at the AOA limit', f"Mach {row['mach']}, {gear}", 'g', 0.0, got['nz_swing'], 0.4))
     return rows

@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-"""Fit the EFM's lift, drag, thrust and fuel constants to the flight manual's performance data.
+"""Fit the EFM's drag, thrust and fuel constants to the flight manual's performance data.
 
 This uses a point-mass model with the same equations as the EFM, so it runs in seconds. It proposes
 constants to put in the EFM; scorecard.py then checks them on the built DLL, flight controls included.
 
     python tools/fm_bench/fit_performance.py
+    python tools/fm_bench/fit_performance.py --bench
+
+fitted_constants.json holds the constants currently in the EFM, and each fit starts from them. --bench also
+takes the gap between this model and the last scorecard, row by row, and fits with that gap included. That
+only makes sense when the scorecard was flown with those same constants.
 """
+import argparse
 import json
 import math
 import sys
@@ -21,43 +27,48 @@ from sim import FT_TO_M, G, LB_TO_KG, cas_from_mach, isa, mach_from_cas  # noqa:
 S = 84.77  # The EFM's wing area (m2).
 THRUST_ALIGNMENT = math.cos(math.radians(10.0))  # The EFM toes each engine out by 10 degrees.
 
-NAMES = ['cd0', 'k1', 'k', 'mcrit', 'wave1', 'wave2', 't0', 'lapse_h', 'lapse_curve', 'mach1', 'mach2', 'mach_alt',
-         'idle_sl', 'idle_per_10km', 'q_limit', 'q_cut']
-# The fit has several local minima, so it runs from each of these and keeps the best.
-STARTS = [
-    [0.012, 0.0, 0.02, 0.80, 0.05, 0.10, 90000.0, 9000.0, 0.0, -0.13, 0.0, 0.1, -1000.0, 5000.0, 30000.0, 0.5],
-    [0.0117, -0.01, -0.06, 0.87, 0.001, 0.026, 62000.0, 10000.0, 0.25, 0.40, 0.29, -0.31, -2500.0, 8800.0, 18300.0, 0.165],
-    [0.013986, -0.0273, 0.0723, 0.8998, 0.00943, 0.00104, 79501.0, 13896.0, 0.3, 0.001, 0.0244, -0.215, 217.0, 7704.0, 19581.0, 0.098],
-    [0.015, -0.01, 0.003, 0.88, 0.1, 0.016, 74670.0, 13307.0, 0.3, 0.066, -0.038, -0.2, -2500.0, 8800.0, 19655.0, 0.149],
-]
-LOWER = [0.005, -0.06, -0.2, 0.55, 0.0, 0.0, 60000.0, 6000.0, -0.3, -1.0, -1.0, -0.5, -10000.0, 0.0, 15000.0, 0.0]
-UPPER = [0.05, 0.06, 0.5, 0.90, 3.0, 5.0, 95000.0, 14000.0, 0.3, 0.5, 1.0, 1.0, 10000.0, 30000.0, 50000.0, 3.0]
+DRAG_NAMES = ['cd0', 'k1', 'k', 'wave', 'idle_sl', 'idle_per_10km']
+DRAG_LOWER = [0.005, -0.06, -0.2, 0.0, -10000.0, 0.0]
+DRAG_UPPER = [0.05, 0.06, 0.5, 5.0, 10000.0, 30000.0]
+TABLE_ALT_FT = [0.0, 10000.0, 20000.0, 30000.0, 40000.0]
+TABLE_MACH = [0.30, 0.50, 0.70, 0.80, 0.90]
+TABLE_ALT_M = np.array(TABLE_ALT_FT) * FT_TO_M
+TABLE_MACH_ARRAY = np.array(TABLE_MACH)
+THRUST_LOWER_KN = 3.0
+THRUST_UPPER_KN = 94.0  # Two F404s at about 47 kN each.
 MDIV = 0.85
+MLIMIT = 0.90  # The manual has no data above this, so the EFM's barrier above it isn't fitted.
+BARRIER = 0.096098
 CHORD = 6.422  # The EFM's mean chord (m).
 CZQ = -30.0  # About what the EFM's Czq table gives between 0 and 15 degrees.
+SMOOTHNESS = 6.0  # Weight on sharp changes of slope in the thrust table, per unit of log thrust.
+INSIDE = 0.6  # Being this far inside a tolerance is good enough, so most of the penalty starts here.
+EDGE = 0.92  # And a row this close to its tolerance is pushed back hard.
+EDGE_WEIGHT = 5.0
+REACH_MARGIN_FPM = 100.0  # Spare excess power wanted at the Mach limit, so small differences from the bench don't lose it.
 
 
 def wave_drag(p, mach):
-    """Same shape as the EFM: two quadratic rises scaled to the range up to Mach 1.05."""
+    """Same shape as the EFM: a quadratic rise from Mdiv and a barrier above the limit, scaled to the range up to Mach 1.05."""
     drag = 0.0
-    if mach > p['mcrit']:
-        drag += p['wave1'] * ((min(mach, 1.05) - p['mcrit']) / (1.05 - p['mcrit'])) ** 2
     if mach > MDIV:
-        drag += p['wave2'] * ((min(mach, 1.05) - MDIV) / (1.05 - MDIV)) ** 2
+        drag += p['wave'] * ((min(mach, 1.05) - MDIV) / (1.05 - MDIV)) ** 2
+    if mach > MLIMIT:
+        drag += BARRIER * ((min(mach, 1.05) - MLIMIT) / (1.05 - MLIMIT)) ** 2
     return drag
 
 
 def max_thrust(p, mach, h):
+    """Installed thrust of both engines, bilinear in altitude and Mach as in the EFM. Above the top row it carries on along the same slope."""
+    table = p['table']
+    mach = min(max(mach, TABLE_MACH[0]), TABLE_MACH[-1])  # The EFM adds thrust below Mach 0.30 for takeoff. The in-flight data starts here.
     h = min(h, 13716.0)
-    mach = max(mach, 0.27)  # The EFM adds thrust below Mach 0.30 for takeoff. The in-flight data starts here.
-    # h is in units of 10 km where it shapes the curve, which keeps these constants a readable size.
-    tens = h / 10000.0
-    thrust = (p['t0'] * math.exp(-h / p['lapse_h'] - p['lapse_curve'] * tens * tens)
-              * (1.0 + p['mach1'] * mach + (p['mach2'] + p['mach_alt'] * tens) * mach * mach))
-    # The engines lose thrust at high dynamic pressure, seen at low altitude near the Mach limit.
-    t, pressure, rho, sound = isa(h)
-    q = 0.5 * rho * (mach * sound) ** 2
-    return thrust * max(0.3, 1.0 - p['q_cut'] * max(0.0, q - p['q_limit']) / p['q_limit'])
+    i = min(int(np.searchsorted(TABLE_ALT_M, h, side='right')) - 1, len(TABLE_ALT_M) - 2)
+    j = min(int(np.searchsorted(TABLE_MACH_ARRAY, mach, side='right')) - 1, len(TABLE_MACH) - 2)
+    a = (h - TABLE_ALT_M[i]) / (TABLE_ALT_M[i + 1] - TABLE_ALT_M[i])
+    b = (mach - TABLE_MACH[j]) / (TABLE_MACH[j + 1] - TABLE_MACH[j])
+    return ((1.0 - a) * ((1.0 - b) * table[i, j] + b * table[i, j + 1])
+            + a * ((1.0 - b) * table[i + 1, j] + b * table[i + 1, j + 1]))
 
 
 def idle_thrust(p, mach, h):
@@ -111,7 +122,7 @@ class Model:
             total += step / excess
         return total
 
-    def accel_times(self, alt_ft, weight_lb, kcas, fuel_lb, end_min):
+    def accel_times(self, alt_ft, weight_lb, kcas, fuel_lb):
         h = alt_ft * FT_TO_M
         sound = isa(h)[3]
         weight = (weight_lb - fuel_lb / 2.0) * LB_TO_KG * G
@@ -175,73 +186,131 @@ def fit_lift(targets):
     return 1.0 / slope, intercept, list(zip(cn, aoa))
 
 
-def residuals(x, targets, cna, alpha0):
-    p = dict(zip(NAMES, x))
-    model = Model(p, cna, alpha0)
-    out = []
+def performance_rows(model, targets):
+    """Every compared value as (test, condition, manual, model, tolerance), named and scored as scorecard.py does."""
+    p = model.p
+    rows = []
     for table in targets['level_accel']['tables']:
         for row in table['rows']:
-            times = model.accel_times(table['alt_ft'], row['weight_lb'], table['kcas'], row['fuel_lb'], row['min'][-1])
-            for want, have in zip(row['min'][1:], times[1:]):
-                out.append((have - want) / max(0.15 * want, 0.1))
+            times = model.accel_times(table['alt_ft'], row['weight_lb'], table['kcas'], row['fuel_lb'])
+            for kcas, want, have in zip(table['kcas'][1:], row['min'][1:], times[1:]):
+                rows.append(('Level acceleration', f"{table['alt_ft']} ft, {row['weight_lb']} lb, to {kcas} KCAS",
+                             want, have, max(0.1, 0.1 * want)))
     block = targets['idle_decel']
     for row in block['rows']:
         times, total = model.decel_times(row['alt_ft'], block['weight_lb'], row['limit_mach'], row['kcas'])
-        for want, have in zip(row['min'] + [row['limit_min']], times + [total]):
-            out.append((have - want) / max(0.15 * want, 0.1))
+        for kcas, want, have in zip(row['kcas'], row['min'], times):
+            rows.append(('Idle deceleration', f"{row['alt_ft']} ft, from {kcas} KCAS", want, have, max(0.1, 0.1 * want)))
+        rows.append(('Idle deceleration', f"{row['alt_ft']} ft, from limit Mach", row['limit_min'], total, max(0.1, 0.1 * row['limit_min'])))
     block = targets['climb']
     for row in block['rows']:
         altitudes = block['alt_ft'][:len(row['min'])]
         times = model.climb_times(row['weight_lb'], block['cas_kt'], block['mach'], altitudes, row['fuel_lb'])
-        for want, have in zip(row['min'], times):
-            out.append((have - want) / max(0.15 * want, 0.1))
+        for alt, want, have in zip(altitudes, row['min'], times):
+            rows.append(('Climb time', f"{row['weight_lb']} lb, to {alt} ft", want, have, max(0.1, 0.1 * want)))
     block = targets['service_ceiling']
     for row in block['rows']:
         h = row['alt_ft'] * FT_TO_M
         weight = (row['initial_weight_lb'] - row['fuel_lb']) * LB_TO_KG * G
         excess, V = model.specific_excess(max_thrust(p, block['mach'], h), block['mach'], h, weight)
-        out.append((excess * V - 0.508) / 1.0)
-    # Top speed where thrust sets it: no excess power there.
+        # The ceiling is where excess power is 100 ft/min. Near it, 1,000 ft of altitude is worth about 1 m/s of that.
+        rows.append(('Excess power at the ceiling', f"{row['initial_weight_lb']} lb at start", 0.508, excess * V, 1.0))
     for row in targets['max_level_speed']['thrust_limited']:
         h = row['alt_ft'] * FT_TO_M
         mach = mach_from_cas(row['kcas'], h)
         excess, V = model.specific_excess(max_thrust(p, mach, h), mach, h, row['weight_lb'] * LB_TO_KG * G)
-        out.append(excess * V / 1.5)
-    # Below those points the chart follows the Mach limit, so the aircraft must be able to reach it.
+        rows.append(('Top speed, excess power at the limit', f"{row['weight_lb']} lb, {row['alt_ft']} ft, {row['kcas']} KCAS",
+                     0.0, excess * V / 0.3048 * 60.0, 300.0))
     for row in targets['max_level_speed']['reaches_limit_mach']:
         h = row['alt_ft'] * FT_TO_M
         excess, V = model.specific_excess(max_thrust(p, row['mach'], h), row['mach'], h, row['weight_lb'] * LB_TO_KG * G)
-        out.append(min(excess * V, 0.0) / 1.5)
+        rows.append(('Top speed, must reach limit Mach', f"{row['weight_lb']} lb, {row['alt_ft']} ft, Mach {row['mach']}",
+                     0.0, excess * V / 0.3048 * 60.0, REACH_MARGIN_FPM))
     block = targets['sustained_turn']
     for row in block['rows']:
         h = row['alt_ft'] * FT_TO_M
         for mach, want in zip(block['mach'], row['g']):
             if want is not None:
                 have = model.sustained_g(mach, h, block['weight_lb'] * LB_TO_KG * G)
-                out.append((have - want) / 0.15)
-    return np.array(out)
+                rows.append(('Sustained turn', f"{row['alt_ft']} ft, Mach {mach}", want, have, 0.15))
+    return rows
+
+
+def unpack(x):
+    p = dict(zip(DRAG_NAMES, x[:len(DRAG_NAMES)]))
+    p['table'] = np.reshape(x[len(DRAG_NAMES):], (len(TABLE_ALT_FT), len(TABLE_MACH))) * 1000.0
+    return p
+
+
+def pack(constants):
+    return np.concatenate([[constants[name] for name in DRAG_NAMES], np.ravel(constants['thrust_kn'])])
+
+
+def errors_in_tolerances(x, targets, cna, alpha0, gaps):
+    rows = performance_rows(Model(unpack(x), cna, alpha0), targets)
+    errors = []
+    for test, condition, want, have, tolerance in rows:
+        error = (have + gaps.get((test, condition), 0.0) - want) / tolerance
+        # Only a shortfall counts at the Mach limit, since the chart follows the limit and spare power there is fine.
+        errors.append(min(error - 1.0, 0.0) if test == 'Top speed, must reach limit Mach' else error)
+    return np.array(errors)
+
+
+def residuals(x, targets, cna, alpha0, gaps):
+    errors = errors_in_tolerances(x, targets, cna, alpha0, gaps)
+    shaped = (np.sign(errors) * (np.maximum(np.abs(errors) - INSIDE, 0.0) + EDGE_WEIGHT * np.maximum(np.abs(errors) - EDGE, 0.0))
+              + 0.15 * errors)
+    log_thrust = np.log(x[len(DRAG_NAMES):].reshape(len(TABLE_ALT_FT), len(TABLE_MACH)))
+    # Thrust has no reason to change slope sharply between table points. The Mach spacing isn't even, so this compares slopes.
+    mach_slope = np.diff(log_thrust, axis=1) / np.diff(TABLE_MACH_ARRAY) * 0.2
+    return np.concatenate([shaped,
+                           SMOOTHNESS * np.diff(log_thrust, 2, axis=0).ravel(),
+                           SMOOTHNESS * np.diff(mach_slope, axis=1).ravel()])
+
+
+def bench_gaps(targets, cna, alpha0, constants):
+    """How far the last scorecard was from this model at the same constants, row by row."""
+    scored = json.loads((HERE / 'results/scorecard.json').read_text(encoding='utf-8'))['rows']
+    bench = {(row['group'], row['condition']): row['model'] for row in scored if row['model'] is not None}
+    rows = performance_rows(Model(unpack(pack(constants)), cna, alpha0), targets)
+    return {(test, condition): bench[(test, condition)] - have for test, condition, _, have, _ in rows
+            if (test, condition) in bench}
 
 
 def fit_fuel(targets, model):
-    """Fuel per unit thrust, from the fuel used in the manual's tables: a + b x Mach + c x fraction of maximum thrust.
+    """Fuel per unit thrust, from the fuel used in the manual's tables:
+    a + b x Mach + c x fraction of maximum thrust + d x altitude in units of 10 km.
 
     Idle flow is a floor in the EFM rather than an addition, so it doesn't enter this fit.
     """
     rows, values = [], []
     p = model.p
+    hours = 1.0 / 9.81 / 3600.0
+
+    def add_max_power(segments, fuel_lb):
+        """segments: (Mach, altitude in m, seconds). All at maximum thrust, so the fraction is 1."""
+        row = np.zeros(4)
+        for mach, h, seconds in segments:
+            amount = max_thrust(p, mach, h) * seconds * hours
+            row += amount * np.array([1.0, mach, 1.0, h / 10000.0])
+        rows.append(row)
+        values.append(fuel_lb * LB_TO_KG)
+
     for table in targets['level_accel']['tables']:
         h = table['alt_ft'] * FT_TO_M
         for row in table['rows']:
-            # Mean thrust and Mach over the run, weighted by the time spent at each speed.
             times = row['min']
-            thrust_time, mach_time = 0.0, 0.0  # All at maximum thrust, so the fraction is 1.
-            for a in range(1, len(times)):
-                mach = mach_from_cas((table['kcas'][a] + table['kcas'][a - 1]) / 2.0, h)
-                dt = (times[a] - times[a - 1]) * 60.0
-                thrust_time += max_thrust(p, mach, h) * dt
-                mach_time += max_thrust(p, mach, h) * mach * dt
-            rows.append([thrust_time / 9.81 / 3600.0, mach_time / 9.81 / 3600.0, thrust_time / 9.81 / 3600.0])
-            values.append(row['fuel_lb'] * LB_TO_KG)
+            add_max_power([(mach_from_cas((table['kcas'][a] + table['kcas'][a - 1]) / 2.0, h), h, (times[a] - times[a - 1]) * 60.0)
+                           for a in range(1, len(times))], row['fuel_lb'])
+    block = targets['climb']
+    for row in block['rows']:
+        altitudes = [0.0] + block['alt_ft'][:len(row['min'])]
+        times = [0.0] + row['min']
+        segments = []
+        for a in range(1, len(altitudes)):
+            h = (altitudes[a] + altitudes[a - 1]) / 2.0 * FT_TO_M
+            segments.append((min(mach_from_cas(block['cas_kt'], h), block['mach']), h, (times[a] - times[a - 1]) * 60.0))
+        add_max_power(segments, row['fuel_lb'][-1])
     for row in targets['cruise_fuel_flow']['rows']:
         h = row['alt_ft'] * FT_TO_M
         mach = mach_from_cas(row['kcas'], h)
@@ -251,50 +320,59 @@ def fit_fuel(targets, model):
         alpha = math.radians(model.alpha0 + cn / model.cna)
         cx = p['cd0'] + p['k1'] * cn + p['k'] * cn * cn + wave_drag(p, mach)
         thrust = (qs * cx + weight * math.tan(alpha)) / THRUST_ALIGNMENT
-        rows.append([thrust / 9.81, thrust / 9.81 * mach, thrust / 9.81 * thrust / max_thrust(p, mach, h)])
+        rows.append(np.array([1.0, mach, thrust / max_thrust(p, mach, h), h / 10000.0]) * thrust / 9.81)
         values.append(row['lb_hr_engine'] * 2.0 * LB_TO_KG)
     rows, values = np.array(rows), np.array(values)
     weights = 1.0 / values
-    # Mach can't lower fuel per unit thrust: the data alone would make it fall with Mach, which no jet engine does.
-    solution = lsq_linear(rows * weights[:, None], values * weights, bounds=([0.0, 0.0, 0.0], [np.inf, np.inf, np.inf])).x
+    # Only five rows give part-power flow, and their tolerance is the tightest, so they count for more.
+    weights[-len(targets['cruise_fuel_flow']['rows']):] *= 2.0
+    # Mach can't lower fuel per unit thrust, and altitude can't raise it, because the air gets colder. These are what jet engines do.
+    solution = lsq_linear(rows * weights[:, None], values * weights,
+                          bounds=([0.0, 0.0, 0.0, -np.inf], [np.inf, np.inf, np.inf, 0.0])).x
     errors = 100.0 * (rows @ solution - values) / values
     return solution, errors
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--bench', action='store_true', help='include the gap to the last scorecard, flown with fitted_constants.json')
+    parser.add_argument('--evaluations', type=int, default=60)
+    args = parser.parse_args()
     targets = json.loads((HERE / 'targets.json').read_text(encoding='utf-8'))
-    cna, alpha0, points = fit_lift(targets)
-    print(f'Lift: CN = {cna:.4f} per deg x (AOA - {alpha0:.2f} deg)')
-    for cn, aoa in points:
-        print(f'  CN {cn:.3f}  manual {aoa:.1f}  line {alpha0 + cn / cna:.2f}')
-    solved = min((least_squares(residuals, start, bounds=(LOWER, UPPER), args=(targets, cna, alpha0),
-                                x_scale=[max(abs(v), 1e-3) for v in start], diff_step=1e-3, loss='soft_l1', max_nfev=200)
-                  for start in STARTS), key=lambda result: result.cost)
-    p = dict(zip(NAMES, solved.x))
-    print('\nFitted constants:')
-    for name, value in p.items():
-        print(f'  {name:10s} {value:.5g}')
-    print(f"  (fixed: Mdiv {MDIV})")
-    raw = residuals(solved.x, targets, cna, alpha0)
-    print(f'\nFit quality: {len(raw)} points, {100.0 * np.mean(np.abs(raw) <= 1.0):.0f}% in tolerance, '
-          f'rms {np.sqrt(np.mean(raw * raw)):.2f} tolerances')
+    start = json.loads((HERE / 'fitted_constants.json').read_text(encoding='utf-8'))
+    cna, alpha0, _ = fit_lift(targets)
+    gaps = bench_gaps(targets, cna, alpha0, start) if args.bench else {}
+    x0 = pack(start)
+    size = len(TABLE_ALT_FT) * len(TABLE_MACH)
+    lower = DRAG_LOWER + [THRUST_LOWER_KN] * size
+    upper = DRAG_UPPER + [THRUST_UPPER_KN] * size
+    solved = least_squares(residuals, np.clip(x0, lower, upper), bounds=(lower, upper), args=(targets, cna, alpha0, gaps),
+                           x_scale=np.maximum(np.abs(x0), 1e-3), diff_step=1e-3, max_nfev=args.evaluations)
+    p = unpack(solved.x)
     model = Model(p, cna, alpha0)
-    fuel, errors = fit_fuel(targets, model)
-    print(f'\nFuel: {fuel[0]:.3f} + {fuel[1]:.3f} x Mach + {fuel[2]:.3f} x thrust fraction, kg per kgf per hour. Errors {errors.min():+.0f}% to {errors.max():+.0f}%')
-    print('\nThrust at maximum power (kN):')
-    print('  ft       M0.0   M0.3   M0.5   M0.7   M0.9')
-    for alt in (0, 10000, 20000, 30000, 40000):
-        print(f'  {alt:6d} ' + ' '.join(f'{max_thrust(p, m, alt * FT_TO_M) / 1000:6.1f}' for m in (0.0, 0.3, 0.5, 0.7, 0.9)))
-    print('\nDrag coefficient at 1 g, 32,000 lb, 10,000 ft:')
-    for m in (0.3, 0.5, 0.7, 0.8, 0.85, 0.9):
-        h = 10000 * FT_TO_M
-        qs = 0.5 * isa(h)[2] * (m * isa(h)[3]) ** 2 * S
-        cn = 32000 * LB_TO_KG * G / qs
-        alpha = math.radians(alpha0 + cn / cna)
-        cx = p['cd0'] + p['k1'] * cn + p['k'] * cn * cn + wave_drag(p, m)
-        cd = cx * math.cos(alpha) + cn * math.sin(alpha)
-        print(f'  M{m:.2f}  CL {cn:.3f}  CD {cd:.4f}  L/D {cn / cd:.1f}')
-    return p
+    labels = performance_rows(model, targets)
+    errors = errors_in_tolerances(solved.x, targets, cna, alpha0, gaps)
+    print(f'Fit: {np.sum(np.abs(errors) <= 1.0)} of {len(errors)} points in tolerance, rms {np.sqrt(np.mean(errors * errors)):.2f} tolerances')
+    for (test, condition, *_), error in zip(labels, errors):
+        if abs(error) > 1.0:
+            print(f'  {test}, {condition}: {error:+.2f} tolerances')
+    print('\nDrag:')
+    for name in DRAG_NAMES:
+        print(f'  {name:14s} {p[name]:.6g}')
+    print('\nThrust at maximum power, kN. Mach ' + ' '.join(f'{m:.2f}' for m in TABLE_MACH))
+    for alt, row in zip(TABLE_ALT_FT, p['table'] / 1000.0):
+        print(f'  {alt:6.0f} ft ' + ' '.join(f'{v:6.2f}' for v in row))
+    fuel, fuel_errors = fit_fuel(targets, model)
+    print(f'\nFuel: {fuel[0]:.4f} + {fuel[1]:.4f} x Mach + {fuel[2]:.4f} x thrust fraction {fuel[3]:+.4f} x altitude / 10 km, '
+          f'kg per kgf per hour. Errors {fuel_errors.min():+.0f}% to {fuel_errors.max():+.0f}%')
+    proposed = {name: float(p[name]) for name in DRAG_NAMES}
+    proposed['thrust_kn'] = (p['table'] / 1000.0).round(3).tolist()
+    proposed['fuel'] = [round(float(v), 4) for v in fuel]
+    out = HERE / 'results/proposed_constants.json'
+    out.parent.mkdir(exist_ok=True)
+    out.write_text(json.dumps(proposed, indent=2) + '\n', encoding='utf-8')
+    print(f'\nProposal written to {out}. After building it into the EFM, copy it over fitted_constants.json.')
+    return proposed
 
 
 if __name__ == '__main__':

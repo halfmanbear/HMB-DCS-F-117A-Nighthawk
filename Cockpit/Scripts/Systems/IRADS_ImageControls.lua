@@ -6,7 +6,7 @@ local native_active=get_param_handle("F117_NATIVE_BRIGHTNESS_ACTIVE")
 local draw_brightness=get_param_handle("F117_IRADS_DRAW_BRIGHTNESS")
 local dim=get_param_handle("F117_IRADS_DIM_OPACITY")
 local band=get_param_handle("F117_IRADS_CONTRAST_BAND")
-local b,c=.65,.80
+local b,c=.45,.80
 local function clamp(value,low,high) return math.max(low,math.min(high,value)) end
 local function finite(v) return type(v)=="number" and v==v and math.abs(v)<math.huge end
 local function daylight_fraction(seconds)
@@ -16,7 +16,7 @@ local function daylight_fraction(seconds)
     return daylight
 end
 local function default_brightness(seconds)
-    return .16+(.65-.16)*daylight_fraction(seconds)
+    return .11+(.45-.11)*daylight_fraction(seconds)
 end
 local function default_contrast(seconds)
     return .96-(.96-.80)*daylight_fraction(seconds)

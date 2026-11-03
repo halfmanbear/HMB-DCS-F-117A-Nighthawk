@@ -288,7 +288,8 @@ class NativeDisplayTests(unittest.TestCase):
         # A side holder replaces its source page on screen, so it needs the same clearance.
         holders={Path(row[1]).stem:row[3][1] for row in registered if '/LCD/' in row[1]}
         for kind,index in [('left',3),('right',4)]:
-            self.assertEqual(holders[f'{kind}_init'],registered[index][3][1])
+            for axis in ['sx_l','sy_l','sz_l']:
+                self.assertEqual(holders[f'{kind}_init'][axis],registered[index][3][1][axis])
         self.assertEqual([holders['centre_init'][k] for k in ['sx_l','sy_l','sz_l']],[0,0,0])
 
     def test_complete_resource_registration_and_glyphs(self):
@@ -333,7 +334,7 @@ class NativeDisplayTests(unittest.TestCase):
         self.assertEqual(convert(lua.globals().purposes),[0,1])
         lua,load=runtime();load(SCRIPTS/'MFD/Indicator/DLIR_Camera_page.lua')
         video=next(e for e in convert(lua.globals()._elements) if e['name']=='dlir_picture')
-        self.assertEqual(video['material'],dict(path='mfd0',color=[0,255,0,255]))
+        self.assertEqual(video['material'],dict(path='mfd0',color=[0,90,0,255]))
         model=Model('MFD',PAGES['MFD'].read_text())
         self.assertEqual(sum(e['_etype']=='ceTexPoly' for e in model.elements),66)
         lua,load=runtime();load(SCRIPTS/'MFD/Indicator/MFD_base_page.lua')
@@ -343,6 +344,21 @@ class NativeDisplayTests(unittest.TestCase):
         self.assertFalse(config.bake_test)
         self.assertFalse(config.holder_test)
         self.assertTrue(any(e['_etype']=='ceSMultiLine' for e in model.elements))
+
+    def test_baked_sources_match_their_holder_extents(self):
+        # A mismatch stretches the bake when the holder shows it: circles turn oval.
+        lua,load=runtime();load(SCRIPTS/'devices.lua');load(SCRIPTS/'device_init.lua')
+        config=convert(load(SCRIPTS/'MFD/Indicator/render_config.lua'))
+        registered=convert(lua.globals().indicators)
+        surfaces=json.loads((ROOT/'tools/data/cockpit_display_geometry.json').read_text())['surfaces']
+        for kind,page,surface in [('left','Left_init.lua','Left MFD'),('right','Right_init.lua','Right MFD'),
+                                  ('centre','MFD_indication_init.lua','MFD')]:
+            output=config[kind]
+            self.assertAlmostEqual(output['connector_half_width'],surfaces[surface]['connector_width_m']/2,delta=1e-5)
+            self.assertAlmostEqual(output['connector_half_height'],surfaces[surface]['connector_height_m']/2,delta=1e-5)
+            mount=next(v for v in registered if str(v[1]).endswith(page))[3][1]
+            self.assertAlmostEqual(output['connector_half_width']+mount['sw'],output['half_width'])
+            self.assertAlmostEqual(output['connector_half_height']+mount['sh'],output['half_height'])
 
     def test_centre_page_loads_with_native_write_only_table_properties(self):
         # DCS returns an opaque string for assigned table properties. A plain

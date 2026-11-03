@@ -1,6 +1,7 @@
 local finish_native_brightness=dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")("dlir_picture")
 dofile(LockOn_Options.common_script_path.."elements_defs.lua")
 SetScale(FOV)
+local readability=dofile(LockOn_Options.script_path.."display_readability.lua")
 
 local params={"F117_IRADS_POWER","mainpower"}
 local controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1}}
@@ -19,7 +20,7 @@ for band=0,65 do
     picture.vertices={{-1,1},{1,1},{1,-1},{-1,-1}}
     picture.indices={0,1,2,0,2,3}
     picture.tex_coords={{0,0},{1,0},{1,1},{0,1}}
-    picture.material=MakeMaterial("mfd0",{0,255,0,255})
+    picture.material=MakeMaterial("mfd0",readability.irads_video_colour)
     picture.input_space_SRGB=true;picture.additive_alpha=true
     picture.use_mipfilter=false
     local p,c={},{}

@@ -55,8 +55,8 @@ FM = {
             amortizer_static_force = 7.0e4, -- N: strut preload, 70 kN (earlier value 5815)
             amortizer_spring_force_factor = 1.00e6, -- Spring factor (earlier values 4050770 and 6200000)
             amortizer_spring_force_factor_rate = 4, -- Spring exponent
-            amortizer_direct_damper_force_factor = 60000, -- Damping while the strut compresses
-            amortizer_back_damper_force_factor = 60000, -- Damping while the strut extends; usually below the direct factor
+            amortizer_direct_damper_force_factor = 20000, -- Damping while the strut compresses. The nose wheel carries little of the weight, so this is lighter than the mains
+            amortizer_back_damper_force_factor = 20000, -- Damping while the strut extends
             allowable_hard_contact_length = 0.01, -- m: excess strut travel allowed under heavy loads; tunes strut damage strength
 
             -- Wheel
@@ -94,12 +94,12 @@ FM = {
             -- Strut
             amortizer_max_length = 0.229362, -- m: maximum (unloaded) strut length
             amortizer_basic_length = 0.229362, -- m: normally the same as the maximum length
-            amortizer_reduce_length = 0.08, -- m: length below which the gear reaction force starts to reduce
-            amortizer_static_force = 653.35, -- N: strut preload (earlier value 0.185e6)
-            amortizer_spring_force_factor = 4.900125e7, -- Spring factor (earlier value 2.00e6)
+            amortizer_reduce_length = 0.12, -- m: below this the force builds from zero, which makes a soft spring where the strut sits. Same idea as the stock F-15C
+            amortizer_static_force = 1.35e5, -- N: with the reduce length, about 1.2 MN/m at the 46,000 lb sitting height. The earlier 653 N and 4.9e7 factor gave about 3 MN/m and rougher landings
+            amortizer_spring_force_factor = 5.0e6, -- Spring factor: stiffens the strut late in its travel, for hard landings
             amortizer_spring_force_factor_rate = 2.5, -- Spring exponent
-            amortizer_direct_damper_force_factor = 60000, -- Damping while the strut compresses
-            amortizer_back_damper_force_factor = 40000, -- Damping while the strut extends; usually below the direct factor
+            amortizer_direct_damper_force_factor = 30000, -- Damping while the strut compresses. Heavier damping passes sharp runway bumps into the airframe
+            amortizer_back_damper_force_factor = 30000, -- Damping while the strut extends. No bounce at this value in a 3 m/s touchdown
             allowable_hard_contact_length = 0.02, -- m: excess strut travel allowed under heavy loads; tunes strut damage strength
 
             -- Wheel
@@ -139,12 +139,12 @@ FM = {
             -- Strut
             amortizer_max_length = 0.229362, -- m: maximum (unloaded) strut length
             amortizer_basic_length = 0.229362, -- m: normally the same as the maximum length
-            amortizer_reduce_length = 0.08, -- m: length below which the gear reaction force starts to reduce
-            amortizer_static_force = 653.35, -- N: strut preload (earlier value 0.185e6)
-            amortizer_spring_force_factor = 4.900125e7, -- Spring factor (earlier value 2.00e6)
+            amortizer_reduce_length = 0.12, -- m: below this the force builds from zero, which makes a soft spring where the strut sits. Same idea as the stock F-15C
+            amortizer_static_force = 1.35e5, -- N: with the reduce length, about 1.2 MN/m at the 46,000 lb sitting height. The earlier 653 N and 4.9e7 factor gave about 3 MN/m and rougher landings
+            amortizer_spring_force_factor = 5.0e6, -- Spring factor: stiffens the strut late in its travel, for hard landings
             amortizer_spring_force_factor_rate = 2.5, -- Spring exponent
-            amortizer_direct_damper_force_factor = 60000, -- Damping while the strut compresses
-            amortizer_back_damper_force_factor = 40000, -- Damping while the strut extends; usually below the direct factor
+            amortizer_direct_damper_force_factor = 30000, -- Damping while the strut compresses. Heavier damping passes sharp runway bumps into the airframe
+            amortizer_back_damper_force_factor = 30000, -- Damping while the strut extends. No bounce at this value in a 3 m/s touchdown
             allowable_hard_contact_length = 0.02, -- m: excess strut travel allowed under heavy loads; tunes strut damage strength
 
             -- Wheel

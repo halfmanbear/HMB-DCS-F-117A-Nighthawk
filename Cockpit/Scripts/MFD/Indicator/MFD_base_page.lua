@@ -31,7 +31,7 @@ if not F117_IRADS_OVERLAY_OPTIONS then
         video.name="F117_CENTRE_BAKED_VIDEO_"..band
         video.vertices={{-.0881,.0748},{.0881,.0748},{.0881,-.0748},{-.0881,-.0748}}
         video.indices={0,1,2,0,2,3};video.tex_coords={{0,0},{1,0},{1,1},{0,1}}
-        video.material=MakeMaterial("mfd0",{0,255,0,255})
+        video.material=MakeMaterial("mfd0",readability.irads_video_colour)
         video.input_space_SRGB=true;video.additive_alpha=true
         video.element_params={"mainpower","F117_IRADS_POWER","F117_LCD_READY","F117_IRADS_DRAW_BRIGHTNESS","F117_IRADS_CONTRAST_BAND"}
         video.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1},

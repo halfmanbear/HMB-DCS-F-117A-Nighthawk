@@ -122,19 +122,33 @@ def service_ceiling(sim, weight_lb, mach, guess_ft):
 
 
 def _turn_point(sim, weight_lb, alt_ft, mach, g):
+    """Excess power in a steady turn. The pilot flies the load factor and keeps the turn level with bank, because
+    holding altitude with the stick doesn't settle in a steep bank."""
     pilot = _level(sim, weight_lb, alt_ft, mach, seconds=6.0)
-    pilot.bank = math.degrees(math.acos(1.0 / max(g, 1.0001)))
-    pilot.fly(16.0)
-    ps, nz, alpha = _average(pilot, 4.0, 'ps', 'nz', 'alpha')
+    if g > 1.0001:
+        started = sim.t
+
+        def fly_turn(s):
+            nz = 1.0 + (g - 1.0) * min((s.t - started) / 3.0, 1.0)
+            pilot.nz_cmd = nz
+            pilot.bank = math.degrees(math.acos(1.0 / nz)) + max(-5.0, min(5.0, s.vs))
+
+        pilot.fly(16.0, fly_turn)
+        ps, nz, alpha = _average(pilot, 4.0, 'ps', 'nz', 'alpha')
+    else:
+        pilot.fly(16.0)
+        ps, nz, alpha = _average(pilot, 4.0, 'ps', 'nz', 'alpha')
     return nz, ps, alpha
 
 
 def sustained_turn(sim, weight_lb, alt_ft, mach, guess_g):
     """Load factor where a level turn at fixed Mach uses all the excess power."""
     n0, p0, _ = _turn_point(sim, weight_lb, alt_ft, mach, 1.0)
-    if p0 <= 0.0:
-        return {'g': None, 'ps_1g': p0, 'alpha': None}
     n1, p1, alpha = _turn_point(sim, weight_lb, alt_ft, mach, max(guess_g, 1.3))
+    if p0 <= 0.0:
+        # It can't hold 1 g. The same straight line, run below 1 g, shows by how much.
+        squared = n0 * n0 - p0 * (n1 * n1 - n0 * n0) / (p1 - p0)
+        return {'g': math.sqrt(max(squared, 0.0)), 'ps_1g': p0, 'alpha': alpha}
     for _ in range(4):
         # Excess power falls almost linearly with load factor squared.
         if abs(p1 - p0) < 1e-6:

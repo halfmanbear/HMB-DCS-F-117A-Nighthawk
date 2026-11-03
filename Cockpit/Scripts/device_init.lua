@@ -21,6 +21,17 @@ creators[devices.WEAPONS]                = {"avSimpleWeaponSystem", LockOn_Optio
 
 indicators = {}
 
+local display_config=dofile(LockOn_Options.script_path.."MFD/Indicator/render_config.lua")
+-- A bake fills its texture from the source indicator's extents, and the holder
+-- shows that texture on its own quad. Match the two or a circle draws as an oval.
+local function source_mount(kind,sx_l,sy_l)
+    local output=display_config[kind]
+    return {sx_l=sx_l,sy_l=sy_l,sz_l=0,
+        sh=output.half_height-output.connector_half_height,
+        sw=output.half_width-output.connector_half_width,
+        rz_l=0,rx_l=0,ry_l=0}
+end
+
 -- Centre green IRADS camera; target 0 also supplies the left grayscale repeater.
 -- Must be listed BEFORE the overlay so it renders underneath.
 indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/Indicator/DLIR_Camera_init.lua",
@@ -42,14 +53,7 @@ indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/I
  devices.DISPLAYS,
     {
         {"MFD-PLASHKA-CENTER", "MFD-PLASHKA-DOWN", "MFD-PLASHKA-RIGHT"},
-        {sx_l =  0,
-         sy_l =  0,
-         sz_l =  0,
-         sh   =  0,
-         sw   =  0,
-         rz_l =  0,
-         rx_l =  0,
-         ry_l =  0}
+        source_mount("centre",0,0)
     }
 }
 
@@ -79,7 +83,7 @@ indicators[#indicators + 1] = {
     devices.DISPLAYS,
     {
         {"MFD-PLASHKA-CENTER1", "MFD-PLASHKA-DOWN1", "MFD-PLASHKA-RIGHT1"},
-        {sx_l=-0.001,sy_l=0.0005,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0}
+        source_mount("left",-0.001,0.0005)
     }
 }
 
@@ -89,13 +93,12 @@ indicators[#indicators + 1] = {
     devices.DISPLAYS,
     {
         {"RADAR-PLASHKA-CENTER", "RADAR-PLASHKA-DOWN", "RADAR-PLASHKA-RIGHT"},
-        {sx_l=-0.001,sy_l=0.0005,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0}
+        source_mount("right",-0.001,0.0005)
     }
 }
 
 -- Holders stay invisible until the native compositor commits all three bakes.
 -- Source indicators retain GENERAL drawing if the module cannot initialize.
-local display_config=dofile(LockOn_Options.script_path.."MFD/Indicator/render_config.lua")
 if display_config.enabled or display_config.holder_test or display_config.bake_test then
     local function holder(kind,connectors,mount)
         indicators[#indicators+1]={"ccIndicator",

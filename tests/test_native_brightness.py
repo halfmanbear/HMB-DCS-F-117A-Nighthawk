@@ -104,7 +104,7 @@ class NativeBrightnessTests(unittest.TestCase):
         image=lua.execute((SCRIPTS/'Systems/IRADS_ImageControls.lua').read_text())
         image.initialize();image.set_command(lua.globals().irads_image_commands.BRIGHTNESS_UP,1)
         v=lua.globals()['values']
-        self.assertAlmostEqual(v.F117_IRADS_BRIGHTNESS,.21)
+        self.assertAlmostEqual(v.F117_IRADS_BRIGHTNESS,.16)
         self.assertEqual(v.F117_IRADS_DRAW_BRIGHTNESS,1)
         self.assertEqual(v.F117_IRADS_DIM_OPACITY,0)
 

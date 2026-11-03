@@ -25,11 +25,11 @@ class IRADSImageTests(unittest.TestCase):
         self.module.initialize()
 
     def test_day_night_twilight_and_multiday_presets(self):
-        for hour,expected in [(0,.16),(5,.16),(6,.16),(7,.405),(8,.65),(12,.65),
-                              (17,.65),(18,.405),(19,.16),(23,.16),(31,.405)]:
+        for hour,expected in [(0,.11),(5,.11),(6,.11),(7,.28),(8,.45),(12,.45),
+                              (17,.45),(18,.28),(19,.11),(23,.11),(31,.28)]:
             self.assertAlmostEqual(self.module.default_brightness(hour*3600),expected)
         self.assertAlmostEqual(self.v.F117_IRADS_CONTRAST,.8)
-        self.assertAlmostEqual(self.v.F117_IRADS_DIM_OPACITY,.35)
+        self.assertAlmostEqual(self.v.F117_IRADS_DIM_OPACITY,.55)
         self.assertEqual(self.v.F117_IRADS_CONTRAST_BAND,45)
 
     def test_night_contrast_and_side_dimming_presets(self):
@@ -47,10 +47,10 @@ class IRADSImageTests(unittest.TestCase):
 
     def test_steps_clamping_manual_persistence_and_reset(self):
         self.module.set_command(self.cmd.BRIGHTNESS_DOWN,1)
-        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.6)
+        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.4)
         self.g.clock=0
         self.module.set_command(self.cmd.CONTRAST_DOWN,1)
-        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.6)
+        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.4)
         self.assertAlmostEqual(self.v.F117_IRADS_CONTRAST,.75)
         for _ in range(40):
             self.module.set_command(self.cmd.BRIGHTNESS_DOWN,1)
@@ -63,7 +63,7 @@ class IRADSImageTests(unittest.TestCase):
         self.assertEqual(self.v.F117_IRADS_BRIGHTNESS,1)
         self.assertEqual(self.v.F117_IRADS_CONTRAST,1)
         self.module.set_command(self.cmd.RESET,1)
-        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.16)
+        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.11)
         self.assertAlmostEqual(self.v.F117_IRADS_CONTRAST,.96)
         self.assertFalse(self.module.set_command(87,1))
 
@@ -80,7 +80,7 @@ class IRADSImageTests(unittest.TestCase):
         video=[e for e in elements if e['_etype']=='ceTexPoly']
         self.assertEqual(len(video),66)
         for band,e in enumerate(video):
-            self.assertEqual(e['material'],dict(path='mfd0',color=[0,255,0,255]))
+            self.assertEqual(e['material'],dict(path='mfd0',color=[0,90,0,255]))
             self.assertEqual(e['controllers'][-2],['parameter_in_range',2,band-.1,band+.1])
             self.assertEqual(e['controllers'][-1][0],'set_contrast_raw')
             self.assertAlmostEqual(e['controllers'][-1][1],(.35+band*.01)/.8)

@@ -20,6 +20,13 @@ indicator order. Native `addSource(index,width,height)` sets target pixel sizes.
 The three named channels are `F117_LCD_LEFT`, `F117_LCD_RIGHT` and
 `F117_LCD_CENTRE`. The centre page includes camera target 0 plus its Lua overlay.
 
+A bake fills its square texture from the source indicator's extents, which default
+to the connector spans, and the holder shows that texture on its own quad. If they
+differ, the image stretches: a side display at its 107.4 x 90.5 mm connector frame
+drew a circle over 10% too tall and cropped its top and bottom rows.
+`source_mount` in `device_init.lua` sets each source's `sw`/`sh` so its extents
+match the `half_width`/`half_height` in `render_config.lua`.
+
 All source indicators initially retain normal drawing. Holders and the centre
 page's composited video are gated by `F117_LCD_READY=0`. Only after all three
 bakers initialize does the module change source purposes to BAKE and set READY
