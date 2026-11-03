@@ -11,10 +11,10 @@ function S.line(points,scale,weight)
     e.thickness=style.thickness*(weight or 1);e.fuzziness=style.fuzziness;e.draw_as_wire=false
     return e
 end
-function S.text(e)
+function S.text(e,weight)
     -- Create text with ceStringSLine: ceStringPoly bypasses the indicator's
     -- stroke settings, including the native offscreen/bake width scaling.
-    e.thickness=style.thickness;e.fuzziness=style.fuzziness;e.draw_as_wire=false
+    e.thickness=style.thickness*(weight or 1);e.fuzziness=style.fuzziness;e.draw_as_wire=false
     e.use_mipfilter=false
 end
 return S

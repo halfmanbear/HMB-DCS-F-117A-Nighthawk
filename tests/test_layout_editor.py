@@ -119,20 +119,80 @@ class LayoutEditorTests(unittest.TestCase):
         model.scene(dict(DEFAULTS,ROLL_HUD=.3,PITCH_HUD=.1))
         self.assertEqual(model.warnings,set())
 
+    def test_left_vsd_tapes_scroll_with_readouts(self):
+        model=self.load('Left MFD')
+        def label_y(params,value):
+            scene=model.scene(dict(DEFAULTS,F117_LEFT_EO=0,**params))
+            return next(s[1] for e,s in scene if e.get('value')==value)
+        # The tape label for the current value sits level with the readout box (ball centre).
+        self.assertAlmostEqual(label_y({'CURR_IAS':300},'300'),-.002,places=6)
+        self.assertAlmostEqual(label_y({'ALTITUDE_HUD':4000},'4000'),-.002,places=6)
+        self.assertGreater(label_y({'CURR_IAS':250},'300'),label_y({'CURR_IAS':300},'300'))
+        self.assertEqual(model.warnings,set())
+
+    def test_left_vsd_release_staple_and_fired_store(self):
+        model=self.load('Left MFD')
+        def green_staples(params):
+            scene=model.scene(dict(DEFAULTS,F117_LEFT_EO=0,**params))
+            return [s[1] for e,s in scene if s[3] and len(e.get('vertices') or [])==4
+                    and (e.get('material') or {}).get('color')==[110,235,140,255]]
+        cue=dict(F117_RELEASE_CUE_VALID=1,F117_RELEASE_CUE_IN_ZONE=0)
+        self.assertEqual(green_staples(dict(cue,F117_RELEASE_CUE_TTG=40)),[])
+        high,low=green_staples(dict(cue,F117_RELEASE_CUE_TTG=20)),green_staples(dict(cue,F117_RELEASE_CUE_TTG=5))
+        self.assertEqual(len(high),1);self.assertGreater(high[0],low[0])
+        # In zone: staple rests on the pitch reference symbol (release gate open).
+        self.assertAlmostEqual(green_staples(dict(cue,F117_RELEASE_CUE_TTG=12,F117_RELEASE_CUE_IN_ZONE=1))[0],-.0018,places=6)
+        self.assertEqual(green_staples(dict(cue,F117_RELEASE_CUE_VALID=0,F117_RELEASE_CUE_TTG=5)),[])
+        def red_lines(fired):
+            scene=model.scene(dict(DEFAULTS,F117_LEFT_EO=0,F117_VSD_STORE=4,F117_VSD_STORE_FIRED=fired))
+            assert 'GBU27' in {s[5] for e,s in scene if s[3]}
+            return [e for e,s in scene if s[3] and (e.get('material') or {}).get('color')==[255,48,48,255] and e.get('vertices')]
+        self.assertEqual(len(red_lines(1))-len(red_lines(0)),2)
+
     def test_right_hsd_heading_card_and_unavailable_navigation(self):
         model=self.load('Right MFD')
         for heading,top in [(0,'N'),(90,'E'),(180,'S'),(270,'W')]:
-            scene=model.scene(dict(DEFAULTS,HEADING_HUD=heading,GS_HUD=321))
+            scene=model.scene(dict(DEFAULTS,HEADING_HUD=heading,GS_HUD=321,F117_OCIP_TAS=333))
             state=next(s for e,s in scene if e.get('value')==top)
             self.assertAlmostEqual(state[0],0,places=8)
-            self.assertAlmostEqual(state[1],-.001+.033-.0052,places=8)
-            self.assertAlmostEqual(state[2],0,places=8)
-            self.assertIn('GS  321',{s[5] for e,s in scene if s[3]})
+            self.assertAlmostEqual(state[1],-.001+.030-.0005,places=8)
+            # Card labels stay upright at every heading.
+            for e,s in scene:
+                if e.get('value') in ('N','E','S','W','3','12','21','30'):
+                    self.assertAlmostEqual(math.remainder(s[2],2*math.pi),0,places=8)
+            texts={s[5] for e,s in scene if s[3]}
+            self.assertIn('GS  321',texts);self.assertIn('TAS 333',texts)
         texts={e.get('value') for e in model.elements}
-        self.assertIn('DME ---.-',texts)
-        self.assertNotIn('ALERT',texts)
+        self.assertIn('DME',texts);self.assertNotIn('ALERT',texts)
+        # Route readouts come from Systems/Navigation.lua text parameters.
+        nav=dict(DEFAULTS,HEADING_HUD=0,F117_NAV_CRS_TEXT='CRS 087',F117_NAV_D_TEXT='D  04',
+            F117_NAV_TTG_TEXT='TTG 02:30',F117_NAV_RNG_TEXT='RNG  12.5',F117_NAV_REL_COURSE=math.pi/2)
+        scene=model.scene(nav)
+        texts={s[5] for e,s in scene if s[3]}
+        for value in ('CRS 087','D  04','TTG 02:30','RNG  12.5'):self.assertIn(value,texts)
+        # Course 90 degrees right of heading: arrow, tip circle, line and outer
+        # arrowhead turn clockwise together; nothing else on a north-up card does.
+        turned=[s for e,s in scene if s[3] and e['_etype']!='ceSimple' and abs(s[2]+math.pi/2)<1e-9]
+        self.assertEqual(len(turned),4)
+        self.assertFalse([s for e,s in model.scene(dict(nav,F117_NAV_REL_COURSE=0)) if s[3] and e['_etype']!='ceSimple' and abs(s[2]+math.pi/2)<1e-9])
         self.assertFalse(any(s[3] for _,s in model.scene(dict(DEFAULTS,mainpower=0))))
         self.assertEqual(model.warnings,set())
+
+    def test_map_legends_follow_the_video_layout(self):
+        model=self.load('Central Map')
+        def visible(**values):
+            return {s[5] for e,s in model.scene(dict(DEFAULTS,**values)) if s[3]}
+        normal=visible(F117_MAP_FUNCTION=0,F117_MAP_FUNCTION_TEXT='FUNC')
+        self.assertTrue({'MARK','-','SNSR','ENTR','UPDT'}<=normal)
+        # The normal page has no function legend; function 1 shows FNC1 and COR.
+        self.assertNotIn('FUNC',normal);self.assertNotIn('COR',normal)
+        function=visible(F117_MAP_FUNCTION=1,F117_MAP_FUNCTION_TEXT='FNC1')
+        self.assertTrue({'FNC1','COR'}<=function)
+        self.assertFalse({'MARK','SNSR'}&function)
+        # Bottom legends in left-to-right order, MAP boxed as the selected page.
+        scene=model.scene(DEFAULTS)
+        xs=[next(s[0] for e,s in scene if e.get('value')==v) for v in ('HSD','MAP','STAT','SMD','DFRM')]
+        self.assertEqual(xs,sorted(xs))
 
     def test_tracking_switches_exclusive_labels(self):
         model=self.load('MFD')

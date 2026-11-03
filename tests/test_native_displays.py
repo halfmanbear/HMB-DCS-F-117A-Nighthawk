@@ -322,7 +322,7 @@ class NativeDisplayTests(unittest.TestCase):
                     self.assertLess(max(e['indices']),len(e['vertices']))
             dynamic=[e for e in model.elements if e['_etype']=='ceSimpleLineObject']
             if mode=='Central Map':
-                self.assertEqual(len(dynamic),64)
+                self.assertEqual(len(dynamic),65) # 64 route legs plus the steering leg
                 for e in dynamic:
                     self.assertGreater(e['width'],0)
                     self.assertEqual(sum(c[0]=='line_object_set_point_using_parameters' for c in e['controllers']),2)

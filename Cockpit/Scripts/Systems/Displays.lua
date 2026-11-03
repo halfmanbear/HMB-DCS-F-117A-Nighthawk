@@ -9,7 +9,8 @@ local check_irads_terrain = dofile(LockOn_Options.script_path.."Systems/IRADS_Di
 local native_brightness = dofile(LockOn_Options.script_path.."Systems/NativeBrightness.lua").new()
 local display_compositor = dofile(LockOn_Options.script_path.."Systems/DisplayCompositor.lua").new()
 -- Local variables ==================
-local map_outline = dofile(LockOn_Options.script_path.."Systems/MovingMap.lua").new()
+local navigation = dofile(LockOn_Options.script_path.."Systems/Navigation.lua").new()
+local map_outline = dofile(LockOn_Options.script_path.."Systems/MovingMap.lua").new(nil,nil,navigation)
 local Page_changed = 0
 local left_eo = get_param_handle("F117_LEFT_EO")
 local fov_axis=-1
@@ -249,6 +250,7 @@ dev:listen_command(87)	-- TGP on
 function post_initialize()	-- modes / toggle default settings
     left_eo:set(0) -- OCIP III default: primary flight data on the left
     get_param_handle("F117_RIGHT_FORMAT"):set(2) -- digital moving map
+    navigation.initialize()
     map_outline.initialize()
     display_compositor.initialize()
     irads_image.initialize()
@@ -337,6 +339,7 @@ for _,command in pairs(left_cmdi_commands) do dev:listen_command(command) end
 for _,command in pairs(map_commands) do dev:listen_command(command) end
 for _,command in pairs(right_cmdi_commands) do dev:listen_command(command) end
 for _,command in pairs(irads_fov_commands) do dev:listen_command(command) end
+for _,command in pairs(nav_commands) do dev:listen_command(command) end
 
 function SetCommand(command,value)
     if command==right_cmdi_commands.MAP_SELECT or command==right_cmdi_commands.HSD_SELECT or command==right_cmdi_commands.VSD_SELECT then
@@ -357,6 +360,7 @@ function SetCommand(command,value)
         end
         return
     end
+    if navigation.set_command(command,value) then return end
     if map_outline.set_command(command,value) then return end
     if irads_image.set_command(command,value) then return end
     -- Forward exactly once. The EFM owns deadzone, rate, power and motion.
@@ -1154,6 +1158,7 @@ function update()
     native_brightness.update()
     irads_terrain.update()
     irads_readouts.update()
+    navigation.update()
     map_outline.update()
     check_irads_terrain()
 

@@ -1,5 +1,6 @@
 local finish_native_brightness=dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")("F117_VSD_SOURCE")
--- LEFT VSD DESIGN: manual PDF p33, Figure 4-13 basic display.
+-- LEFT VSD DESIGN: manual PDF p33, Figure 4-13 basic display, matched to the
+-- cockpit video frames in docs/reference/CockpitImages/CMDI_VSD.
 -- Metres, fitted to the measured aperture. Flight data uses existing parameters;
 -- navigation/status text is static reference artwork. Default left cockpit page.
 local SD,SM,VAL=VSD_SD,VSD_SD_SMALL,VSD_SD_VALUE
@@ -48,6 +49,18 @@ local function line(points,colour,parent,level,width)
     e.material=VSD_MATERIALS[colour or "white"]
     return props(e,parent,level)
 end
+-- Many disjoint segments ({x1,y1,x2,y2}, ...) in one element: tape graduations.
+local function segments(list,colour,parent,level)
+    local e=strokes.line({{0,0},{0,0}},1,1)
+    local vertices,indices={},{}
+    for _,s in ipairs(list) do
+        vertices[#vertices+1]={s[1],s[2]};vertices[#vertices+1]={s[3],s[4]}
+        indices[#indices+1]=#vertices-2;indices[#indices+1]=#vertices-1
+    end
+    e.vertices=vertices;e.indices=indices
+    e.material=VSD_MATERIALS[colour or "white"]
+    return props(e,parent,level)
+end
 local function text(value,x,y,sd,align,params,controllers,formats,colour,parent,level)
     local e=CreateElement "ceStringSLine"
     e.value=value;e.init_pos={x,y,0}
@@ -62,10 +75,20 @@ end
 local function box(x,y,w,h,colour,parent)
     return line({{x-w/2,y-h/2},{x+w/2,y-h/2},{x+w/2,y+h/2},{x-w/2,y+h/2},{x-w/2,y-h/2}},colour,parent)
 end
+-- Background-filled box: masks tape labels scrolling behind a readout.
+local function readout(x,y,w,h,colour,parent)
+    poly({{x-w/2,y-h/2},{x+w/2,y-h/2},{x+w/2,y+h/2},{x-w/2,y+h/2}},"background",parent)
+    return box(x,y,w,h,colour,parent)
+end
+local function rect(x1,y1,x2,y2) return {{x1,y1},{x2,y1},{x2,y2},{x1,y2}} end
 local function circle(cx,cy,r)
     local p={}
     for i=0,64 do local a=i*math.pi/32;table.insert(p,{cx+r*math.cos(a),cy+r*math.sin(a)}) end
     return p
+end
+-- Shown only while the named parameter is 1. Nothing drives these yet, so they stay blank.
+local function when(name,parent)
+    return group({0,0},parent,{name},{{"parameter_in_range",0,.9,1.1}})
 end
 -- Rounded safe area, inset from the 104.1 x 95.3 mm measured screen.
 local aperture={}
@@ -83,102 +106,158 @@ local bank=group({0,CY},ROOT,{"ROLL_HUD"},{{"rotate_using_parameter",0,1}})
 local pitch=group({0,0},bank,{"PITCH_HUD"},{{"move_up_down_using_parameter",0,-R/math.rad(30)}})
 poly({{-.12,0},{.12,0},{.12,.12},{-.12,.12}},"sky",pitch,2)
 poly({{-.12,-.12},{.12,-.12},{.12,0},{-.12,0}},"earth",pitch,2)
+-- Ladder: continuous 10 degree bars numbered at both ends, short centred 5 degree dashes.
 line({{-.09,0},{.09,0}},"white",pitch,2,.00028)
-for degrees=-30,30,5 do
-    if degrees~=0 then
-        local y=degrees*R/30
-        local w=degrees%10==0 and .012 or .007
-        line({{-w,y},{-.002,y}},"white",pitch,2)
-        line({{.002,y},{w,y}},"white",pitch,2)
-        if degrees%10==0 then
-            text(tostring(math.abs(degrees)),-.015,y,SM,nil,nil,nil,nil,nil,pitch,2)
-            text(tostring(math.abs(degrees)),.015,y,SM,nil,nil,nil,nil,nil,pitch,2)
-        end
+for degrees=-25,25,5 do
+    local y=degrees*R/30
+    if degrees==0 then
+        text("0",-.0072,y,SM,nil,nil,nil,nil,nil,pitch,2)
+        text("0",.0072,y,SM,nil,nil,nil,nil,nil,pitch,2)
+    elseif degrees%10==0 then
+        line({{-.0040,y},{.0040,y}},"white",pitch,2)
+        text(tostring(math.abs(degrees)),-.0072,y,SM,nil,nil,nil,nil,nil,pitch,2)
+        text(tostring(math.abs(degrees)),.0072,y,SM,nil,nil,nil,nil,nil,pitch,2)
+    else
+        line({{-.0015,y},{.0015,y}},"white",pitch,2)
     end
 end
 poly(ball,"background",nil,2,h_clip_relations.DECREASE_IF_LEVEL)
 line(ball)
-for _,degrees in ipairs({-60,-45,-30,-20,-10,0,10,20,30,45,60}) do
-    local a=math.rad(degrees);local r=R+.0015
-    local l=degrees%30==0 and .0018 or .0010
-    line({{r*math.sin(a),CY+r*math.cos(a)},{(r+l)*math.sin(a),CY+(r+l)*math.cos(a)}})
+-- Fixed bank graduations all round the ball; the open triangles roll with the ball.
+for _,degrees in ipairs({10,20,30,45,60,90,120,150}) do
+    for _,sign in ipairs({-1,1}) do
+        local a=math.rad(sign*degrees);local r=R+.0012
+        local l=degrees%30==0 and .0018 or .0011
+        line({{r*math.sin(a),CY+r*math.cos(a)},{(r+l)*math.sin(a),CY+(r+l)*math.cos(a)}})
+    end
 end
-poly({{0,CY+R+.002},{-.0012,CY+R+.004},{.0012,CY+R+.004}},"white")
-line({{-.012,CY},{-.004,CY},{-.002,CY-.001},{0,CY},{.002,CY-.001},{.004,CY},{.012,CY}},nil,nil,nil,.0004)
-line({{-.003,CY+.004},{0,CY+.005},{.003,CY+.004}},"magenta")
+line({{0,R-.0006},{-.0011,R-.0026},{.0011,R-.0026},{0,R-.0006}},"white",bank)
+line({{0,-R+.0006},{-.0011,-R+.0026},{.0011,-R+.0026},{0,-R+.0006}},"white",bank)
+-- Steering line (static: no steering data yet), heading lubber and aircraft symbol.
+line({{0,.0318},{0,-.0300}},"green")
+line({{-.0010,.0303},{0,.0322},{.0010,.0303}})
+line({{-.0042,CY},{-.0022,CY},{-.0011,CY-.0018},{0,CY-.0004},{.0011,CY-.0018},{.0022,CY},{.0042,CY}},nil,nil,nil,.0004)
+-- CCRP release window staple: enters 30 s before the ballistic release point and
+-- descends the steering line; it sits on the pitch reference symbol (release gate
+-- open) while the EFM reports the store in its release zone.
+local STAPLE={{-.0022,0},{-.0022,.0010},{.0022,.0010},{.0022,0}}
+local staple=group({0,CY+.0002},ROOT,{"F117_RELEASE_CUE_TTG","F117_RELEASE_CUE_VALID","F117_RELEASE_CUE_IN_ZONE"},
+    {{"parameter_in_range",0,.01,30},{"parameter_in_range",1,.9,1.1},{"parameter_in_range",2,-.1,.1},
+     {"move_up_down_using_parameter",0,.0005}})
+line(STAPLE,"green",staple,nil,.0003)
+local stapleGate=group({0,CY+.0002},ROOT,{"F117_RELEASE_CUE_VALID","F117_RELEASE_CUE_IN_ZONE"},
+    {{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1}})
+line(STAPLE,"green",stapleGate,nil,.0003)
 
--- Top strip: ground speed, AOA scale, heading and vertical velocity.
-box(-.040,.040,.013,.0045)
-text("",-.040,.040,SM,nil,{"GS_HUD"},{{"text_using_parameter",0,0}},{"GS %3.0f"})
-text("P/L",-.045,.033,SM)
-line({{-.028,.043},{-.028,.014}})
+-- Scrolling tapes, each clipped to its own window.
+local SX,AX=-.0326,.0307            -- airspeed and altitude tape spines
+local KT,FT,DEG=.00029,.0000273,.00045 -- metres per knot, foot, degree
+local windows={
+    rect(-.052,-.0265,SX+.0003,.0235),
+    rect(AX-.0003,-.0320,.052,.0235),
+    rect(-.0118,.0325,.0118,.0430),
+}
+for _,w in ipairs(windows) do poly(w,"background",nil,1,h_clip_relations.INCREASE_IF_LEVEL) end
+local ias=group({0,CY},ROOT,{"CURR_IAS"},{{"move_up_down_using_parameter",0,-KT}})
+local ticks={}
+for kt=0,800,10 do ticks[#ticks+1]={SX,kt*KT,SX-(kt%50==0 and .0028 or .0016),kt*KT} end
+segments(ticks,"white",ias,2)
+for kt=0,800,50 do text(tostring(kt),SX-.0036,kt*KT,SM,"RightCenter",nil,nil,nil,nil,ias,2) end
+local alt=group({0,CY},ROOT,{"ALTITUDE_HUD"},{{"move_up_down_using_parameter",0,-FT}})
+ticks={}
+for ft=-1000,50000,100 do ticks[#ticks+1]={AX,ft*FT,AX+(ft%500==0 and .0025 or .0012),ft*FT} end
+segments(ticks,"white",alt,2)
+for ft=-1000,50000,500 do text(tostring(ft),AX+.0034,ft*FT,SM,"LeftCenter",nil,nil,nil,nil,alt,2) end
+local HY=.0395                      -- heading readout row; ticks rise from .0335
+local hdg=group({0,0},ROOT,{"HEADING_HUD"},{{"move_left_right_using_parameter",0,-DEG}})
+ticks={}
+for h=-40,400,5 do ticks[#ticks+1]={h*DEG,.0335,h*DEG,.0335+(h%10==0 and .0018 or .0010)} end
+segments(ticks,"white",hdg,2)
+for h=-30,390,30 do text(string.format("%02d",(h%360)/10),h*DEG,HY,SM,nil,nil,nil,nil,nil,hdg,2) end
+for _,w in ipairs(windows) do poly(w,"background",nil,2,h_clip_relations.DECREASE_IF_LEVEL) end
+
+-- Fixed tape parts: spines, readouts and the open chevrons tied to the ball.
+line({{SX,-.0265},{SX,.0235}})
+line({{AX,-.0320},{AX,.0235}})
+line({{-R-.0004,CY},{SX+.0006,CY}});line({{SX+.0026,CY+.0012},{SX+.0006,CY},{SX+.0026,CY-.0012}})
+line({{R+.0004,CY},{AX-.0006,CY}});line({{AX-.0026,CY+.0012},{AX-.0006,CY},{AX-.0026,CY-.0012}})
+readout(-.0405,CY,.0115,.0055)
+text("",-.0405,CY,VAL,nil,{"CURR_IAS"},{{"text_using_parameter",0,0}},{"%3.0f"})
+poly(rect(-.0445,CY+.0030,-.0365,CY+.0064),"background")
+text("",-.0405,CY+.0047,SM,nil,{"MACH_A"},{{"text_using_parameter",0,0}},{"%.2f"})
+readout(.0400,CY,.0155,.0055)
+text("",.0400,CY,VAL,nil,{"ALTITUDE_HUD"},{{"text_using_parameter",0,0}},{"%5.0f"})
+text("P/L",-.0400,.0255,SM)
+readout(0,HY,.0095,.0050)
+text("",0,HY,SD,nil,{"HEADING_HUD"},{{"text_using_parameter",0,0}},{"%03.0f"})
+line({{-.0012,.0353},{.0012,.0353}},"green")
+local mea=when("F117_VSD_MEA")
+readout(0,.0445,.0090,.0040,nil,mea)
+text("MEA",0,.0445,SM,nil,nil,nil,nil,nil,mea)
+
+-- Ground speed and AOA (0-15 units, red above 10, index at 10).
+box(-.040,.0395,.013,.0045)
+text("",-.040,.0395,SM,nil,{"GS_HUD"},{{"text_using_parameter",0,0}},{"GS %3.0f"})
+local AOX,A0,AU=-.028,.014,.0019
+line({{AOX,A0},{AOX,A0+10*AU}})
+line({{AOX,A0+10*AU},{AOX,A0+15*AU}},"red",nil,nil,.0003)
 for i=0,15 do
-    local y=.014+i*.0019
-    line({{-.028,y},{-.028+(i%5==0 and .0035 or .0017),y}})
-    if i%5==0 then text(tostring(i),-.0228,y,SM) end
+    local y=A0+i*AU
+    line({{AOX,y},{AOX+(i%5==0 and .0035 or .0017),y}})
+    if i%5==0 then text(tostring(i),AOX+.0052,y,SM) end
 end
-line({{-.031,.020},{-.030,.026},{-.029,.025}},nil,nil,nil,.00035)
-text("MEA",0,.043,SM)
-box(0,.036,.010,.0045)
-text("",0,.036,SD,nil,{"HEADING_HUD"},{{"text_using_parameter",0,0}},{"%03.0f"})
-for i=-6,6 do local x=i*.0017;line({{x,.029},{x,.029+(i%3==0 and .0018 or .0009)}}) end
-text("27",-.012,.034,SM)
-text("33",.012,.034,SM)
-line({{-.0018,.026},{0,.029},{.0018,.026}})
-for i=0,5 do line({{.023,.017+i*.005},{.025,.017+i*.005}}) end
-line({{.027,.021},{.030,.021},{.030,.040}})
-text("",.035,.033,SM,"LeftCenter",{"VVI_HUD"},{{"text_using_parameter",0,0}},{"%+.0f"})
+line({{AOX-.0035,A0+10*AU},{AOX,A0+10*AU}})
+local aoaPointer=group({0,A0},ROOT,{"F117_OCIP_AOA"},
+    {{"parameter_in_range",0,-.01,math.rad(15.5)},{"move_up_down_using_parameter",0,AU*180/math.pi}})
+line({{AOX-.0004,0},{AOX-.0022,.0009},{AOX-.0022,-.0009},{AOX-.0004,0}},"white",aoaPointer)
 
--- Airspeed tape and boxed CAS; tape graduations remain design samples.
-line({{-.034,-.030},{-.034,.025}})
-for i=0,10 do local y=-.030+i*.005;line({{-.034,y},{-.034+(i%5==0 and .003 or .0014),y}}) end
-text("350",-.039,.014,SM)
-text("300",-.039,-.006,SM)
-text("250",-.039,-.027,SM)
-text("",-.043,.006,SM,nil,{"MACH_A"},{{"text_using_parameter",0,0}},{"%.2f"})
-poly({{-.033,-.001},{-.030,0},{-.033,.001}},"white")
-poly({{-.049,-.003},{-.036,-.003},{-.036,.003},{-.049,.003}},"background")
-box(-.0425,0,.013,.006)
-text("",-.0425,0,VAL,nil,{"CURR_IAS"},{{"text_using_parameter",0,0}},{"%3.0f"})
+-- Vertical velocity: alternating graduations, open pointer at the zero mark, digital value.
+for i=0,6 do
+    local y=.0383-i*.00384
+    line({{i%2==0 and .0201 or .0219,y},{.0234,y}})
+end
+line({{.0240,.0306},{.0256,.0314},{.0256,.0298},{.0240,.0306}});line({{.0256,.0306},{.0272,.0306}})
+text("",.0355,.0306,SM,nil,{"VVI_HUD"},{{"text_using_parameter",0,0}},{"%.0f"})
 
--- Altitude tape and boxed barometric altitude.
-line({{.033,-.030},{.033,.025}})
-for i=0,12 do local y=-.030+i*.0045;line({{.033,y},{.033+(i%4==0 and .0025 or .0012),y}}) end
-text("22500",.041,.019,SM)
-text("22000",.041,-.008,SM)
-text("21500",.041,-.026,SM)
-poly({{.031,-.001},{.033,0},{.031,.001}},"white")
-poly({{.034,-.003},{.050,-.003},{.050,.003},{.034,.003}},"background")
-box(.042,0,.016,.006)
-text("",.042,0,VAL,nil,{"ALTITUDE_HUD"},{{"text_using_parameter",0,0}},{"%5.0f"})
-
--- Static lower annotations from the basic VSD (not valid navigation/status).
--- ARS selection blanks the digital readout, FMS status/commands, ICE and CONS (manual 4-21).
+-- Lower annotations. Destination, time to go and range come from the mission
+-- route (Systems/Navigation.lua) and show dashes without one.
+-- ARS selection blanks the digital readout and FMS status/commands (manual 4-21).
 local arsBlank=group({0,0},nil,{"F117_ARS_ACTIVE"},{{"parameter_in_range",0,-.1,.1}})
-text("ICE",-.021,-.027,SM,nil,nil,nil,nil,nil,arsBlank)
-text("ALIGN",-.0195,-.0295,SM)
-text("CONS",.021,-.027,SM,nil,nil,nil,nil,nil,arsBlank)
-text("ALERT",.040,-.032,SM)
+text("ETA",-.046,-.0283,SM,"LeftCenter",nil,nil,nil,nil,arsBlank)
 box(-.035,-.0345,.022,.009,nil,arsBlank)
-text("D  39",-.044,-.0315,SM,"LeftCenter",nil,nil,nil,nil,arsBlank)
-text("TTG 13:47",-.044,-.0345,SM,"LeftCenter",nil,nil,nil,nil,arsBlank)
-text("RNG 108.4",-.044,-.0375,SM,"LeftCenter",nil,nil,nil,nil,arsBlank)
-box(.036,-.037,.023,.0045)
-text("DME 40.7",.036,-.037,SM)
+for i,name in ipairs({"D_TEXT","TTG_TEXT","RNG_TEXT"}) do
+    text("",-.044,-.0285-.003*i,SM,"LeftCenter",{"F117_NAV_"..name},{{"text_using_parameter",0,0}},{"%s"},nil,arsBlank)
+end
+local dr=when("F117_NAV_DR")
+box(-.0205,-.0235,.0075,.0035,"amber",dr)
+text("DR",-.0205,-.0235,SM,nil,nil,nil,nil,nil,dr)
+box(.036,-.0335,.023,.0045)
+text("DME",.036,-.0335,SM) -- no TACAN receiver: no distance value
+-- Store legend (Weapons.lua): the selected store, or the store just fired,
+-- crossed out with thin red lines until the next station step or designation.
+for profile,name in pairs({[0]="GBU31",[1]="GBU31V3",[2]="GBU32",[3]="GBU12",[4]="GBU27"}) do
+    text(name,.036,-.0375,SM,nil,{"F117_VSD_STORE"},{{"parameter_in_range",0,profile-.1,profile+.1}})
+end
+local fired=when("F117_VSD_STORE_FIRED")
+line({{.0300,-.0390},{.0420,-.0360}},"red",fired,nil,.00012)
+line({{.0300,-.0360},{.0420,-.0390}},"red",fired,nil,.00012)
 
 -- FMS command line (Fig 4-13 item 26): A/T CAS hold reads "C <value> CAS" (manual 4-39).
-local atLine=group({-.022,-.0340},arsBlank,{"F117_AT_ENGAGED"},{{"parameter_in_range",0,.9,1.1}})
-text("",0,0,SM,"LeftCenter",{"F117_AT_CAS_COMMAND"},{{"text_using_parameter",0,0}},{"C %3.0f CAS"},nil,atLine)
+local atLine=group({-.0165,-.0315},arsBlank,{"F117_AT_ENGAGED"},{{"parameter_in_range",0,.9,1.1}})
+text("C",0,0,SM,"LeftCenter",nil,nil,nil,"green",atLine)
+text("",.0030,0,SM,"LeftCenter",{"F117_AT_CAS_COMMAND"},{{"text_using_parameter",0,0}},{"%3.0f CAS"},nil,atLine)
 
 -- ARS indication (item 31): minimum pullout altitude in red, to the next lower thousand feet.
 local arsLine=group({-.030,-.0335},nil,{"F117_ARS_ACTIVE"},{{"parameter_in_range",0,.9,1.1}})
 text("",0,0,VAL,"LeftCenter",{"F117_ARS_MIN_ALT"},{{"text_using_parameter",0,0}},{"ARS  %5.0f"},"red",arsLine)
-text("VSD",-.035,-.0415,SM,nil,nil,nil,nil,"magenta")
-box(-.035,-.0415,.008,.0025)
-line({{-.023,-.0415},{-.015,-.0415}})
-line({{-.019,-.043},{-.019,-.040}})
+
+-- Bottom option row.
+box(-.028,-.0415,.008,.0028,"green")
+text("VSD",-.028,-.0415,SM,nil,nil,nil,nil,"green")
+line({{-.018,-.0415},{-.0148,-.0415}});line({{-.0132,-.0415},{-.010,-.0415}})
+line(circle(-.014,-.0415,.0008));line({{-.014,-.0407},{-.014,-.0395}})
 text("STAT",0,-.0415,SM)
-text("DEP",.034,-.0415,SM)
+text("DEP",.026,-.0415,SM)
 
 F117_SIDE_DIM_PARAMETER="F117_LEFT_DIM_OPACITY"
 F117_SIDE_DIM_ROOT=ROOT.name

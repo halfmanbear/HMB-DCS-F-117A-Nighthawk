@@ -23,6 +23,7 @@ return function(sensor,options)
         local rate=previous_ias and (ias-previous_ias)/dt or 0
         local step=math.abs(rate)>300 and 5 or 1
         set("CAS",math.floor(ias/step+.5)*step)
+        set("TAS",math.floor(sensor.getTrueAirSpeed()*1.94384449+.5)) -- knots, HSD speed block
         -- Manual: approach bracket enters below 200 KCAS and leaves above 230.
         if ias<200 then approach=true elseif ias>230 then approach=false end
         set("APPROACH",approach and 1 or 0)

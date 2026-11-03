@@ -22,6 +22,8 @@ join(res.keyCommands,{
 {down = map_commands.RANGE_UP, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Range Increase'), category = _('F-117A Displays')},
 {down = map_commands.RANGE_DOWN, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Range Decrease'), category = _('F-117A Displays')},
 {down = map_commands.ORIENTATION, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Orientation Cycle'), category = _('F-117A Displays')},
+{down = nav_commands.WP_NEXT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Navigation Next Waypoint'), category = _('F-117A Displays')},
+{down = nav_commands.WP_PREV, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Navigation Previous Waypoint'), category = _('F-117A Displays')},
 -- CMDI format selections preserve sensor state.
 {down = left_cmdi_commands.MAP_SELECT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Left CMDI Select MAP'), category = _('F-117A Displays')},
 {down = left_cmdi_commands.HSD_SELECT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Left CMDI Select HSD'), category = _('F-117A Displays')},
