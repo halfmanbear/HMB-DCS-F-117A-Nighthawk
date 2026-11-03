@@ -1,6 +1,8 @@
 -- Manual-derived presentation; geographic backgrounds are not installed.
 local M={}
-function M.new(sensor,plan)
+-- navigation (Systems/Navigation.lua) supplies the mission route and active
+-- waypoint; plan supplies stored threats, and a route when navigation is absent.
+function M.new(sensor,plan,navigation)
     sensor=sensor or get_base_data()
     plan=plan or dofile(LockOn_Options.script_path.."Systems/MapMission.lua")
     local source=dofile(LockOn_Options.script_path.."MFD/Indicator/Map/Map_source.lua")
@@ -116,10 +118,22 @@ function M.new(sensor,plan)
             local px,py=project(target_x,target_z)
             if inside(px,py) then set("TARGET_X",px);set("TARGET_Y",py);set("TARGET_VISIBLE",1) end
         end
+        local route=navigation and navigation.route() or plan.route or {}
+        -- Steering leg from ownship to the active waypoint, as in the track-up video frames.
+        set("STEER_VISIBLE",0)
+        local steer=navigation and route[navigation.active()]
+        if position_valid and tdc<2 and type(steer)=="table" and finite(steer.x) and finite(steer.z) then
+            local px,py=project(steer.x,steer.z)
+            local ax,ay,bx,by=clip(ox,oy,px,py)
+            if ax then
+                set("STEER_X",ax);set("STEER_Y",ay);set("STEER_BX",bx);set("STEER_BY",by)
+                set("STEER_VISIBLE",1)
+            end
+        end
         local previous
         for i=1,64 do
             local prefix="WP_"..i.."_"
-            local point=(plan.route or {})[i]
+            local point=route[i]
             set(prefix.."VISIBLE",0);set("LEG_"..i.."_VISIBLE",0)
             if position_valid and type(point)=="table" and finite(point.x) and finite(point.z) then
                 local px,py=project(point.x,point.z)

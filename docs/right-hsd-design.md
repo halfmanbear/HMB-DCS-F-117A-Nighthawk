@@ -1,20 +1,33 @@
 # Right MFD: basic HSD
 
-Based on PDF page 36, printed 4-23, Figure 4-14, Basic HSD, and the supplied
-screenshot. Colours interpret the earlier cockpit photograph: dark navy with
-pale violet compass ticks and boxes, and pale white text and aircraft symbol.
+Based on PDF page 36, printed 4-23, Figure 4-14, Basic HSD, with layout and
+symbol shapes matched to the cockpit video frame in
+`docs/reference/CockpitImages/CMDI_HSD`. Monochrome white on dark navy.
 
 ![Right HSD](assets/right-hsd-design.png)
 
-The heading-up card has five-degree graduations, numeric thirty-degree marks,
-cardinal letters, a fixed lubber line and fixed aircraft symbol. Heading and
-GS use existing `HEADING_HUD` (degrees, existing true/magnetic selection) and
-`GS_HUD` (knots). The card rotates with heading; it does not move with pitch or bank.
-TAS, course preselect, destination, TTG, range and DME show dashes because those
-sources have not been connected. There are no invented warning, master-arm,
-course, drift, destination or TACAN pointers. The optional presentation in the
-lower illustration on page 36 is not implemented. Switch legends are visual;
-OSB actions and navigation calculations are not added by this page.
+The heading-up card has five-degree graduations (ten-degree marks longer).
+Labels (N, 3, 6, E, 12 ...) sit on the ring in place of the thirty-degree
+graduations and stay upright as the card turns. A fixed lubber sits above the
+ring, with wing reference marks outside it at 3 and 9 o'clock. Heading, GS and
+TAS use `HEADING_HUD`, `GS_HUD` and `F117_OCIP_TAS` (knots, from
+`HUD/Device/OCIP_data.lua`). The card rotates with heading; it does not move
+with pitch or bank.
+
+A shorter reference mark sits below the ring at 6 o'clock, clear of the STAT legend.
+
+The course arrow (with its tip circle), the course line and a small arrowhead
+outside the ring turn together to the desired course to the active waypoint
+(`F117_NAV_REL_COURSE`, from `Systems/Navigation.lua`; see
+[ocip-cockpit-research.md](ocip-cockpit-research.md#mission-route)). The desired
+course is the planned leg into the active waypoint, or the direct bearing on the
+first leg. Without a mission route they point up at the lubber. `CRS`, destination
+(`D`), `TTG` and `RNG` come from the same source and show dashes without a route;
+`CRS` follows the card reference (true or magnetic). The four deviation dots are
+fixed: no deviation bar is drawn yet. CRS SEL, mark number and DME stay dashes or
+blank, because those sources have not been connected. The double-box symbol on the ring in the video
+frame is not drawn until identified. Switch legends are visual; OSB actions and
+navigation calculations are not added by this page.
 
 Registered as the default right display in `device_init.lua`, through
 `MFD/Indicator/Right/Right_init.lua`, using the calibrated

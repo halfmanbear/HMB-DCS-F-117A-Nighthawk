@@ -87,9 +87,19 @@ implementation choices.
   Harris elevation shading. PMAP/DMAP select the requested database type; both
   currently share the common DCS chart underlay. `MAP DATA NOT LOADED` stays
   visible until the experimental chart camera becomes ready.
-- SNSR, ENTR, UPDT, HSD, STAT, SMD and DFRM are reference legends only; their
-  underlying pages/update procedures are not implemented. No ALERT or COR
-  condition is invented. New controls are input actions, not a claim that
+- MARK, SNSR, ENTR, UPDT, HSD, STAT, SMD and DFRM are reference legends only; their
+  underlying pages/update procedures are not implemented. The mark number shows
+  `-` (no mark store). Legend positions follow the cockpit video frames in
+  `docs/reference/CockpitImages/CMDI_Map`. On the normal page the function
+  legend is blank; function 1 shows `FNC1` boxed and a static `COR` legend at the
+  bottom left, as in the video. No ALERT condition is invented. An unread
+  mid-left function-page legend, a cyan leg, a triangle on one waypoint and a
+  tick mark on a leg in the video are not drawn until identified.
+- Map symbology is pale amber with heavy strokes, as in the video frames over
+  the terrain chart, so it reads over the bright DCS chart without dimming it.
+  Colour and weights are in `Map/Map_base_page.lua` (`MAP_COLOURS.symbol`,
+  `MAP_LINE_WEIGHT`, `MAP_TEXT_WEIGHT`, `MAP_LEG_WIDTH`).
+  New controls are input actions, not a claim that
   the illustrated bezel buttons have been connected to the central EDM.
 - Scale currently spans the full 106 mm map height. Exact Harris range
   semantics remain unverified. Positions are DCS sensor coordinates, not a
@@ -113,11 +123,40 @@ All actions are under **F-117A Displays**, and are bindable on joystick profiles
 | Ctrl+Alt+Shift+B | Background declutter setting |
 | Ctrl+Alt+Shift+R | Reference elevation mode |
 | Ctrl+Alt+Shift+PgUp / PgDown | Elevation selection, 1,000-foot steps |
+| Ctrl+Alt+Shift+. / , | Next / previous route waypoint |
+
+### Mission route
+
+`Cockpit/Scripts/Systems/Navigation.lua` reads the player's mission flight plan
+through the cockpit Lua function `get_mission_route()`. It retries every five
+seconds, up to ten attempts, then logs one `F117_NAV` line to dcs.log:
+`route: N points, fields: ...` on success, or why the route is unavailable.
+The point layout is read defensively: `x` north with `y` east (map points), or a
+`world_point`/`point` table with `x` north and `z` east. Points are numbered from
+00 (takeoff), as in the mission editor, and labelled with two digits on the map.
+A takeoff point is drawn as takeoff; every other mission point is a navigation
+point, because the flight plan does not carry IP, target, offset or refuelling roles.
+
+The active waypoint starts at the first point after takeoff. It steps on
+automatically after approaching within 1 NM, a mod choice rather than a verified
+OCIP value. Stepping back to a point the aircraft is already inside does not skip
+it again. **Navigation Next / Previous Waypoint** (Ctrl+Alt+Shift+. / ,) step it
+by hand. The route feeds:
+
+- MAP: route legs and symbols, plus a steering leg from the aircraft symbol to
+  the active waypoint, as in the track-up video frames. Tactical declutter TDC2
+  hides it with the route.
+- HSD: course arrow, `CRS`, `D`, `TTG` and `RNG`.
+- VSD: `D`, `TTG` and `RNG`.
+
+Without a route all of these show dashes and the HSD course arrow points up.
+`TTG` needs at least 50 kt ground speed.
 
 ### Planning data
 
 `Cockpit/Scripts/Systems/MapMission.lua` returns `{route={}, threats={}}` by
-initial default. Supply explicit DCS world coordinates in metres (`x` north,
+initial default. Its threats are drawn; its route is used only when the map is
+created without the navigation source (offline tools and tests). Supply explicit DCS world coordinates in metres (`x` north,
 `z` east), not latitude/longitude or mission-file `y` without conversion:
 
 ```lua
@@ -132,10 +171,8 @@ return {
 ```
 
 These coordinates are an example schema, not a furnished route for any theatre.
-The map factory also accepts a plan table as its second argument for a future
-mission integration. No automatic mission-editor route importer exists yet;
-editing this local plan currently requires a mission reload. The default
-therefore draws no route or threat symbols.
+The map factory also accepts a plan table as its second argument. Editing this
+local plan requires a mission reload. The default draws no threat symbols.
 
 ![Offline default map presentation](assets/central-map-outline.png)
 

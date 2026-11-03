@@ -114,6 +114,7 @@ class OcipHudTests(unittest.TestCase):
                 return {set=function(_,v) output[name]=v end}
             end
             sensor={getIndicatedAirSpeed=function() return 200 end,
+                getTrueAirSpeed=function() return 220 end,
                 getBarometricAltitude=function() return 2000 end,
                 getVerticalVelocity=function() return values.up end,
                 getMagneticHeading=function() return -values.yaw end,
@@ -229,6 +230,7 @@ class OcipHudTests(unittest.TestCase):
                 return {set=function(_,v) output[name]=v end}
             end
             sensor={getIndicatedAirSpeed=function() return values.ias end,
+              getTrueAirSpeed=function() return values.ias*1.1 end,
               getBarometricAltitude=function() return values.alt end,
               getVerticalVelocity=function() return values.vv end,
               getMagneticHeading=function() return values.heading end,

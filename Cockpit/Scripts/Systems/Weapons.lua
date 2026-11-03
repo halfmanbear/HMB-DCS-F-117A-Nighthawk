@@ -7,6 +7,13 @@ local valid_param = get_param_handle("F117_STORE_VALID")
 local station_param = get_param_handle("F117_RELEASE_STATION")
 local selected_param = get_param_handle("PLAYER_SELECTED_STATION")
 local release_sequence_param = get_param_handle("F117_RELEASE_SEQUENCE")
+local cue_valid_param = get_param_handle("F117_RELEASE_CUE_VALID")
+-- VSD store legend: the fired store stays listed, crossed out, until the pilot
+-- steps station or a new release cue starts (fresh designation).
+local vsd_store_param = get_param_handle("F117_VSD_STORE")
+local vsd_fired_param = get_param_handle("F117_VSD_STORE_FIRED")
+local fired_profile = nil
+local last_cue_valid = 0
 local last_release_sequence = 0
 local station = 0
 local last_signature = nil
@@ -56,6 +63,8 @@ local function sync()
     station_param:set(valid and station or -1)
     selected_param:set(station)
     get_param_handle("F117_WEAPON_STATION"):set(station+1)
+    vsd_store_param:set(fired_profile or (valid and profile or -1))
+    vsd_fired_param:set(fired_profile and 1 or 0)
     local signature=tostring(station)..":"..tostring(profile)..":"..tostring(info and info.count)
     if signature~=last_signature then
         last_signature=signature
@@ -73,8 +82,8 @@ local function next_station(direction)
 end
 
 function SetCommand(command,value)
-    if command==f117_commands.WEAPON_STATION_NEXT then next_station(1)
-    elseif command==f117_commands.WEAPON_STATION_PREV then next_station(-1) end
+    if command==f117_commands.WEAPON_STATION_NEXT then fired_profile=nil; next_station(1)
+    elseif command==f117_commands.WEAPON_STATION_PREV then fired_profile=nil; next_station(-1) end
 end
 function post_initialize()
     last_release_sequence=release_sequence_param:get()
@@ -86,7 +95,14 @@ function update()
     -- Gate-firing remains latched until pickle is released, so selecting the next
     -- store cannot release it on the same held press.
     local sequence=release_sequence_param:get()
-    if sequence>last_release_sequence then next_station(1) else sync() end
+    local cue_valid=cue_valid_param:get()
+    if cue_valid>.5 and last_cue_valid<=.5 then fired_profile=nil end
+    last_cue_valid=cue_valid
+    if sequence>last_release_sequence then
+        local fired=profile_param:get()
+        if fired>=0 then fired_profile=fired end
+        next_station(1)
+    else sync() end
     last_release_sequence=sequence
 end
 need_to_be_closed = false

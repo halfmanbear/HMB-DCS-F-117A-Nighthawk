@@ -8,7 +8,9 @@ VSD_COLOURS = {
     earth={163,140,80,255},   -- #A38C50, supplied by Fraser
     white={255,255,255,255},
     magenta={225,195,255,255},
-    red={255,48,48,255},      -- ARS minimum pullout altitude (manual 4-6)
+    red={255,48,48,255},      -- ARS minimum pullout altitude (manual 4-6), AOA limit band
+    green={110,235,140,255},  -- steering line, command prefixes, VSD option (cockpit video)
+    amber={255,170,40,255},   -- DR navigation mode box (cockpit video)
 }
 VSD_MATERIALS, VSD_FONTS = {},{}
 for name,colour in pairs(VSD_COLOURS) do

@@ -110,6 +110,8 @@ irads_image_commands = {
 left_cmdi_commands = { EO_TOGGLE=3011, EO_SELECT=3012, VSD_SELECT=3013, MAP_SELECT=3031, HSD_SELECT=3032 }
 right_cmdi_commands = { MAP_SELECT=3033, HSD_SELECT=3034, VSD_SELECT=3035 }
 irads_fov_commands = { WIDE=3036, NARROW=3037 }
+-- Mission route: step the active waypoint (Systems/Navigation.lua).
+nav_commands = { WP_NEXT=3038, WP_PREV=3039 }
 
 -- Central map outline controls; not a replica of the real bezel switch layout.
 map_commands = { RANGE_UP=3014, RANGE_DOWN=3015, ORIENTATION=3016,

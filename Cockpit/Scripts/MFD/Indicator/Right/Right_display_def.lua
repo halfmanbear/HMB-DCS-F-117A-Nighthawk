@@ -1,11 +1,11 @@
--- HSD resources; pale violet markings interpreted from the cockpit photograph. Values are physical indicator metres.
+-- HSD resources; monochrome white markings, as in the cockpit video frame. Values are physical indicator metres.
 dofile(LockOn_Options.common_script_path.."elements_defs.lua")
 SetScale(METERS)
 HSD_READABILITY = dofile(LockOn_Options.script_path.."display_readability.lua")
 HSD_COLOURS = {
     background={7,9,20,255},
     white={255,255,255,255},
-    magenta={225,195,255,255},
+    paleyellow={255,240,170,255}, -- selected-page box around the HSD legend
 }
 HSD_MATERIALS, HSD_FONTS = {},{}
 for name,colour in pairs(HSD_COLOURS) do

@@ -75,52 +75,73 @@ end
 poly(aperture,"background",nil,1,h_clip_relations.REWRITE_LEVEL)
 poly({{-.052,-.046},{.052,-.046},{.052,.050},{-.052,.050}},"background")
 
+-- Layout matched to the cockpit video frame in docs/reference/CockpitImages/CMDI_HSD.
 -- Fixed upper switch legends and speed block.
-text("MARK",-.027,.042,SD)
-text("SNSR",-.010,.042,SD)
-text("ENTR",.008,.042,SD)
-box(-.038,.032,.020,.010,"magenta")
-text("",-.046,.0345,SM,"LeftCenter",{"GS_HUD"},{{"text_using_parameter",0,0}},{"GS  %3.0f"})
-text("TAS  ---",-.046,.030,SM,"LeftCenter")
-box(.038,.032,.021,.0045,"magenta")
-text("CRS SEL",.038,.032,SM)
-text("---",.038,.0275,SM)
+text("MARK",-0.027,0.042,SD)
+text("-",-0.027,0.0385,SM)            -- mark number: no mark store yet
+text("SNSR",-0.0135,0.042,SD)
+text("ENTR",0,0.042,SD)
+box(-0.039,0.0295,.0175,.0090)
+text("",-0.0465,0.0315,SM,"LeftCenter",{"GS_HUD"},{{"text_using_parameter",0,0}},{"GS  %3.0f"})
+text("",-0.0465,0.0275,SM,"LeftCenter",{"F117_OCIP_TAS"},{{"text_using_parameter",0,0}},{"TAS %3.0f"})
+box(0.036,0.0305,.0150,.0042)
+text("",0.036,0.0305,SM,nil,{"F117_NAV_CRS_TEXT"},{{"text_using_parameter",0,0}},{"%s"})
+box(0.036,0.023,.0150,.0042)
+text("CRS SEL",0.036,0.023,SM)
+text("---",0.036,0.019,SM)
 
 -- Heading-up card: north is zero; positive headings run clockwise.
 -- The parent rotates counterclockwise as aircraft heading increases.
-local CY,R=-.001,.033
+-- Labels sit on the ring in place of the 30-degree ticks and stay upright.
+local CY,R=-.001,.030
 local card=group({0,CY},ROOT,{"HEADING_HUD"},{{"rotate_using_parameter",0,math.pi/180}})
 for degrees=0,355,5 do
     local a=math.rad(degrees)
-    local length=degrees%30==0 and .0028 or (degrees%10==0 and .0018 or .0010)
-    line({{R*math.sin(a),R*math.cos(a)},{(R-length)*math.sin(a),(R-length)*math.cos(a)}},"magenta",card)
     if degrees%30==0 then
         local label=({[0]="N",[90]="E",[180]="S",[270]="W"})[degrees] or tostring(degrees/10):gsub("%.0$","")
-        -- Card numbers remain radial and rotate with the compass card.
-        local anchor=group({(R-.0052)*math.sin(a),(R-.0052)*math.cos(a)},card,nil,nil,-degrees)
-        text(label,0,0,SD,nil,nil,nil,nil,"white",anchor)
+        local anchor=group({(R-.0005)*math.sin(a),(R-.0005)*math.cos(a)},card)
+        local upright=group({0,0},anchor,{"HEADING_HUD"},{{"rotate_using_parameter",0,-math.pi/180}})
+        text(label,0,0,SD,nil,nil,nil,nil,"white",upright)
+    else
+        local length=degrees%10==0 and .0016 or .0010
+        line({{R*math.sin(a),R*math.cos(a)},{(R-length)*math.sin(a),(R-length)*math.cos(a)}},"white",card)
     end
 end
--- Fixed lubber line and aircraft symbol.
-line({{0,CY+R+.001},{0,CY+R-.003}},"white",nil,nil,.00035)
-line({{-.004,CY},{.004,CY}},"white",nil,nil,.00035)
-line({{0,CY+.002},{0,CY-.006}},"white",nil,nil,.00035)
-line({{-.0015,CY-.005},{.0015,CY-.005}},"white",nil,nil,.00035)
+-- Fixed lubber above the ring and reference marks at 3, 6 and 9 o'clock.
+line({{0,CY+R+.0015},{0,CY+R+.0060}},"white",nil,nil,.00035)
+line({{-R-.0017,CY},{-R-.0075,CY}},"white",nil,nil,.00035)
+line({{R+.0017,CY},{R+.0075,CY}},"white",nil,nil,.00035)
+line({{0,CY-R-.0017},{0,CY-R-.0065}},"white",nil,nil,.00035) -- shorter: clears the STAT legend
+-- Course group: arrow, tip circle, course line and the small outer arrowhead
+-- outside the ring all point at the desired course to the active waypoint
+-- (Systems/Navigation.lua). F117_NAV_REL_COURSE is clockwise; positive
+-- rotation is counterclockwise, hence the -1 gain. With no route it is 0 (up).
+local course=group({0,CY},ROOT,{"F117_NAV_REL_COURSE"},{{"rotate_using_parameter",0,-1}})
+line({{-.0014,R+.0013},{0,R+.0032},{.0014,R+.0013}},"white",course)
+line({{-.0025,R-.0082},{0,R-.0027},{.0025,R-.0082}},"white",course)
+line(circle(0,R-.0021,.0006),"white",course)
+line({{0,R-.0027},{0,-R+.0010}},"white",course)
+-- Deviation dots stay fixed on the aircraft axis; no deviation bar yet.
+for _,x in ipairs({-.46,-.23,.23,.46}) do poly(circle(x*R,CY,.00035),"white") end
+-- Fixed aircraft symbol.
+line({{-.0037,CY+.0005},{.0037,CY+.0005}},"white",nil,nil,.00035)
+line({{-.0012,CY-.0040},{.0012,CY-.0040}},"white",nil,nil,.00035)
 
--- No route/course/TACAN receiver is connected yet: avoid invented bearings,
--- DME, destination, warning or master-arm indications.
-box(-.036,-.0335,.025,.010,"magenta")
-text("D   --",-.047,-.031,SM,"LeftCenter")
-text("TTG --:--",-.047,-.034,SM,"LeftCenter")
-text("RNG ---.-",-.047,-.037,SM,"LeftCenter")
-box(.036,-.035,.024,.0045,"magenta")
-text("DME ---.-",.036,-.035,SM)
-text("HSD",-.033,-.0405,SD)
-box(-.033,-.0405,.009,.0034,"magenta")
-text("MAP",-.014,-.0405,SD)
-text("STAT",.005,-.0405,SD)
-text("SMD",.023,-.0405,SD)
-text("DFRM",.041,-.0405,SD)
+-- Destination, time to go and range come from the mission route; they show
+-- dashes without one. No TACAN receiver: DME stays a bare legend.
+text("COR",-0.046,-0.0225,SM,"LeftCenter")
+box(-0.036,-0.0295,.025,.010)
+for i,name in ipairs({"D_TEXT","TTG_TEXT","RNG_TEXT"}) do
+    text("",-0.047,-0.023-.003*i,SM,"LeftCenter",{"F117_NAV_"..name},{{"text_using_parameter",0,0}},{"%s"})
+end
+box(0.0386,-0.0305,.0193,.0045)
+text("DME",0.0301,-0.0305,SM,"LeftCenter")
+text("HSD",-.0252,-.0405,SD)
+box(-.0252,-.0405,.0108,.0036,"paleyellow") -- HSD is the selected page; legend text stays white
+text("MAP",-.0119,-.0405,SD)
+text("STAT",.0012,-.0405,SD)
+text("SMD",.0149,-.0405,SD)
+text("DFRM",.0282,-.0405,SD)
 
 F117_SIDE_DIM_PARAMETER="F117_RIGHT_DIM_OPACITY"
 F117_SIDE_DIM_ROOT=ROOT.name
