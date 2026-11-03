@@ -8,6 +8,9 @@ for name,colour in pairs(MAP_COLOURS) do
     MAP_MATERIALS[name]=MakeMaterial(nil,colour)
     MAP_FONTS[name]=MakeFont(MAP_READABILITY.font,colour)
 end
-MAP_SD={.0028,.00165,.00025,0}
-MAP_SMALL={.0021,.00125,.00018,0}
+-- The page is drawn at about .58 on the CMDIs; the gain keeps its text as legible as the
+-- VSD/HSD text instead of shrinking with it.
+MAP_TEXT_GAIN=1.4
+MAP_SD={.0028*MAP_TEXT_GAIN,.00165*MAP_TEXT_GAIN,.00025*MAP_TEXT_GAIN,0}
+MAP_SMALL={.0021*MAP_TEXT_GAIN,.00125*MAP_TEXT_GAIN,.00018*MAP_TEXT_GAIN,0}
 dofile(LockOn_Options.script_path.."MFD/Indicator/Map/Map_page.lua")

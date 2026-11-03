@@ -32,6 +32,10 @@ class MovingMapTests(unittest.TestCase):
         self.module=self.load(S/'Systems/MovingMap.lua').new()
         self.module.initialize();self.g=g;self.p=g._parameters;self.c=g.map_commands
 
+    def window(self):
+        """Half extents of the chart/aperture, which fill the whole CMDI glass."""
+        return self.load(S/'MFD/Indicator/Map/Map_window.lua').cmdi()
+
     def test_documented_ranges_clamp_and_ignore_release(self):
         self.assertEqual(self.p.F117_MAP_RANGE,25)
         self.module.set_command(self.c.RANGE_UP,0);self.assertEqual(self.p.F117_MAP_RANGE,25)
@@ -104,8 +108,8 @@ class MovingMapTests(unittest.TestCase):
         self.assertEqual(self.p.F117_MAP_WP_1_VISIBLE,0)
         self.assertEqual(self.p.F117_MAP_WP_2_VISIBLE,0)
         self.assertEqual(self.p.F117_MAP_LEG_2_VISIBLE,1)
-        self.assertAlmostEqual(self.p.F117_MAP_LEG_2_Y,-.049)
-        self.assertAlmostEqual(self.p.F117_MAP_LEG_2_BY,.049)
+        self.assertAlmostEqual(self.p.F117_MAP_LEG_2_Y,-self.window().half_height)
+        self.assertAlmostEqual(self.p.F117_MAP_LEG_2_BY,self.window().half_height)
         self.assertEqual(self.p.F117_MAP_THREAT_1_VISIBLE,1)
         self.assertEqual(self.p.F117_MAP_THREAT_1_LABEL,'6')
         self.assertEqual(self.p.F117_MAP_THREAT_2_VISIBLE,0)
@@ -197,8 +201,8 @@ class MovingMapTests(unittest.TestCase):
         scale=self.p.F117_MAP_VIEW_SCALE
         self.assertAlmostEqual(self.p.F117_MAP_VIEW_CENTER_X,1000+.0265/scale)
         self.assertAlmostEqual(self.p.F117_MAP_VIEW_CENTER_Z,2000)
-        self.assertAlmostEqual(self.p.F117_MAP_VIEW_WIDTH_M*scale,.122)
-        self.assertAlmostEqual(self.p.F117_MAP_VIEW_HEIGHT_M*scale,.098)
+        self.assertAlmostEqual(self.p.F117_MAP_VIEW_WIDTH_M*scale,2*self.window().half_width)
+        self.assertAlmostEqual(self.p.F117_MAP_VIEW_HEIGHT_M*scale,2*self.window().half_height)
         self.module.set_command(self.c.ORIENTATION,1) # DTUP, eastward track
         self.g.vn=0;self.g.ve=200;self.module.update()
         self.assertAlmostEqual(self.p.F117_MAP_VIEW_UP_RAD,math.pi/2)
@@ -240,7 +244,10 @@ class MovingMapTests(unittest.TestCase):
         self.assertLess(names.index('F117_MAP_BACKGROUND'),names.index(image['name']))
         self.assertLess(names.index(image['name']),names.index('F117_MAP_OWNSHIP'))
         self.assertLess(names.index('F117_MAP_OWNSHIP'),names.index('F117_MAP_DIM_LAYER'))
-        self.assertTrue(all(abs(x)<=.061 and abs(y)<=.049 for x,y in image['vertices']))
+        # Centre-glass window here (no CMDI side); on a CMDI it is the side glass over its scale.
+        xs=[x for x,y in image['vertices']];ys=[y for x,y in image['vertices']]
+        self.assertAlmostEqual(max(xs),-min(xs));self.assertAlmostEqual(max(ys),-min(ys))
+        self.assertGreater(max(xs),.087);self.assertGreater(max(ys),.073)
 
     def text_bindings(self):
         """Yield (parameter, format) for every parameter-driven map text element."""

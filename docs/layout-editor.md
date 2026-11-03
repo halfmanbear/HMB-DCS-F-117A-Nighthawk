@@ -6,6 +6,12 @@ Double-click `tools/launch_layout_editor.bat`, or run from the mod folder:
 python tools/layout_editor.py
 ```
 
+The launcher picks `py -3` or `python`, checks for Python 3.10+ and the `tkinter`,
+`lupa` and `PIL` modules (naming any that are missing), then starts the editor.
+It forwards its arguments, so the command-line renders below also work through it:
+`tools\launch_layout_editor.bat --render HUD --output tmp\hud.png`. It pauses on
+an error only when started without arguments (double-click).
+
 Requires Python 3.10+ with Tkinter, lupa and Pillow. These are already available
 on the development machine. For another machine:
 
@@ -15,7 +21,22 @@ python -m pip install -r tools/layout_editor_requirements.txt
 
 ## Working on a layout
 
-1. Choose **HUD**, **MFD** (shared IRADS template), **Left MFD**, **Right MFD**, or **Central Map**. The editor executes the actual page and the mod's
+1. Pick a **Screen**, then a **Page** to edit. Screens match the cockpit: **HUD**,
+   **Left CMDI (MFD)**, **Central Sensor Display** and **Right CMDI (MFD)**.
+
+   | Screen | Pages |
+   |---|---|
+   | HUD | HUD |
+   | Left CMDI (MFD) | VSD, EO (IRADS, preview-only), MAP, HSD |
+   | Central Sensor Display | IRADS |
+   | Right CMDI (MFD) | VSD, MAP, HSD |
+
+   VSD, MAP and HSD are one source file each, shared by both CMDIs: editing the
+   VSD under either CMDI changes the same Lua. The screen only selects the guide
+   outline, view and format parameters (`F117_LEFT_EO`, `F117_RIGHT_FORMAT`). On a CMDI the
+   MAP guide is drawn in map-source units, so it matches the live scale from `CMDI_formats.lua`.
+   Only the Central Sensor Display and the left CMDI EO page show the IRADS targeting symbols. A
+   page that does not exist yet, such as SMS/STAT, is not listed. The editor executes the actual page and the mod's
    real drawing helpers. Nothing is saved just by opening or previewing it.
 2. Click a symbol, or drag a box from empty space to select multiple symbols.
    The box selects symbols fully enclosed by it. **Shift+drag** starts an additive
@@ -144,11 +165,12 @@ The VSD uses `MFD-PLASHKA-CENTER1 / DOWN1 / RIGHT1`; the HSD uses
 `RADAR-PLASHKA-CENTER / DOWN / RIGHT`. Those connector frames were calibrated
 against the cockpit model. The old alignment starter files are preserved separately.
 
-You can render a starter without opening the editor:
+You can render a page without opening the editor. `--render` takes the page's source name (`HUD`, `MFD` = IRADS, `Left MFD` = VSD, `Right MFD` = HSD, `Left EO`, `Central Map`); `--screen` picks the screen guide:
 
 ```powershell
 python tools/layout_editor.py --render "Left MFD" --output tmp/left-mfd.png
 python tools/layout_editor.py --render "Right MFD" --output tmp/right-mfd.png
+python tools/layout_editor.py --render "Central Map" --screen "Left CMDI (MFD)" --output tmp/map-left.png
 ```
 
 ## Automated renders and checks
@@ -172,7 +194,7 @@ is disabled so the production HUD is visible without the cyan ruler.
 
 ## Native stroke display port
 
-Operational pages now use native vector stroke fonts/lines. The editor previews the mod-owned glyph source and preserves the same source coordinates when dragging. MFD sources currently draw directly, because the optional compositor in F117Displays.dll is switched off in render_config.lua. The editor edits the source layouts either way, and does not emulate the compositor. Live IRADS video appears as an empty backdrop offline. See display-readability.md for rendering and validation details.
+Operational pages now use native vector stroke fonts/lines. The editor previews the mod-owned glyph source and preserves the same source coordinates when dragging. The three-screen compositor in F117Displays.dll is on (`enabled=true` in render_config.lua), so live pages are baked to textures and shown on holder quads. The editor edits the source layouts that feed those bakes and does not emulate the compositor. Live IRADS video appears as an empty backdrop offline. See display-readability.md for rendering and validation details.
 
 
 ## Symbol colors
@@ -191,7 +213,13 @@ HUD's default line and font color is `#00FF00`.
 
 ## OCIP map and targeting layouts
 
-The live centre indicator now uses **Central Map**. **MFD** edits the shared IRADS
-symbol template used by left EO at 0.62 scale. **Left MFD** defaults to EO in the
-preview; set `F117_LEFT_EO=0` for VSD artwork. Camera pixels are unavailable in the
+**MFD** edits the IRADS symbol template that the centre indicator draws; the left EO
+format reuses it at 0.62 scale. **Central Map** edits the MAP format source
+(`Map_page.lua`); the live left/right CMDIs compose it, with the VSD, EO and HSD formats,
+through `CMDI_formats.lua` (format 0 VSD, 1 EO, 2 MAP, 3 HSD; EO is left only) at a scale
+taken from the measured outlines. **Left MFD** edits the VSD artwork (`F117_LEFT_EO=0`).
+**EO (IRADS)** on the left CMDI previews the left EO composition (rounded aperture, video backdrop and
+the 0.62-scale IRADS symbols, `F117_LEFT_EO=1`) inside the left screen guide. It is
+preview-only: its symbols come from the MFD page, so edit them there. Selecting
+the page sets `F117_LEFT_EO` automatically. Camera pixels are unavailable in the
 offline editor. See [research and implementation limits](ocip-cockpit-research.md).

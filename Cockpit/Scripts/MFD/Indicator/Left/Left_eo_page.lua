@@ -6,9 +6,22 @@ root.name="F117_LEFT_EO_ROOT"
 root.element_params={"mainpower","F117_LEFT_EO"}
 root.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1}}
 Add(root)
-local function add(e,relation,additive)
+-- The picture and the IRADS symbols are the centre display's layout drawn at one
+-- scale, so a symbol stays on the same picture feature as on the centre screen.
+-- Both hang from CONTENT, centred on the rounded aperture (which sits 2 mm high).
+local EO_SCALE=.62
+local EO_CENTRE_Y=.002
+local centre=dofile(LockOn_Options.script_path.."MFD/Indicator/render_config.lua").centre
+local VIDEO_HALF_W=centre.connector_half_width*EO_SCALE
+local VIDEO_HALF_H=centre.connector_half_height*EO_SCALE
+local content=CreateElement "ceSimple"
+content.name="F117_LEFT_EO_CONTENT"
+content.parent_element=root.name
+content.init_pos={0,EO_CENTRE_Y}
+Add(content)
+local function add(e,relation,additive,parent)
     e.name=e.name or create_guid_string()
-    e.parent_element=root.name
+    e.parent_element=parent or root.name
     e.collimated=false;e.z_enabled=true
     e.h_clip_relation=relation or h_clip_relations.COMPARE;e.level=1
     e.additive_alpha=additive or false
@@ -35,20 +48,20 @@ local VIDEO=MakeMaterial("mfd0",{255,255,255,255})
 for band=0,65 do
     local e=CreateElement "ceTexPoly"
     e.name="F117_LEFT_EO_VIDEO_"..band
-    e.vertices={{-.052,.050},{.054,.050},{.054,-.046},{-.052,-.046}}
+    e.vertices={{-VIDEO_HALF_W,VIDEO_HALF_H},{VIDEO_HALF_W,VIDEO_HALF_H},{VIDEO_HALF_W,-VIDEO_HALF_H},{-VIDEO_HALF_W,-VIDEO_HALF_H}}
     e.indices={0,1,2,0,2,3};e.tex_coords={{0,0},{1,0},{1,1},{0,1}}
     e.material=VIDEO;e.use_mipfilter=false
     e.input_space_SRGB=true
     e.element_params={"F117_IRADS_POWER","F117_IRADS_CONTRAST_BAND"}
     e.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,band-.1,band+.1},
         {"set_contrast_raw",(.35+band*.01)/.80}}
-    add(e,nil,true)
+    add(e,nil,true,content.name)
 end
 -- Reuse the centre targeting symbols and telemetry, fitted to the smaller glass.
 -- ONE avoids applying centre brightness: native left brightness or its final
 -- black fallback layer dims the complete EO picture and symbols together.
 F117_IRADS_OVERLAY_OPTIONS={repeater=true,root_name="F117_LEFT_EO_SYMBOLOGY",
-    parent=root.name,scale=.62,level=1,brightness_parameter="ONE"}
+    parent=content.name,scale=EO_SCALE,level=1,brightness_parameter="ONE"}
 dofile(LockOn_Options.script_path.."MFD/Indicator/MFD_base_page.lua")
 F117_IRADS_OVERLAY_OPTIONS=nil
 F117_SIDE_DIM_PARAMETER="F117_LEFT_EO_DIM_OPACITY"

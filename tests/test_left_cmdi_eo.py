@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
 from check_display_calibration import runtime
-from layout_editor import Model,PAGES,DEFAULTS,convert
+from layout_editor import Model,PAGES,DEFAULTS,convert,measured_surfaces
 SCRIPTS=ROOT/'Cockpit/Scripts'
 
 def composite(side='Left'):
@@ -118,6 +118,38 @@ class LeftEOTests(unittest.TestCase):
             self.assertTrue(e['additive_alpha'])
         lua,load=runtime();load(SCRIPTS/'MFD/Indicator/DLIR_Camera_init.lua')
         self.assertEqual(lua.globals().render_target,0) # target 0 is texture mfd0
+
+    def test_video_and_symbols_share_one_registered_transform(self):
+        lua,load=runtime();load(SCRIPTS/'MFD/Indicator/Left/Left_base_page.lua')
+        elements=convert(lua.globals()._elements)
+        by_name={e['name']:e for e in elements}
+        content=by_name['F117_left_EO_F117_LEFT_EO_CONTENT']
+        self.assertEqual(content['init_pos'][:2],[0,.002])
+        self.assertEqual(by_name['F117_left_EO_F117_LEFT_EO_SYMBOLOGY']['parent_element'],content['name'])
+        videos=[e for e in elements if 'EO_VIDEO' in e['name']]
+        self.assertTrue(all(v['parent_element']==content['name'] for v in videos))
+        # Picture extents are the centre display's, scaled exactly like the symbols (.62).
+        centre=lua.execute('return dofile(LockOn_Options.script_path.."MFD/Indicator/render_config.lua").centre')
+        xs=[x for x,y in videos[0]['vertices']];ys=[y for x,y in videos[0]['vertices']]
+        self.assertAlmostEqual(max(xs),centre.connector_half_width*.62);self.assertAlmostEqual(min(xs),-max(xs))
+        self.assertAlmostEqual(max(ys),centre.connector_half_height*.62);self.assertAlmostEqual(min(ys),-max(ys))
+
+    def test_map_chart_and_aperture_fill_the_whole_cmdi_glass(self):
+        outlines={'Left':'left','Right':'right'}
+        for side,key in outlines.items():
+            model=composite(side)
+            glass=measured_surfaces()['Left MFD' if side=='Left' else 'Right MFD']['boundary_local_m']
+            gx=[x for x,y in glass];gy=[y for x,y in glass]
+            bg=model.by_name[f'F117_{side.lower()}_MAP_F117_MAP_BACKGROUND']
+            xs=[x for x,y in bg['vertices']];ys=[y for x,y in bg['vertices']]
+            # The stencil aperture is the side glass itself, not a shrunken centre outline.
+            self.assertAlmostEqual(min(xs),min(gx),delta=.0005);self.assertAlmostEqual(max(xs),max(gx),delta=.0005)
+            self.assertAlmostEqual(min(ys),min(gy),delta=.0005);self.assertAlmostEqual(max(ys),max(gy),delta=.0005)
+            # Map text is as legible as the other CMDI formats (it was about 40% of their height).
+            sizes=[e['stringdefs'][0] for e in model.elements
+                   if e['name'].startswith(f'F117_{side.lower()}_MAP_') and e.get('stringdefs')]
+            self.assertTrue(sizes)
+            self.assertGreater(min(sizes),.0016)
 
     def test_overlay_fits_left_glass_without_registering_second_camera(self):
         lua,load=runtime();load(SCRIPTS/'MFD/Indicator/Left/Left_base_page.lua')
