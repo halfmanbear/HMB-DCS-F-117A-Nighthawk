@@ -39,9 +39,11 @@ The full JSON records the rounded polygon, its world vertices and all three anch
 
 The connector triples confirmed in this loaded blend are:
 
-- Centre: `MFD-PLASHKA-CENTER`, `MFD-PLASHKA-DOWN`, `MFD-PLASHKA-RIGHT`.
-- Left: `MFD-PLASHKA-CENTER1`, `MFD-PLASHKA-DOWN1`, `MFD-PLASHKA-RIGHT1`.
-- Right: `RADAR-PLASHKA-CENTER`, `RADAR-PLASHKA-DOWN`, `RADAR-PLASHKA-RIGHT`.
+- Centre: `SD-CENTER`, `SD-DOWN`, `SD-RIGHT`.
+- Left: `CMDI-L-CENTER`, `CMDI-L-DOWN`, `CMDI-L-RIGHT`.
+- Right: `CMDI-R-CENTER`, `CMDI-R-DOWN`, `CMDI-R-RIGHT`.
+- DEP: `DEP-CENTER`, `DEP-DOWN`, `DEP-RIGHT`. Added 3 November 2026 on the
+  glass edges (152.66 x 24.54 mm), with no in-game calibration yet.
 
 Connector spans differ slightly from mesh edges. For example, the centre connector
 width/height spans are about 175.34 x 144.98 mm, while the screen envelope is

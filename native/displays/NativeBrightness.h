@@ -18,8 +18,12 @@ struct BrightnessChannel {
     size_t resolved=0;
     bool materialsReady=false;
 };
+// Update gains arrive in this order. The DEP follows the HUD brightness control.
 BrightnessChannel brightnessChannels[]={
-    {"OCIP_ROOT"},{"F117_VSD_SOURCE"},{"F117_HSD_SOURCE"},{"F117_IRADS_SOURCE"},{"dlir_picture"}};
+    {"OCIP_ROOT"},{"F117_VSD_SOURCE"},{"F117_HSD_SOURCE"},{"F117_IRADS_SOURCE"},{"dlir_picture"},
+    {"F117_DEP_SOURCE"}};
+constexpr size_t BrightnessChannelCount=sizeof(brightnessChannels)/sizeof(brightnessChannels[0]);
+constexpr size_t VideoChannel=4; // camera picture: also drives the MFD video shader
 BrightnessAPI brightnessAPI;
 bool brightnessBound=false;
 bool brightnessAttempted=false;
@@ -62,8 +66,8 @@ int registerBrightness(lua_State* state) {
     const char* marker=lua.tolstring(state,1,nullptr);
     if (!marker) return result(state,false,"missing brightness marker");
     size_t index=0;
-    while (index<5 && std::strcmp(marker,brightnessChannels[index].marker)) ++index;
-    if (index==5) return result(state,false,"unknown brightness marker");
+    while (index<BrightnessChannelCount && std::strcmp(marker,brightnessChannels[index].marker)) ++index;
+    if (index==BrightnessChannelCount) return result(state,false,"unknown brightness marker");
     std::vector<std::string> names;
     for (int i=1;i<=4096;++i) {
         lua.rawgeti(state,2,i);
@@ -80,7 +84,7 @@ int registerBrightness(lua_State* state) {
     channel.materials=std::move(names);channel.configured=nullptr;channel.materialsReady=false;
     return result(state,true,"brightness materials registered");
 }
-bool findBrightnessSources(void* context,void* (&found)[5],int depth=0) {
+bool findBrightnessSources(void* context,void* (&found)[BrightnessChannelCount],int depth=0) {
     if (!context || depth>8) return false;
     auto* bytes=static_cast<unsigned char*>(context);
     const auto& indicators=*reinterpret_cast<Vector*>(bytes+0xb0);
@@ -89,7 +93,7 @@ bool findBrightnessSources(void* context,void* (&found)[5],int depth=0) {
     for (size_t i=0;i<count;++i) {
         void* indicator=indicators.begin[i];
         if (!indicator) continue;
-        for (size_t j=0;j<5;++j) if (brightnessAPI.element(indicator,brightnessChannels[j].marker)) {
+        for (size_t j=0;j<BrightnessChannelCount;++j) if (brightnessAPI.element(indicator,brightnessChannels[j].marker)) {
             if (found[j] && found[j]!=indicator) return false;
             found[j]=indicator;
         }
@@ -104,8 +108,8 @@ bool findBrightnessSources(void* context,void* (&found)[5],int depth=0) {
 // gain 1+1.6*(setting-0.5), so translate the existing luminance-gain controls.
 float nativeVideoBrightness(float gain) {return .5f+(gain-1.f)/1.6f;}
 int updateBrightness(lua_State* state) {
-    float gains[5];
-    for (int i=0;i<5;++i) {
+    float gains[BrightnessChannelCount];
+    for (int i=0;i<static_cast<int>(BrightnessChannelCount);++i) {
         double value=lua.tonumber(state,i+1);
         if (!std::isfinite(value) || value<0 || value>1)
             return result(state,false,"invalid brightness; previous state retained");
@@ -113,18 +117,18 @@ int updateBrightness(lua_State* state) {
     }
     std::lock_guard<std::mutex> lock(brightnessMutex);
     if (!bindBrightness()) return result(state,false,"native brightness unavailable for this CockpitBase build");
-    void* found[5]={};
+    void* found[BrightnessChannelCount]={};
     auto reset=[&]() {
-        for (size_t j=0;j<5;++j) if (found[j]) {
+        for (size_t j=0;j<BrightnessChannelCount;++j) if (found[j]) {
             auto* parser=static_cast<unsigned char*>(found[j])+IndicatorParserOffset;
             brightnessAPI.changeBrightness(parser,1.f);
-            if (j==4) brightnessAPI.shaderBrightness(parser,.5f);
+            if (j==VideoChannel) brightnessAPI.shaderBrightness(parser,.5f);
         }
     };
     if (!findBrightnessSources(brightnessAPI.context(),found))
         {reset();return result(state,false,"waiting for brightness context");}
     std::string status;
-    for (size_t i=0;i<5;++i) {
+    for (size_t i=0;i<BrightnessChannelCount;++i) {
         if (!found[i]) status="waiting for brightness page ";
         else if (brightnessChannels[i].materials.empty()) status="no brightness materials registered for ";
         if (!status.empty()) {
@@ -132,7 +136,7 @@ int updateBrightness(lua_State* state) {
             return result(state,false,status.c_str());
         }
     }
-    for (size_t i=0;i<5;++i) {
+    for (size_t i=0;i<BrightnessChannelCount;++i) {
         auto& channel=brightnessChannels[i];
         auto* parser=static_cast<unsigned char*>(found[i])+IndicatorParserOffset;
         if (channel.configured!=found[i]) {
@@ -162,12 +166,12 @@ int updateBrightness(lua_State* state) {
             std::to_string(channel.resolved)+" of "+std::to_string(channel.materials.size())+"); existing dimming retained";
         return result(state,false,status.c_str());
     }
-    for (size_t i=0;i<5;++i) {
+    for (size_t i=0;i<BrightnessChannelCount;++i) {
         auto* parser=static_cast<unsigned char*>(found[i])+IndicatorParserOffset;
         brightnessAPI.changeBrightness(parser,gains[i]);
-        if (i==4) brightnessAPI.shaderBrightness(parser,nativeVideoBrightness(gains[i]));
+        if (i==VideoChannel) brightnessAPI.shaderBrightness(parser,nativeVideoBrightness(gains[i]));
     }
-    return result(state,true,"native HUD/MFD renderer brightness active");
+    return result(state,true,"native HUD/MFD/DEP renderer brightness active");
 }
 }
 extern "C" __declspec(dllexport) int luaopen_f117_brightness(lua_State* state) {

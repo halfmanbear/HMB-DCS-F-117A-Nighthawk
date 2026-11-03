@@ -243,7 +243,7 @@ class NativeDisplayTests(unittest.TestCase):
         # merely assigning render_target does not supply that compositor.
         lua,load=runtime(False);load(SCRIPTS/'device_init.lua')
         registered=convert(lua.globals().indicators)
-        self.assertEqual(len(registered),9)
+        self.assertEqual(len(registered),10)
         self.assertEqual(sum('/LCD/' in indicator[1] for indicator in registered),3)
         for source in ['Left/Left_init.lua','Right/Right_init.lua','MFD_indication_init.lua']:
             lua,load=runtime();load(SCRIPTS/'MFD/Indicator'/source)
@@ -294,7 +294,7 @@ class NativeDisplayTests(unittest.TestCase):
 
     def test_complete_resource_registration_and_glyphs(self):
         lua,load=runtime(False);load(SCRIPTS/'device_init.lua')
-        self.assertEqual(len(lua.globals().indicators),9)
+        self.assertEqual(len(lua.globals().indicators),10)
         resources=convert(lua.globals().symbologyPaths)
         self.assertEqual(resources,[(SCRIPTS/'Resources/Stroke').as_posix()])
         font=convert(load(SCRIPTS/'display_font.lua'))

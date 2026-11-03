@@ -20,8 +20,9 @@ class LayoutEditorTests(unittest.TestCase):
             self.assertGreater(len(scene), 10)
             self.assertEqual(model.warnings, set())
 
-    def test_screen_dropdown_offers_four_screens_with_shared_pages(self):
-        self.assertEqual(list(SCREENS),['HUD','Left CMDI (MFD)','Central Sensor Display','Right CMDI (MFD)'])
+    def test_screen_dropdown_offers_five_screens_with_shared_pages(self):
+        self.assertEqual(list(SCREENS),['HUD','Left CMDI (MFD)','Central Sensor Display','Right CMDI (MFD)','Data Entry Panel (DEP)'])
+        self.assertEqual(SCREENS['Data Entry Panel (DEP)'],{'MAIN MENU':'DEP'})
         self.assertEqual(set(SCREENS['Left CMDI (MFD)']),{'VSD','EO (IRADS)','MAP','HSD'})
         self.assertEqual(set(SCREENS['Right CMDI (MFD)']),{'VSD','MAP','HSD'})
         self.assertEqual(list(SCREENS['Central Sensor Display']),['IRADS'])

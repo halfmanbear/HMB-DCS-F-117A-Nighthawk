@@ -34,7 +34,7 @@ class ChartBackendTests(unittest.TestCase):
             if str(path).endswith('/Charts/config.lua'):return lua.table_from(dict(enabled=False,render_target=5))
             return load(path)
         lua.globals().dofile=disabled;load(S/'device_init.lua')
-        self.assertEqual(len(lua.globals().indicators),8)
+        self.assertEqual(len(lua.globals().indicators),9)
         self.assertIsNone(lua.globals().creators[lua.globals().devices.MAP_CHARTS])
 
     def test_ready_camera_drives_texture_but_failures_clear_it(self):

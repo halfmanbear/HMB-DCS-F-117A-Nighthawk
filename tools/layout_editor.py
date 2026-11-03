@@ -23,6 +23,7 @@ PAGES = {
     'Right MFD': SCRIPTS / 'MFD/Indicator/Right/Right_hsd_page.lua',
     'Left EO': SCRIPTS / 'MFD/Indicator/Left/Left_eo_page.lua',
     'Central Map': SCRIPTS / 'MFD/Indicator/Map/Map_page.lua',
+    'DEP': SCRIPTS / 'DEP/Indicator/DEP_page.lua',
 }
 ENTRIES = {
     'HUD': SCRIPTS / 'HUD/Indicator/HUD_base_page.lua',
@@ -31,10 +32,12 @@ ENTRIES = {
     'Right MFD': SCRIPTS / 'MFD/Indicator/Right/Right_base_format.lua',
     'Left EO': SCRIPTS / 'MFD/Indicator/Left/Left_eo_page.lua',
     'Central Map': SCRIPTS / 'MFD/Indicator/Map/Map_base_page.lua',
+    'DEP': SCRIPTS / 'DEP/Indicator/DEP_base_page.lua',
 }
 # Pages that share a physical screen with another page, and per-page sample values.
 SURFACES = {'Central Map': 'MFD', 'Left EO': 'Left MFD'}
-MODE_PARAMS = {'Left EO': {'F117_LEFT_EO': 1}}
+# DEP sample: VNAV and SRCH engaged, as in the reference frames.
+MODE_PARAMS = {'Left EO': {'F117_LEFT_EO': 1}, 'DEP': {'F117_DEP_VNAV': 1, 'F117_DEP_SRCH': 1}}
 # Symbols come from another page file, so position/colour edits belong to that page.
 PREVIEW_ONLY = {'Left EO'}
 # Physical screens and the pages each can show. Page labels map to the page key in PAGES.
@@ -44,15 +47,25 @@ SCREENS = {
     'Left CMDI (MFD)': {'VSD': 'Left MFD', 'EO (IRADS)': 'Left EO', 'MAP': 'Central Map', 'HSD': 'Right MFD'},
     'Central Sensor Display': {'IRADS': 'MFD'},
     'Right CMDI (MFD)': {'VSD': 'Left MFD', 'MAP': 'Central Map', 'HSD': 'Right MFD'},
+    'Data Entry Panel (DEP)': {'MAIN MENU': 'DEP'},
 }
 SCREEN_SURFACE = {'HUD': None, 'Left CMDI (MFD)': 'Left MFD', 'Central Sensor Display': 'MFD',
-                  'Right CMDI (MFD)': 'Right MFD'}
+                  'Right CMDI (MFD)': 'Right MFD', 'Data Entry Panel (DEP)': 'DEP'}
 # Screen shown first when a page key is selected without a screen (live default formats).
 DEFAULT_SCREEN = {'HUD': 'HUD', 'MFD': 'Central Sensor Display', 'Left MFD': 'Left CMDI (MFD)',
-                  'Left EO': 'Left CMDI (MFD)', 'Right MFD': 'Right CMDI (MFD)', 'Central Map': 'Right CMDI (MFD)'}
+                  'Left EO': 'Left CMDI (MFD)', 'Right MFD': 'Right CMDI (MFD)', 'Central Map': 'Right CMDI (MFD)',
+                 'DEP': 'Data Entry Panel (DEP)'}
 # CMDI_formats.lua selection ids: 0 VSD, 1 EO, 2 MAP, 3 HSD.
 FORMAT_IDS = {'Left MFD': 0, 'Left EO': 1, 'Central Map': 2, 'Right MFD': 3}
 GEOMETRY_PATH = Path(__file__).with_name('data') / 'cockpit_display_geometry.json'
+# Reference photo folders offered by the Reference image dialog, per page.
+REFERENCES = ROOT / 'docs/reference/CockpitImages'
+REFERENCE_DIRS = {'HUD': 'HUD', 'MFD': 'IRADS', 'Left EO': 'IRADS', 'Left MFD': 'CMDI_VSD',
+                  'Right MFD': 'CMDI_HSD', 'Central Map': 'CMDI_Map',
+                  'DEP': 'DEP(DATA_ENTRY_PANEL)/rectified'}
+# Screens far from square: a reference cropped to the glass is fitted to the
+# measured glass instead of being stretched over the square preview.
+GLASS_FIT_REFERENCE = {'Data Entry Panel (DEP)'}
 HUD_PROFILE = SCRIPTS / 'HUD/Indicator/layout_profile.lua'
 DCS_LOG = ROOT.parents[2] / 'Logs/dcs.log'
 
@@ -82,13 +95,22 @@ def hud_working_area(log_path=None):
     return result
 
 
+def reference_fit(screen,units_per_metre=1):
+    """Glass bounding box in source units for GLASS_FIT_REFERENCE screens, else None."""
+    if screen not in GLASS_FIT_REFERENCE:return None
+    surface=measured_surfaces().get(SCREEN_SURFACE[screen])
+    if not surface:return None
+    (x0,y0),(x1,y1)=surface['bounds_local_m']
+    return x0*units_per_metre,y0*units_per_metre,x1*units_per_metre,y1*units_per_metre
+
+
 def layout_boundary(mode,units_per_metre=1,screen=None):
     return hud_working_area()['boundary'] if mode=='HUD' else measured_boundary(mode,units_per_metre,screen)
 
 
 def context_params(mode,screen=None):
     """Sample parameters that select this page's format on its screen."""
-    params={'F117_LEFT_EO':MODE_PARAMS.get(mode,{}).get('F117_LEFT_EO',0)}
+    params={'F117_LEFT_EO':0,**MODE_PARAMS.get(mode,{})}
     if screen=='Right CMDI (MFD)' and mode in FORMAT_IDS:params['F117_RIGHT_FORMAT']=FORMAT_IDS[mode]
     return params
 
@@ -110,6 +132,7 @@ def default_view(mode,screen=None):
         if area['boundary']:
             return max(area['half_width'],area['half_height'])*1.2,area['center']
         return 1.1,(0,-.15)
+    if mode=='DEP':return .085,(0,0)
     scale=page_scale(mode,screen)
     if mode in ('Left MFD','Right MFD','Left EO') or scale!=1:return .058/scale,(0,.002/scale)
     return .09,(0,0)
@@ -134,7 +157,7 @@ DEFAULTS = {
     'F117_MAP_VALID': 1, 'F117_MAP_RANGE_TEXT': '25 NM', 'F117_MAP_ORIENTATION_TEXT': 'CNUP',
     'F117_MAP_GS_TEXT': 'GS 450', 'F117_MAP_HDG_TEXT': 'HDG 300 T',
     'F117_MAP_POSITION_TEXT': 'POSITION UNAVAILABLE',
-    'mainpower': 1, 'HUDBrightness': 1, 'F117_HUD_DRAW_BRIGHTNESS': 1, 'F117_IRADS_DRAW_BRIGHTNESS': .45, 'MFD_OVERLAY': 1, 'F117_IRADS_POWER': 1,
+    'mainpower': 1, 'HUDBrightness': 1, 'F117_HUD_DRAW_BRIGHTNESS': 1, 'F117_DEP_DRAW_BRIGHTNESS': 1, 'F117_IRADS_DRAW_BRIGHTNESS': .45, 'MFD_OVERLAY': 1, 'F117_IRADS_POWER': 1,
     'currentPhase': 8, 'masterMode': 1, 'headingMode': 2, 'ALTITUDE_MODE': 1,
     'altMode': 1, 'RadarAltAvail': 1, 'CURR_IAS': 314, 'GS_HUD': 450,
     'MACH_A': .71, 'machDecimals': 71, 'machWhole': .71, 'ALTITUDE_HUD': 22200,
@@ -614,16 +637,32 @@ class Renderer:
         return None
 
     def render(self, model, params, size=850, extent=1.1, center=(0, 0),
-               show_all=False, grid=True, clipping=True, reference=None, boundary=None):
+               show_all=False, grid=True, clipping=True, reference=None, boundary=None,
+               reference_above=True):
         scale = size / (2*extent)
         def point(x, y):
             return size/2+(x-center[0])*scale, size/2-(y-center[1])*scale
         image = Image.new('RGBA', (size, size), '#06110d')
+        reference_layer = None
         if reference:
-            ref, opacity = reference
-            ref = ref.convert('RGBA').resize((size, size))
-            ref.putalpha(ref.getchannel('A').point(lambda v: int(v*opacity)))
-            image.alpha_composite(ref)
+            # An optional source-unit rectangle (x0, y0, x1, y1) places the
+            # reference on the glass; otherwise it fills the square preview.
+            ref, opacity, *fit = reference
+            box = (0, 0, size, size)
+            if fit and fit[0]:
+                x0, y0, x1, y1 = fit[0]
+                (left, top), (right, bottom) = point(x0, y1), point(x1, y0)
+                box = tuple(round(v) for v in (left, top, right, bottom))
+            width, height = box[2]-box[0], box[3]-box[1]
+            if width > 0 and height > 0:
+                ref = ref.convert('RGBA').resize((width, height))
+                ref.putalpha(ref.getchannel('A').point(lambda v: int(v*opacity)))
+                reference_layer = Image.new('RGBA', (size, size))
+                reference_layer.paste(ref, box[:2])
+                # Above: visible over opaque page backgrounds; below: under symbols.
+                if not reference_above:
+                    image.alpha_composite(reference_layer)
+                    reference_layer = None
         draw = ImageDraw.Draw(image)
         if grid:
             step = 10**math.floor(math.log10(extent/4))
@@ -805,6 +844,8 @@ class Renderer:
             if alpha_box:
                 image.alpha_composite(layer)
                 hits.append(Hit(e, alpha_box, state))
+        if reference_layer:
+            image.alpha_composite(reference_layer)
         if boundary:
             edge=[point(x,y) for x,y in boundary]
             outside=Image.new('L',(size,size),100)
@@ -828,7 +869,7 @@ class Editor:
         self.all=tk.BooleanVar(value=False); self.snap=tk.DoubleVar(value=.005)
         self.boundary=tk.BooleanVar(value=True); self.guide_scale=tk.DoubleVar(value=1)
         self.extent=tk.DoubleVar(value=1.1)
-        self.reference_opacity=tk.DoubleVar(value=.25)
+        self.reference_opacity=tk.DoubleVar(value=.25); self.reference_above=tk.BooleanVar(value=True)
         self.reference_image=None; self.params=dict(DEFAULTS); self.renderer=Renderer()
         self.models={}; self.sources={}; self.disk={}; self.undo_stack=[]
         self.hits=[]; self.selected=None; self.selection=[]; self.drag=None; self.marquee=None; self.pending=False
@@ -869,6 +910,7 @@ class Editor:
         ttk.Button(left,text='Centre view / reset zoom',command=self.reset_view).pack(fill='x',pady=5)
         ttk.Label(left,text='REFERENCE OPACITY').pack(anchor='w',pady=(10,0))
         ttk.Scale(left,from_=0,to=1,variable=self.reference_opacity,command=lambda _:self.queue_draw()).pack(fill='x')
+        ttk.Checkbutton(left,text='Draw reference above symbols',variable=self.reference_above,command=self.redraw).pack(anchor='w')
         ttk.Button(left,text='Remove reference',command=self.clear_reference).pack(fill='x')
         ttk.Label(left,text='PARAMETERS',font=('Segoe UI',10,'bold')).pack(anchor='w',pady=(15,5))
         self.filter=tk.StringVar(); entry=ttk.Entry(left,textvariable=self.filter);entry.pack(fill='x')
@@ -1008,10 +1050,11 @@ class Editor:
             extent=float(self.extent.get())
             if extent<=0:raise ValueError('View half-width must be positive')
             self.size=max(250,min(1200,self.canvas.winfo_width(),self.canvas.winfo_height()))
-            ref=(self.reference_image,self.reference_opacity.get()) if self.reference_image else None
+            ref=(self.reference_image,self.reference_opacity.get(),reference_fit(self.screen.get(),self.guide_scale.get())) if self.reference_image else None
             self.preview,self.hits,missing=self.renderer.render(model,self.params,self.size,extent,self.center,
                 self.all.get(),self.grid.get(),self.clip.get(),ref,
-                layout_boundary(self.current,self.guide_scale.get(),self.screen.get()) if self.boundary.get() else None)
+                layout_boundary(self.current,self.guide_scale.get(),self.screen.get()) if self.boundary.get() else None,
+                self.reference_above.get())
             self.guide_scale_entry.configure(state='disabled' if self.current=='HUD' else 'normal')
             measurements=measured_surfaces()
             surface=measurements.get(SCREEN_SURFACE.get(self.screen.get()) or self.current)
@@ -1237,7 +1280,10 @@ class Editor:
 
     def reference(self):
         from tkinter import filedialog
-        path=filedialog.askopenfilename(title='Choose a cropped HUD/MFD reference',filetypes=[('Images','*.png *.jpg *.jpeg *.bmp *.tga'),('All files','*.*')])
+        folder=REFERENCES/REFERENCE_DIRS.get(self.current,'')
+        hint='cropped to the glass' if self.screen.get() in GLASS_FIT_REFERENCE else 'cropped HUD/MFD'
+        path=filedialog.askopenfilename(title=f'Choose a {hint} reference',
+            initialdir=str(folder if folder.is_dir() else REFERENCES),filetypes=[('Images','*.png *.jpg *.jpeg *.bmp *.tga'),('All files','*.*')])
         if path:
             try:self.reference_image=Image.open(path).convert('RGBA');self.redraw()
             except OSError as exc:self.message(str(exc))
@@ -1270,6 +1316,8 @@ def main():
     parser.add_argument('--screen',choices=list(SCREENS),help='Physical screen for the guide outline and scale (default: the live default for the page)')
     parser.add_argument('--output',type=Path,default=ROOT/'tmp/layout-preview.png')
     parser.add_argument('--params',type=Path,help='JSON object of sample DCS parameter values')
+    parser.add_argument('--reference',type=Path,help='Reference image overlaid as in the editor')
+    parser.add_argument('--reference-opacity',type=float,default=.5)
     args=parser.parse_args()
     if args.render:
         screen=args.screen or DEFAULT_SCREEN[args.render]
@@ -1278,7 +1326,8 @@ def main():
         if args.params:params.update(json.loads(args.params.read_text()))
         model=Model(args.render,PAGES[args.render].read_text(encoding='utf-8-sig'),screen)
         extent,center=default_view(args.render,screen)
-        image,hits,missing=Renderer().render(model,params,extent=extent,center=center,
+        reference=(Image.open(args.reference),args.reference_opacity,reference_fit(screen)) if args.reference else None
+        image,hits,missing=Renderer().render(model,params,extent=extent,center=center,reference=reference,
                                             boundary=layout_boundary(args.render,1,screen))
         args.output.parent.mkdir(parents=True,exist_ok=True);image.save(args.output)
         print(f'{args.render}: {len(model.elements)} elements; {len(hits)} visible; {len(missing)} missing atlases')

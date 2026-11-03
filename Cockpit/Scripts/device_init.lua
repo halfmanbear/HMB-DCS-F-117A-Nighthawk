@@ -37,7 +37,7 @@ end
 indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/Indicator/DLIR_Camera_init.lua",
  devices.DISPLAYS,
     {
-        {"MFD-PLASHKA-CENTER", "MFD-PLASHKA-DOWN", "MFD-PLASHKA-RIGHT"},
+        {"SD-CENTER", "SD-DOWN", "SD-RIGHT"},
         {sx_l =  0,
          sy_l =  0,
          sz_l =  0,
@@ -52,7 +52,7 @@ indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/I
 indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/Indicator/MFD_indication_init.lua",
  devices.DISPLAYS,
     {
-        {"MFD-PLASHKA-CENTER", "MFD-PLASHKA-DOWN", "MFD-PLASHKA-RIGHT"},
+        {"SD-CENTER", "SD-DOWN", "SD-RIGHT"},
         source_mount("centre",0,0)
     }
 }
@@ -60,9 +60,7 @@ indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."MFD/I
 indicators[#indicators + 1] = {"ccIndicator", LockOn_Options.script_path.."HUD/Indicator/HUD_init.lua", --init script
  nil,
     {
-        -- Using ILS-PLASHKA connectors as a stand-in until dedicated HUD connectors are added to the EDM.
-        -- Fine-tune position with the sx_l/sy_l/sz_l offsets below once the HUD is visible.
-        {"ILS-PLASHKA-CENTER", "ILS-PLASHKA-DOWN", "ILS-PLASHKA-RIGHT"},  -- initial geometry anchor , triple of connector names.
+        {"HUD-CENTER", "HUD-DOWN", "HUD-RIGHT"},  -- initial geometry anchor , triple of connector names.
         {sx_l =  0,  -- center position correction in meters (+forward , -backward)
          sy_l =  0.03,  -- was 0.05 center position correction in meters (+up , -down)
          sz_l =  0,  -- center position correction in meters (-left , +right)
@@ -82,7 +80,7 @@ indicators[#indicators + 1] = {
     "ccIndicator", LockOn_Options.script_path.."MFD/Indicator/Left/Left_init.lua",
     devices.DISPLAYS,
     {
-        {"MFD-PLASHKA-CENTER1", "MFD-PLASHKA-DOWN1", "MFD-PLASHKA-RIGHT1"},
+        {"CMDI-L-CENTER", "CMDI-L-DOWN", "CMDI-L-RIGHT"},
         source_mount("left",-0.001,0.0005)
     }
 }
@@ -92,7 +90,7 @@ indicators[#indicators + 1] = {
     "ccIndicator", LockOn_Options.script_path.."MFD/Indicator/Right/Right_init.lua",
     devices.DISPLAYS,
     {
-        {"RADAR-PLASHKA-CENTER", "RADAR-PLASHKA-DOWN", "RADAR-PLASHKA-RIGHT"},
+        {"CMDI-R-CENTER", "CMDI-R-DOWN", "CMDI-R-RIGHT"},
         source_mount("right",-0.001,0.0005)
     }
 }
@@ -105,13 +103,13 @@ if display_config.enabled or display_config.holder_test or display_config.bake_t
             LockOn_Options.script_path.."MFD/Indicator/LCD/"..kind.."_init.lua",
             devices.DISPLAYS,{connectors,mount}}
     end
-    holder("centre",{"MFD-PLASHKA-CENTER","MFD-PLASHKA-DOWN","MFD-PLASHKA-RIGHT"},
+    holder("centre",{"SD-CENTER","SD-DOWN","SD-RIGHT"},
         {sx_l=0,sy_l=0,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0})
     if display_config.enabled then
         -- Same clearance as the side source pages, or the screen mesh cuts through the image.
-        holder("left",{"MFD-PLASHKA-CENTER1","MFD-PLASHKA-DOWN1","MFD-PLASHKA-RIGHT1"},
+        holder("left",{"CMDI-L-CENTER","CMDI-L-DOWN","CMDI-L-RIGHT"},
             {sx_l=-0.001,sy_l=0.0005,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0})
-        holder("right",{"RADAR-PLASHKA-CENTER","RADAR-PLASHKA-DOWN","RADAR-PLASHKA-RIGHT"},
+        holder("right",{"CMDI-R-CENTER","CMDI-R-DOWN","CMDI-R-RIGHT"},
             {sx_l=-0.001,sy_l=0.0005,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0})
     end
 end
@@ -127,12 +125,18 @@ if calibration.enabled then
             device, {connectors, mount or {sx_l=0,sy_l=0,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0}}
         }
     end
-    add_calibration("centre", {"MFD-PLASHKA-CENTER","MFD-PLASHKA-DOWN","MFD-PLASHKA-RIGHT"}, devices.DISPLAYS)
-    add_calibration("left", {"MFD-PLASHKA-CENTER1","MFD-PLASHKA-DOWN1","MFD-PLASHKA-RIGHT1"}, devices.DISPLAYS)
-    add_calibration("right", {"RADAR-PLASHKA-CENTER","RADAR-PLASHKA-DOWN","RADAR-PLASHKA-RIGHT"}, devices.DISPLAYS)
-    add_calibration("hud", {"ILS-PLASHKA-CENTER","ILS-PLASHKA-DOWN","ILS-PLASHKA-RIGHT"}, nil, calibration.hud.mount)
+    add_calibration("centre", {"SD-CENTER","SD-DOWN","SD-RIGHT"}, devices.DISPLAYS)
+    add_calibration("left", {"CMDI-L-CENTER","CMDI-L-DOWN","CMDI-L-RIGHT"}, devices.DISPLAYS)
+    add_calibration("right", {"CMDI-R-CENTER","CMDI-R-DOWN","CMDI-R-RIGHT"}, devices.DISPLAYS)
+    add_calibration("hud", {"HUD-CENTER","HUD-DOWN","HUD-RIGHT"}, nil, calibration.hud.mount)
 end
 
+
+-- Data entry panel, drawn directly. The same 1.1 mm clearance toward the pilot
+-- as the side displays keeps the artwork in front of the DEP glass.
+indicators[#indicators+1]={"ccIndicator",LockOn_Options.script_path.."DEP/Indicator/DEP_init.lua",
+    devices.DISPLAYS,{{"DEP-CENTER","DEP-DOWN","DEP-RIGHT"},
+    {sx_l=-0.001,sy_l=0.0005,sz_l=0,sh=0,sw=0,rz_l=0,rx_l=0,ry_l=0}}}
 
 -- Independent generic DCS chart source. Keep the first five indicators stable.
 -- The third indicator parameter is one-based: DCS stores it minus one as the target.
