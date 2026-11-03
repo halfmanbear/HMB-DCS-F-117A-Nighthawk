@@ -21,6 +21,7 @@ PAGES = {
     'MFD': SCRIPTS / 'MFD/Indicator/MFD_indication_page.lua',
     'Left MFD': SCRIPTS / 'MFD/Indicator/Left/Left_vsd_page.lua',
     'Right MFD': SCRIPTS / 'MFD/Indicator/Right/Right_hsd_page.lua',
+    'Left EO': SCRIPTS / 'MFD/Indicator/Left/Left_eo_page.lua',
     'Central Map': SCRIPTS / 'MFD/Indicator/Map/Map_page.lua',
 }
 ENTRIES = {
@@ -28,9 +29,29 @@ ENTRIES = {
     'MFD': SCRIPTS / 'MFD/Indicator/MFD_base_page.lua',
     'Left MFD': SCRIPTS / 'MFD/Indicator/Left/Left_base_format.lua',
     'Right MFD': SCRIPTS / 'MFD/Indicator/Right/Right_base_format.lua',
+    'Left EO': SCRIPTS / 'MFD/Indicator/Left/Left_eo_page.lua',
     'Central Map': SCRIPTS / 'MFD/Indicator/Map/Map_base_page.lua',
 }
-DRAFTS = set()
+# Pages that share a physical screen with another page, and per-page sample values.
+SURFACES = {'Central Map': 'MFD', 'Left EO': 'Left MFD'}
+MODE_PARAMS = {'Left EO': {'F117_LEFT_EO': 1}}
+# Symbols come from another page file, so position/colour edits belong to that page.
+PREVIEW_ONLY = {'Left EO'}
+# Physical screens and the pages each can show. Page labels map to the page key in PAGES.
+# The VSD, MAP and HSD formats are shared by both CMDIs; EO/IRADS is left CMDI and centre only.
+SCREENS = {
+    'HUD': {'HUD': 'HUD'},
+    'Left CMDI (MFD)': {'VSD': 'Left MFD', 'EO (IRADS)': 'Left EO', 'MAP': 'Central Map', 'HSD': 'Right MFD'},
+    'Central Sensor Display': {'IRADS': 'MFD'},
+    'Right CMDI (MFD)': {'VSD': 'Left MFD', 'MAP': 'Central Map', 'HSD': 'Right MFD'},
+}
+SCREEN_SURFACE = {'HUD': None, 'Left CMDI (MFD)': 'Left MFD', 'Central Sensor Display': 'MFD',
+                  'Right CMDI (MFD)': 'Right MFD'}
+# Screen shown first when a page key is selected without a screen (live default formats).
+DEFAULT_SCREEN = {'HUD': 'HUD', 'MFD': 'Central Sensor Display', 'Left MFD': 'Left CMDI (MFD)',
+                  'Left EO': 'Left CMDI (MFD)', 'Right MFD': 'Right CMDI (MFD)', 'Central Map': 'Right CMDI (MFD)'}
+# CMDI_formats.lua selection ids: 0 VSD, 1 EO, 2 MAP, 3 HSD.
+FORMAT_IDS = {'Left MFD': 0, 'Left EO': 1, 'Central Map': 2, 'Right MFD': 3}
 GEOMETRY_PATH = Path(__file__).with_name('data') / 'cockpit_display_geometry.json'
 HUD_PROFILE = SCRIPTS / 'HUD/Indicator/layout_profile.lua'
 DCS_LOG = ROOT.parents[2] / 'Logs/dcs.log'
@@ -61,17 +82,36 @@ def hud_working_area(log_path=None):
     return result
 
 
-def layout_boundary(mode,units_per_metre=1):
-    return hud_working_area()['boundary'] if mode=='HUD' else measured_boundary(mode,units_per_metre)
+def layout_boundary(mode,units_per_metre=1,screen=None):
+    return hud_working_area()['boundary'] if mode=='HUD' else measured_boundary(mode,units_per_metre,screen)
 
 
-def default_view(mode):
+def context_params(mode,screen=None):
+    """Sample parameters that select this page's format on its screen."""
+    params={'F117_LEFT_EO':MODE_PARAMS.get(mode,{}).get('F117_LEFT_EO',0)}
+    if screen=='Right CMDI (MFD)' and mode in FORMAT_IDS:params['F117_RIGHT_FORMAT']=FORMAT_IDS[mode]
+    return params
+
+
+def page_scale(mode,screen=None):
+    """CMDI_formats.lua draws the centre-sized MAP source scaled to fit a side screen."""
+    if mode!='Central Map' or screen not in ('Left CMDI (MFD)','Right CMDI (MFD)'):return 1
+    surfaces=measured_surfaces();side=surfaces.get(SCREEN_SURFACE[screen]);centre=surfaces.get('MFD')
+    if not side or not centre:return 1
+    def span(surface):
+        xs,ys=zip(*surface['boundary_local_m']);return max(xs)-min(xs),max(ys)-min(ys)
+    (sw,sh),(cw,ch)=span(side),span(centre)
+    return .98*min(sw/cw,sh/ch)
+
+
+def default_view(mode,screen=None):
     if mode=='HUD':
         area=hud_working_area()
         if area['boundary']:
             return max(area['half_width'],area['half_height'])*1.2,area['center']
         return 1.1,(0,-.15)
-    if mode in ('Left MFD','Right MFD'):return .058,(0,.002)
+    scale=page_scale(mode,screen)
+    if mode in ('Left MFD','Right MFD','Left EO') or scale!=1:return .058/scale,(0,.002/scale)
     return .09,(0,0)
 
 
@@ -80,11 +120,15 @@ def measured_surfaces():
     return json.loads(GEOMETRY_PATH.read_text(encoding='utf-8'))['surfaces']
 
 
-def measured_boundary(mode, units_per_metre=1):
-    """Physical MFD guide; scale is explicit, not a claimed DCS calibration."""
-    surface=measured_surfaces().get('MFD' if mode=='Central Map' else mode)
+def measured_boundary(mode, units_per_metre=1, screen=None):
+    """Physical MFD guide; scale is explicit, not a claimed DCS calibration.
+
+    With a screen, the guide is that screen's glass in this page's source units."""
+    name=SCREEN_SURFACE.get(screen) if screen else SURFACES.get(mode,mode)
+    surface=measured_surfaces().get(name)
     if not surface or mode=='HUD':return None
-    return [(x*units_per_metre,y*units_per_metre) for x,y in surface['boundary_local_m']]
+    k=units_per_metre/page_scale(mode,screen)
+    return [(x*k,y*k) for x,y in surface['boundary_local_m']]
 DEFAULTS = {
     'F117_LEFT_EO': 0, 'F117_RIGHT_FORMAT': 2, 'ONE': 1, 'F117_IRADS_CONTRAST_BAND': 45,
     'F117_MAP_VALID': 1, 'F117_MAP_RANGE_TEXT': '25 NM', 'F117_MAP_ORIENTATION_TEXT': 'CNUP',
@@ -136,8 +180,9 @@ def component(values, index, default=0):
 
 class Model:
     """Executes the actual page, HUD_def and Common_Defs with offline API shims."""
-    def __init__(self, mode, source):
+    def __init__(self, mode, source, screen=None):
         self.mode, self.source = mode, source
+        self.screen = screen or DEFAULT_SCREEN[mode]
         self.path = PAGES[mode]
         self.lua = LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute((Path(__file__).with_name('layout_runtime.lua')).read_text())
@@ -153,6 +198,10 @@ class Model:
                 end
             ''')
         g.LockOn_Options.script_path = SCRIPTS.as_posix() + '/'
+        # The MAP page sizes its chart to the CMDI glass it is shown on (CMDI_formats.lua).
+        side = {'Left CMDI (MFD)': 'left', 'Right CMDI (MFD)': 'right'}.get(self.screen)
+        if mode == 'Central Map' and side:
+            g.F117_CMDI_SIDE = side
         g._tracked = self.path.as_posix()
         self.loaded = set()
         loading = set()
@@ -507,7 +556,9 @@ def transform_selection(source, elements, model, params, dx=0, dy=0, factor=1, p
                 if word not in ('text','readout','add_text_hud','add_text_hud2','add_text_hud_param') or len(args)<=index:
                     raise ValueError('Text size is defined outside this call. Select a text/readout call or edit its size in Lua.')
                 span=args[index];size=source[slice(*span)]
-                if size=='nil':size={'HUD':'2.8','MFD':'SD','Left MFD':'VSD_SD','Right MFD':'HSD_SD'}[model.mode]
+                if size=='nil':
+                    size={'HUD':'2.8','MFD':'SD','Left MFD':'VSD_SD','Right MFD':'HSD_SD'}.get(model.mode)
+                    if size is None:raise ValueError('This page has no default text size. Edit the size in Lua.')
                 new=(f'(function(s) if type(s)=="table" then return '
                      f'{{s[1]*{factor:.10g},s[2]*{factor:.10g},(s[3] or 0)*{factor:.10g},s[4]}} '
                      f'else return s*{factor:.10g} end end)({size})')
@@ -764,6 +815,7 @@ class Editor:
         root.title('F-117 Layout Studio | HUD + MFD')
         root.geometry('1500x940')
         self.mode=tk.StringVar(value='HUD'); self.status=tk.StringVar()
+        self.screen=tk.StringVar(value='HUD'); self.page=tk.StringVar(value='HUD')
         self.grid=tk.BooleanVar(value=True); self.clip=tk.BooleanVar(value=True)
         self.all=tk.BooleanVar(value=False); self.snap=tk.DoubleVar(value=.005)
         self.boundary=tk.BooleanVar(value=True); self.guide_scale=tk.DoubleVar(value=1)
@@ -775,8 +827,12 @@ class Editor:
         self.center=(0,0); self.size=800
         bar=ttk.Frame(root,padding=8); bar.pack(fill='x')
         ttk.Label(bar,text='F-117  LAYOUT STUDIO',font=('Segoe UI',12,'bold')).pack(side='left',padx=(0,20))
-        picker=ttk.Combobox(bar,textvariable=self.mode,values=list(PAGES),state='readonly',width=11)
-        picker.pack(side='left'); picker.bind('<<ComboboxSelected>>',lambda _:self.switch())
+        ttk.Label(bar,text='Screen').pack(side='left')
+        screens=ttk.Combobox(bar,textvariable=self.screen,values=list(SCREENS),state='readonly',width=22)
+        screens.pack(side='left',padx=(4,10)); screens.bind('<<ComboboxSelected>>',lambda _:self.choose_screen())
+        ttk.Label(bar,text='Page').pack(side='left')
+        self.page_picker=ttk.Combobox(bar,textvariable=self.page,values=list(SCREENS['HUD']),state='readonly',width=11)
+        self.page_picker.pack(side='left',padx=(4,10)); self.page_picker.bind('<<ComboboxSelected>>',lambda _:self.choose_page())
         for label,fn in [('Reload',self.reload),('Preview source',self.apply_source),('Undo',self.undo),
                          ('Save Lua',self.save),('Export PNG',self.export),('Reference image',self.reference)]:
             ttk.Button(bar,text=label,command=fn).pack(side='left',padx=3)
@@ -862,10 +918,30 @@ class Editor:
     def dirty(self):
         return any(s!=self.disk.get(m) for m,s in self.sources.items()) or self.text()!=self.sources.get(self.mode.get(),'')
 
+    def choose_screen(self):
+        pages=SCREENS[self.screen.get()]
+        if self.page.get() not in pages:self.page.set(next(iter(pages)))
+        self.choose_page()
+
+    def choose_page(self):
+        pages=SCREENS[self.screen.get()]
+        self.page_picker.configure(values=list(pages))
+        self.mode.set(pages[self.page.get()]);self.switch()
+
+    def reconcile_selection(self):
+        """Keep the screen/page pickers consistent with the page key in self.mode."""
+        mode=self.mode.get()
+        if mode not in SCREENS[self.screen.get()].values():self.screen.set(DEFAULT_SCREEN[mode])
+        pages=SCREENS[self.screen.get()]
+        self.page_picker.configure(values=list(pages))
+        if pages.get(self.page.get())!=mode:self.page.set(next(k for k,v in pages.items() if v==mode))
+
     def switch(self):
         if hasattr(self,'current'):
             self.sources[self.current]=self.text()
+        self.reconcile_selection()
         self.current=self.mode.get()
+        self.params.update(context_params(self.current,self.screen.get()))
         if self.current not in self.sources:
             self.disk[self.current]=PAGES[self.current].read_text(encoding='utf-8-sig')
             self.sources[self.current]=self.disk[self.current]
@@ -874,7 +950,7 @@ class Editor:
 
     def compile(self):
         try:
-            model=Model(self.current,self.text())
+            model=Model(self.current,self.text(),self.screen.get())
         except Exception as exc:
             self.message('Lua error - last successful preview retained: '+str(exc));return False
         self.models[self.current]=model;self.sources[self.current]=self.text()
@@ -908,7 +984,7 @@ class Editor:
         self.fill_params();self.redraw()
 
     def reset_view(self):
-        extent,self.center=default_view(self.mode.get())
+        extent,self.center=default_view(self.mode.get(),self.screen.get())
         self.extent.set(extent)
         self.queue_draw()
 
@@ -927,10 +1003,10 @@ class Editor:
             ref=(self.reference_image,self.reference_opacity.get()) if self.reference_image else None
             self.preview,self.hits,missing=self.renderer.render(model,self.params,self.size,extent,self.center,
                 self.all.get(),self.grid.get(),self.clip.get(),ref,
-                layout_boundary(self.current,self.guide_scale.get()) if self.boundary.get() else None)
+                layout_boundary(self.current,self.guide_scale.get(),self.screen.get()) if self.boundary.get() else None)
             self.guide_scale_entry.configure(state='disabled' if self.current=='HUD' else 'normal')
             measurements=measured_surfaces()
-            surface=measurements.get(self.current)
+            surface=measurements.get(SCREEN_SURFACE.get(self.screen.get()) or self.current)
             if surface:
                 self.measurement_text.set(f"Mesh: {surface['width_m']*1000:.1f} x {surface['height_m']*1000:.1f} mm\n"
                                           'Physical guide; DCS unit scale unverified.')
@@ -957,7 +1033,7 @@ class Editor:
                 for h in self.selection if h.element['name'] in model.by_name]
             self.selection_box()
             note=f'{self.current}: {len(model.elements)} elements, {len(self.hits)} visible. '
-            if self.current in DRAFTS:note+='DRAFT PAGE: no cockpit indicator registration yet. '
+            if self.current in PREVIEW_ONLY:note+='EO (IRADS) is a composition preview: edit its symbols on the Central Sensor Display IRADS page. '
             note+='Box drag = select; Shift = add/toggle; arrows = move; +/- = scale; Ctrl+Z = undo. '
             note+='Font metrics, 3D optics and camera imagery are approximate.'
             if self.current=='HUD':note+=' HUD clipping preview uses the working rectangle, not head/VR glass projection.'
@@ -1054,7 +1130,7 @@ class Editor:
             new=transform_selection(old,[h.element for h in self.selection],self.models[self.current],
                                     self.params,dx,dy,factor,pivot)
             if new==old:return
-            Model(self.current,new) # validate the complete action before changing the editor
+            Model(self.current,new,self.screen.get()) # validate the complete action before changing the editor
         except Exception as exc:
             self.selection_box();self.message('Selection unchanged: '+str(exc));return
         self.undo_stack.append((self.current,old))
@@ -1073,7 +1149,7 @@ class Editor:
         old=self.text()
         try:
             new=recolor_selection(old,[h.element for h in self.selection],self.models[self.current],self.hex_color.get())
-            Model(self.current,new)
+            Model(self.current,new,self.screen.get())
         except Exception as exc:
             self.message('Color unchanged: '+str(exc));return
         self.undo_stack.append((self.current,old))
@@ -1183,16 +1259,19 @@ class Editor:
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--render',choices=list(PAGES),help='Render to PNG without opening the editor')
+    parser.add_argument('--screen',choices=list(SCREENS),help='Physical screen for the guide outline and scale (default: the live default for the page)')
     parser.add_argument('--output',type=Path,default=ROOT/'tmp/layout-preview.png')
     parser.add_argument('--params',type=Path,help='JSON object of sample DCS parameter values')
     args=parser.parse_args()
     if args.render:
-        params=dict(DEFAULTS)
+        screen=args.screen or DEFAULT_SCREEN[args.render]
+        if args.render not in SCREENS[screen].values():parser.error(f'{screen} cannot show page {args.render}')
+        params=dict(DEFAULTS,**context_params(args.render,screen))
         if args.params:params.update(json.loads(args.params.read_text()))
-        model=Model(args.render,PAGES[args.render].read_text(encoding='utf-8-sig'))
-        extent,center=default_view(args.render)
+        model=Model(args.render,PAGES[args.render].read_text(encoding='utf-8-sig'),screen)
+        extent,center=default_view(args.render,screen)
         image,hits,missing=Renderer().render(model,params,extent=extent,center=center,
-                                            boundary=layout_boundary(args.render))
+                                            boundary=layout_boundary(args.render,1,screen))
         args.output.parent.mkdir(parents=True,exist_ok=True);image.save(args.output)
         print(f'{args.render}: {len(model.elements)} elements; {len(hits)} visible; {len(missing)} missing atlases')
         print(args.output)

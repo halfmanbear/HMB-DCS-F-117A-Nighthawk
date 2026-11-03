@@ -61,10 +61,11 @@ return function(side)
     end
     page("VSD",0,"MFD/Indicator/Left/Left_base_format.lua",1)
     if side=="left" then page("EO",1,"MFD/Indicator/Left/Left_eo_page.lua",1) end
-    local outlines=dofile(LockOn_Options.script_path.."Calibration/measured_outlines.lua")
-    local map_scale=.98*math.min(outlines[side].width/outlines.centre.width,
-        outlines[side].height/outlines.centre.height)
+    -- The MAP page sizes its chart and aperture to the whole side glass at this scale.
+    F117_CMDI_SIDE=side
+    local map_scale=dofile(LockOn_Options.script_path.."MFD/Indicator/Map/Map_window.lua").for_side(side).scale
     page("MAP",2,"MFD/Indicator/Map/Map_base_page.lua",map_scale)
+    F117_CMDI_SIDE=nil
     page("HSD",3,"MFD/Indicator/Right/Right_base_format.lua",1)
     F117_CMDI_BUILDING=nil
     finish()

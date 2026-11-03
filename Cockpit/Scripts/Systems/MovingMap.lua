@@ -6,6 +6,8 @@ function M.new(sensor,plan)
     local source=dofile(LockOn_Options.script_path.."MFD/Indicator/Map/Map_source.lua")
     local source_config=dofile(LockOn_Options.script_path.."MFD/Indicator/Map/render_source.lua")
     local source_configured=source.configured(source_config)
+    -- The chart and aperture fill the whole CMDI glass; symmetric half extents in map units.
+    local window=dofile(LockOn_Options.script_path.."MFD/Indicator/Map/Map_window.lua").cmdi()
     local chart_backend=dofile(LockOn_Options.script_path.."Systems/ChartBackend.lua").new(source_config)
     local handles={}
     local function h(name)
@@ -37,7 +39,8 @@ function M.new(sensor,plan)
     local function clip(ax,ay,bx,by)
         local dx,dy=bx-ax,by-ay
         local lo,hi=0,1
-        local p,q={-dx,dx,-dy,dy},{ax+.061,.061-ax,ay+.049,.049-ay}
+        local hw,hh=window.half_width,window.half_height
+        local p,q={-dx,dx,-dy,dy},{ax+hw,hw-ax,ay+hh,hh-ay}
         for i=1,4 do
             if math.abs(p[i])<1e-12 then if q[i]<0 then return end
             else
@@ -82,7 +85,7 @@ function M.new(sensor,plan)
         set("VIEW_CENTER_X",view_valid and cx-own_y/scale*math.cos(up) or 0)
         set("VIEW_CENTER_Z",view_valid and cz-own_y/scale*math.sin(up) or 0)
         set("VIEW_UP_RAD",up);set("VIEW_SCALE",scale)
-        set("VIEW_WIDTH_M",.122/scale);set("VIEW_HEIGHT_M",.098/scale)
+        set("VIEW_WIDTH_M",2*window.half_width/scale);set("VIEW_HEIGHT_M",2*window.half_height/scale)
         set("DATABASE",database);set("BACKGROUND_DECLUTTER",bgd)
         set("REFERENCE_ELEVATION",refel);set("ELEVATION_FT",elevation)
         chart_backend.update()
@@ -92,7 +95,9 @@ function M.new(sensor,plan)
             return (east*math.cos(up)-north*math.sin(up))*scale,
                 (north*math.cos(up)+east*math.sin(up))*scale+own_y
         end
-        local function inside(px,py)return math.abs(px)<.058 and py>-.046 and py<.046 end
+        local function inside(px,py)
+            return math.abs(px)<window.half_width-.003 and math.abs(py)<window.half_height-.003
+        end
         local ox,oy=0,own_y
         if position_valid then ox,oy=project(x,z) end
         set("OWN_X",ox);set("OWN_Y",oy)

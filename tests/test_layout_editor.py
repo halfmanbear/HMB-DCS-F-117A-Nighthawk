@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-from layout_editor import DEFAULTS, Model, PAGES, Renderer, move_source, transform_selection, recolor_selection, Editor, measured_boundary, measured_surfaces, hud_working_area
+from layout_editor import DEFAULTS, Model, PAGES, Renderer, move_source, transform_selection, recolor_selection, Editor, measured_boundary, measured_surfaces, hud_working_area, MODE_PARAMS, PREVIEW_ONLY, SURFACES, SCREENS, SCREEN_SURFACE, DEFAULT_SCREEN, context_params, page_scale, layout_boundary
 
 
 class LayoutEditorTests(unittest.TestCase):
@@ -19,6 +19,80 @@ class LayoutEditorTests(unittest.TestCase):
             scene=model.scene(DEFAULTS)
             self.assertGreater(len(scene), 10)
             self.assertEqual(model.warnings, set())
+
+    def test_screen_dropdown_offers_four_screens_with_shared_pages(self):
+        self.assertEqual(list(SCREENS),['HUD','Left CMDI (MFD)','Central Sensor Display','Right CMDI (MFD)'])
+        self.assertEqual(set(SCREENS['Left CMDI (MFD)']),{'VSD','EO (IRADS)','MAP','HSD'})
+        self.assertEqual(set(SCREENS['Right CMDI (MFD)']),{'VSD','MAP','HSD'})
+        self.assertEqual(list(SCREENS['Central Sensor Display']),['IRADS'])
+        # IRADS targeting is only on the left CMDI (EO) and the centre sensor display.
+        irads=[(s,p) for s,pages in SCREENS.items() for p,m in pages.items() if m in ('MFD','Left EO')]
+        self.assertEqual(sorted(irads),[('Central Sensor Display','IRADS'),('Left CMDI (MFD)','EO (IRADS)')])
+        for screen,pages in SCREENS.items():
+            for mode in pages.values():self.assertIn(mode,PAGES)
+        for mode,screen in DEFAULT_SCREEN.items():self.assertIn(mode,SCREENS[screen].values())
+
+    def test_cmdi_format_ids_and_map_guide_scale(self):
+        self.assertEqual(context_params('Central Map','Right CMDI (MFD)'),{'F117_LEFT_EO':0,'F117_RIGHT_FORMAT':2})
+        self.assertEqual(context_params('Right MFD','Right CMDI (MFD)')['F117_RIGHT_FORMAT'],3)
+        self.assertEqual(context_params('Left EO','Left CMDI (MFD)'),{'F117_LEFT_EO':1})
+        self.assertEqual(context_params('Left MFD','Left CMDI (MFD)'),{'F117_LEFT_EO':0})
+        for screen in ('Left CMDI (MFD)','Right CMDI (MFD)'):
+            scale=page_scale('Central Map',screen)
+            self.assertTrue(0.3<scale<1,scale)
+            xs,ys=zip(*layout_boundary('Central Map',1,screen))
+            side=measured_surfaces()[SCREEN_SURFACE[screen]]
+            sx,sy=zip(*side['boundary_local_m'])
+            self.assertAlmostEqual(max(xs)-min(xs),(max(sx)-min(sx))/scale)
+        # Pages that are not rescaled keep the screen's own outline.
+        self.assertEqual(layout_boundary('Left MFD',1,'Right CMDI (MFD)'),measured_boundary('Right MFD'))
+        self.assertEqual(page_scale('Right MFD','Left CMDI (MFD)'),1)
+
+    def test_editor_screen_and_page_selectors(self):
+        import tkinter as tk
+        try:root=tk.Tk()
+        except tk.TclError:self.skipTest('no display')
+        root.withdraw()
+        try:
+            editor=Editor(root)
+            editor.screen.set('Right CMDI (MFD)');editor.choose_screen()
+            self.assertEqual(editor.page.get(),'VSD');self.assertEqual(editor.current,'Left MFD')
+            editor.page.set('MAP');editor.choose_page()
+            self.assertEqual(editor.current,'Central Map');self.assertEqual(editor.params['F117_RIGHT_FORMAT'],2)
+            editor.screen.set('Left CMDI (MFD)');editor.choose_screen()
+            self.assertEqual((editor.page.get(),editor.current),('MAP','Central Map'))
+            editor.page.set('EO (IRADS)');editor.choose_page()
+            self.assertEqual(editor.params['F117_LEFT_EO'],1)
+            editor.screen.set('Right CMDI (MFD)');editor.choose_screen()  # EO is left-only
+            self.assertEqual(editor.page.get(),'VSD');self.assertEqual(editor.params['F117_LEFT_EO'],0)
+            editor.screen.set('Central Sensor Display');editor.choose_screen()
+            self.assertEqual((editor.page.get(),editor.current),('IRADS','MFD'))
+            editor.mode.set('Right MFD');editor.switch()  # undo-style direct switch re-syncs pickers
+            self.assertEqual((editor.screen.get(),editor.page.get()),('Right CMDI (MFD)','HSD'))
+        finally:root.destroy()
+
+    def test_left_eo_composition_matches_live_cmdi_format(self):
+        model=self.load('Left EO')
+        params=dict(DEFAULTS,**MODE_PARAMS['Left EO'])
+        self.assertEqual(params['F117_LEFT_EO'],1)
+        names={e.get('name') for e,s in model.scene(params) if s[3]}
+        self.assertIn('F117_LEFT_EO_SYMBOLOGY',names)
+        self.assertTrue(any(n.startswith('F117_LEFT_EO_VIDEO_') for n in names))
+        self.assertEqual(model.warnings,set())
+        # The VSD gate hides the EO composition, as the live CMDI format selector does.
+        hidden=[s[3] for e,s in model.scene(dict(params,F117_LEFT_EO=0)) if e.get('name')=='F117_LEFT_EO_SYMBOLOGY']
+        self.assertEqual(hidden,[False])
+        self.assertIsNotNone(measured_boundary('Left EO'))
+        self.assertEqual(SURFACES['Left EO'],'Left MFD')
+
+    def test_left_eo_cli_render_writes_png(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as folder:
+            out=Path(folder)/'eo.png'
+            result=subprocess.run([sys.executable,'-B',str(Path(__file__).resolve().parents[1]/'tools/layout_editor.py'),
+                '--render','Left EO','--output',str(out)],capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertGreater(out.stat().st_size,1000)
 
     def test_side_pages_are_separate_editable_layouts(self):
         for mode,label in [('Left MFD','MEA'),('Right MFD','ENTR')]:
@@ -224,7 +298,7 @@ text("E",2,3,2.8,edit_group,nil,nil,nil,nil,nil,"EDIT_CHILD")
         finally:root.destroy()
 
     def test_hex_colors_preserve_fonts_textures_and_unselected_materials(self):
-        for mode in PAGES:
+        for mode in (m for m in PAGES if m not in PREVIEW_ONLY):
             model=self.load(mode)
             target=next(e for e in model.elements if e.get('_etype') in ('ceStringPoly','ceStringSLine') and e.get('isvisible') is not False)
             changed=recolor_selection(model.source,[target],model,'#123aEF')

@@ -14,6 +14,13 @@ if display_config.bake_test and not display_config.enabled and display_config.ba
     marker.name="F117_BAKE_TEST_SOURCE";marker.parent_element=ROOT.name
     Add(marker)
 end
+-- Sized to the CMDI glass (see Map_window.lua), so the chart fills the whole screen.
+local window=dofile(LockOn_Options.script_path.."MFD/Indicator/Map/Map_window.lua").for_side(F117_CMDI_SIDE)
+local aperture={outline=window.outline}
+-- Static labels were laid out for the centre glass; stretch them to this window's edges.
+local function X(x)return x>=0 and x*window.xmax/.0880 or x*window.xmin/-.0870 end
+local function Y(y)return y>=0 and y*window.ymax/.0747 or y*window.ymin/-.0734 end
+local G=MAP_TEXT_GAIN or 1
 local function props(e,parent,params,controllers,additive)
     e.name=e.name or create_guid_string();e.parent_element=parent or ROOT.name
     e.collimated=false;e.z_enabled=true;e.h_clip_relation=h_clip_relations.COMPARE;e.level=0
@@ -25,9 +32,15 @@ local function line(points,colour,parent)
     local e=strokes.line(points,1,.8);e.material=MAP_MATERIALS[colour or "white"]
     return props(e,parent)
 end
+-- Static label geometry: stretched to the window like label positions.
+local function sline(points,colour,parent)
+    local mapped={}
+    for i,p in ipairs(points) do mapped[i]={X(p[1]),Y(p[2])} end
+    return line(mapped,colour,parent)
+end
 local function text(value,x,y,sd,align,params,controllers,formats,colour)
     local e=CreateElement "ceStringSLine"
-    e.value=value;e.init_pos={x,y,0};e.stringdefs=sd or MAP_SD
+    e.value=value;e.init_pos={X(x),Y(y),0};e.stringdefs=sd or MAP_SD
     e.alignment=align or "LeftCenter";e.formats=formats
     e.material=MAP_FONTS[colour or "white"];strokes.text(e)
     return props(e,nil,params,controllers)
@@ -37,7 +50,6 @@ local function readout(parameter,x,y,align)
 end
 -- Opaque measured aperture covers the retained camera-source surface beneath.
 -- The camera target registration itself stays intact for left EO video.
-local aperture=dofile(LockOn_Options.script_path.."Calibration/measured_outlines.lua").centre
 local bg=CreateElement "ceMeshPoly"
 bg.name="F117_MAP_BACKGROUND";bg.primitivetype="triangles"
 bg.vertices=aperture.outline
@@ -47,24 +59,25 @@ bg.indices=indices
 bg.material=MAP_MATERIALS.background;props(bg)
 local source=dofile(LockOn_Options.script_path.."MFD/Indicator/Map/Map_source.lua")
 local source_config=dofile(LockOn_Options.script_path.."MFD/Indicator/Map/render_source.lua")
-source.add_layer(source_config,ROOT.name,props)
+source.add_layer(source_config,ROOT.name,props,window)
 -- Layout follows the supplied MAP DISPLAY figure; colours remain a design choice.
 local function box(x,y,w,h,parent)
-    line({{x-w/2,y-h/2},{x+w/2,y-h/2},{x+w/2,y+h/2},{x-w/2,y+h/2},{x-w/2,y-h/2}},"white",parent)
+    w,h=w*G*.85,h*G*.85 -- boxes hug their text a little tighter than the raw gain
+    sline({{x-w/2,y-h/2},{x+w/2,y-h/2},{x+w/2,y+h/2},{x-w/2,y+h/2},{x-w/2,y-h/2}},"white",parent)
 end
 local function group(name,params,controllers,parent)
     local e=CreateElement "ceSimple";e.name=name
     props(e,parent,params,controllers);return e.name
 end
 local function label(value,x,y,parent,align)
-    local e=CreateElement "ceStringSLine";e.value=value;e.init_pos={x,y,0}
+    local e=CreateElement "ceStringSLine";e.value=value;e.init_pos={X(x),Y(y),0}
     e.stringdefs=MAP_SMALL;e.alignment=align or "CenterCenter"
     e.material=MAP_FONTS.white;strokes.text(e);props(e,parent)
 end
 -- Format must match the stored type: "%s" with a numeric parameter crashes DCS,
 -- and Lua set() stores numeric-looking strings such as "25" as numbers.
 local function param_label(parameter,x,y,parent,format,align)
-    local e=CreateElement "ceStringSLine";e.init_pos={x,y,0};e.stringdefs=MAP_SMALL
+    local e=CreateElement "ceStringSLine";e.init_pos={X(x),Y(y),0};e.stringdefs=MAP_SMALL
     e.alignment=align or "CenterCenter";e.formats={format or "%s"};e.material=MAP_FONTS.white;strokes.text(e)
     props(e,parent,{"F117_MAP_"..parameter},{{"text_using_parameter",0,0}})
 end
@@ -73,15 +86,15 @@ label("SNSR",-.034,.065,normal);label("ENTR",-.006,.065,normal);label("UPDT",.02
 local function1=group("F117_MAP_FUNCTION1",{"F117_MAP_FUNCTION"},{{"parameter_in_range",0,.9,1.1}})
 param_label("BGD_TEXT",-.057,.065,function1);param_label("REFEL_TEXT",-.025,.065,function1)
 param_label("ELEVATION_FT",.016,.065,function1,"%.0f")
-line({{-.003,.063},{0,.067},{.003,.063},{-.003,.063}},"white",function1)
-line({{.035,.067},{.038,.063},{.041,.067},{.035,.067}},"white",function1)
+sline({{-.003,.063},{0,.067},{.003,.063},{-.003,.063}},"white",function1)
+sline({{.035,.067},{.038,.063},{.041,.067},{.035,.067}},"white",function1)
 param_label("DATABASE_TEXT",.064,.065);box(.064,.065,.023,.007)
 readout("GS_TEXT",-.076,.054);box(-.065,.054,.026,.007)
 readout("CRS_TEXT",.076,.054,"RightCenter");box(.062,.054,.030,.007)
 param_label("FUNCTION_TEXT",-.069,.043);box(-.069,.043,.018,.007)
-line({{.067,.033},{.070,.038},{.073,.033},{.067,.033}})
+sline({{.067,.033},{.070,.038},{.073,.033},{.067,.033}})
 param_label("RANGE",.070,.024,nil,"%.0f")
-line({{.067,.015},{.070,.010},{.073,.015},{.067,.015}})
+sline({{.067,.015},{.070,.010},{.073,.015},{.067,.015}})
 readout("ORIENTATION_TEXT",.077,-.011,"RightCenter")
 readout("TDC_TEXT",.077,-.035,"RightCenter")
 label("HSD",-.057,-.065);label("MAP",-.027,-.065);box(-.027,-.065,.021,.007)

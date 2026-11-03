@@ -201,3 +201,27 @@ set `Cockpit/Scripts/MFD/Indicator/Map/Charts/config.lua` enabled=false and relo
 This is the rollback switch; the F-117 symbols and left EO remain independent.
 The pre-chart adapter binary is retained locally at
 `tmp/native-map/F117Displays.before-charts.dll` for development rollback.
+
+## CMDI fill area (3 November 2026)
+
+The MAP page is only shown on the CMDIs, but it is authored at centre-screen size and
+drawn at about 0.58 by `CMDI_formats.lua`. Its chart image used to be a fixed
+0.122 x 0.098 window, so on a CMDI it covered roughly two thirds of the glass, and its
+text was about 40% of the VSD/HSD text height.
+
+`Map/Map_window.lua` now measures the fill area from the measured side glass divided by
+that scale. The aperture (stencil), the chart image, the route clip, the "inside the
+window" test and the chart camera extents (`F117_MAP_VIEW_WIDTH_M/HEIGHT_M`) all use it,
+so the chart fills the whole glass behind the symbology. The ground scale is unchanged:
+`F117_MAP_VIEW_SCALE` still derives from `.106 / (range * 1852)`, so symbols, routes and
+the range readout keep their positions; the chart simply shows more terrain around them.
+Static labels are stretched to the window edges and the map text has a 1.4x gain
+(`MAP_TEXT_GAIN`). Verify the picture and its registration in DCS; the offline editor has
+no chart pixels.
+
+The chart adapter sets the camera's source aspect from the requested view (height / width)
+each update. A fixed aspect from the old window never matched the full-glass view, so the
+camera was never reported ready and the map stayed on "MAP DATA NOT LOADED". `dcs.log`
+showed this as a repeating `chart condition=9 ... volume=` line whose vertical span did not
+equal the requested height. The previous adapter is kept at
+`tmp/native-displays-backup/F117Displays.before-aspect.dll`.

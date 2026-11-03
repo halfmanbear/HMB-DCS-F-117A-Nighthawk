@@ -19,8 +19,11 @@ void observeCamera(){
     *reinterpret_cast<float*>(chartIndicator+760)=static_cast<float>(p.z);
     *reinterpret_cast<float*>(chartIndicator+896)=static_cast<float>(-p.scale);
     *reinterpret_cast<float*>(chartIndicator+908)=static_cast<float>(p.scale);
-    *reinterpret_cast<float*>(chartIndicator+900)=static_cast<float>(-p.scale*.049/.061);
-    *reinterpret_cast<float*>(chartIndicator+912)=static_cast<float>(p.scale*.049/.061);
+    // Like the engine, derive the vertical span from the aspect the adapter wrote.
+    const double aspect=static_cast<double>(*reinterpret_cast<const float*>(chartIndicator+1128))/
+        static_cast<double>(*reinterpret_cast<const float*>(chartIndicator+1124));
+    *reinterpret_cast<float*>(chartIndicator+900)=static_cast<float>(-p.scale*aspect);
+    *reinterpret_cast<float*>(chartIndicator+912)=static_cast<float>(p.scale*aspect);
 }
 }
 int main(int argc,char** argv){
@@ -47,7 +50,7 @@ int main(int argc,char** argv){
     chartsBound=true;
     auto update=[&](double x=1000,double width=50000,double level=3,double rotation=.25){
         lua.settop(state,0);getfield(state,-10002,"charts");getfield(state,-1,"update");
-        for(double value:{x,2000.,rotation,width,width*.098/.122,level})pushnumber(state,value);
+        for(double value:{x,2000.,rotation,width,width*.9,level})pushnumber(state,value);
         check(pcall(state,6,2,0)==0,"chart update returned normally");
         bool ready=toboolean(state,-2)!=0;lua.settop(state,0);return ready;
     };
@@ -55,6 +58,8 @@ int main(int argc,char** argv){
     const auto& page=*reinterpret_cast<const ChartPage*>(mapRecord);
     check(page.x==1000 && page.z==2000 && page.scale==25000 && page.chart==3 && page.rotation==.25,"native page receives exact view");
     check(chartIndicator[1744]==1 && chartDevice[1180]==0,"only owned producer configured");
+    check(std::fabs(*reinterpret_cast<const float*>(chartIndicator+1128)/
+        *reinterpret_cast<const float*>(chartIndicator+1124)-.9)<1e-5,"camera aspect follows the requested window");
     observeCamera();check(update(),"matching previous camera allows source image");
     for (double rate:{-3.,1.,3.}) {
         update();observeCamera();

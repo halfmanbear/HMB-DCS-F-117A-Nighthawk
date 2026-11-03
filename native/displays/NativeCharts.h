@@ -119,8 +119,10 @@ int updateCharts(lua_State* state) {
     // Generic kneeboard toggle listens globally. Keep this owned producer out
     // of all direct/UI purposes even if that command has been received.
     for (int purpose:{0,1,2}) chartAPI.removePurpose(source,purpose);
+    // The camera's vertical span is its horizontal span times this aspect, so it must
+    // follow the requested window; a fixed aspect never matches a differently shaped view.
     *reinterpret_cast<float*>(indicator+1124)=.061f;
-    *reinterpret_cast<float*>(indicator+1128)=.049f;
+    *reinterpret_cast<float*>(indicator+1128)=static_cast<float>(.061*view.height/view.width);
     device[1180]=0; // use explicit centre, not the kneeboard follow-aircraft mode
     chartAPI.change(device);
     session->previous=view;session->previousIndicator=source;session->pending=true;
