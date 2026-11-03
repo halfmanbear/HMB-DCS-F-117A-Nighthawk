@@ -27,6 +27,9 @@ Keys = {
     MFDOverlayToggle = __custom_counter(), -- 10010
 }
 
+-- Global EFM commands (no cockpit_device_id). Member names follow the FA-18C
+-- hotas_commands table, but the IDs are this mod's own: official *_commands
+-- tables are device-local to each module and not shared between modules.
 hotas_commands =
 {
     THROTTLE_DESIGNATOR_CONTROLLER_UP      = 10112,
@@ -34,15 +37,18 @@ hotas_commands =
     THROTTLE_DESIGNATOR_CONTROLLER_LEFT    = 10110,
     THROTTLE_DESIGNATOR_CONTROLLER_RIGHT   = 10111,
     THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS = 10114,
-    THROTTLE_FLIR_FOV_NARROW               = 103,
-    THROTTLE_FLIR_FOV_WIDE                 = 104,
+    THROTTLE_FLIR_FOV_NARROW               = 103, -- iCommandPlaneZoomIn
+    THROTTLE_FLIR_FOV_WIDE                 = 104, -- iCommandPlaneZoomOut
 }
 
 -- F-117A weapons delivery commands, handled by the EFM (Inputs.h).
--- Weapon release deliberately does NOT use iCommandPlanePickleOn (350): that
--- command makes avSimpleWeaponSystem release immediately, bypassing CCRP.
+-- The input profiles bind Weapon Release to iCommandPlanePickleOn/Off (350/351).
+-- The EFM treats 350/351 exactly like WEAPON_RELEASE_ON/OFF: open the bay, then
+-- release only when the delivery gates pass. A live DCS check on 2026-11-03
+-- (Master Arm SAFE and ARMED, bay open, no designation) released nothing on 350.
 f117_commands =
 {
+    BOMB_BAY_TOGGLE        = 10100, -- bombay
     WEAPON_RELEASE_ON      = 10103, -- weaponReleaseHoldOn
     WEAPON_RELEASE_OFF     = 10104, -- weaponReleaseHoldOff
     IRADS_DESIGNATION_CLEAR = 10117,
