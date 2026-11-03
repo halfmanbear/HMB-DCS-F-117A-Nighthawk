@@ -67,7 +67,6 @@ join(res.keyCommands,{
 {combos = defaultDeviceAssignmentFor("lock_aircraft"), down = iCommandPlaneChangeLock, up = iCommandPlaneChangeLockUp, name = _('Target Lock'), category = _('Sensors')},
 {combos = defaultDeviceAssignmentFor("unlock_target"), down = iCommandSensorReset, name = _('Target Unlock'), category = _('Sensors')},
 {combos = {{key = 'I', reformers = {'RCtrl'}}}, down = iCommandPlaneRadarCenter, name = _('Target Designator To Center'), category = _('Sensors')},
-{combos = {{key = 'O'}}, down = iCommandPlaneEOSOnOff, name = _('Electro-Optical System On/Off'), category = {_('Sensors'), _('F-117A Essential System Controls')}},
 {combos = {{key = 'O', reformers = {'RCtrl'}}}, down = iCommandPlaneNightTVOnOff, name = _('Night Vision (FLIR or LLTV) On/Off'), category = _('Sensors')},
 
 -- RWR
@@ -81,7 +80,7 @@ join(res.keyCommands,{
 {combos = {{key = 'PgUp', reformers = {'LCtrl','LAlt'}}}, down = irads_image_commands.CONTRAST_UP, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Contrast Increase'), category = _('F-117A IRADS')},
 {combos = {{key = 'PgDown', reformers = {'LCtrl','LAlt'}}}, down = irads_image_commands.CONTRAST_DOWN, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Contrast Decrease'), category = _('F-117A IRADS')},
 {combos = {{key = 'Home', reformers = {'LCtrl','LShift'}}}, down = irads_image_commands.RESET, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Reset Brightness / Contrast for Mission Time'), category = _('F-117A IRADS')},
-{combos = {{key = 'I', reformers = {'LCtrl'}}}, down = 87, name = _('IRADS On/Off'),  category = {_('Sensors'), _('F-117A IRADS')}},
+{combos = {{key = 'O'}, {key = 'I', reformers = {'LCtrl'}}}, down = iCommandPlaneEOSOnOff, name = _('IRADS On/Off'), category = {_('Sensors'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
 {combos = {{key = ';'}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Up'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {combos = {{key = '.'}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Down'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {combos = {{key = ','}}, down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Left'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
@@ -94,7 +93,7 @@ join(res.keyCommands,{
 {down = Keys.MFDOverlayToggle, name = _('DLIR MFD Overlay Toggle'), category = {_('Sensors'), _('F-117A IRADS')}},
 
 -- Weapons
-{combos = {{key = 'Space', reformers = {'RAlt'}}}, down = 350, up = 351, name = _('Weapon Release (Pickle)'), category = {_('Weapons'), _('F-117A Essential System Controls')}},
+{combos = {{key = 'Space', reformers = {'RAlt'}}}, down = iCommandPlanePickleOn, up = iCommandPlanePickleOff, name = _('Weapon Release (Pickle)'), category = {_('Weapons'), _('F-117A Essential System Controls')}},
 
 --Night Vision Goggles
 {combos = {{key = 'H', reformers = {'LShift'}}}		   , 	down    = iCommandViewNightVisionGogglesOn   , name = _('Night Vision Goggles')   , category = _('Night Vision Goggles')},
@@ -136,16 +135,16 @@ join(res.keyCommands,{
 {down = iCommandDynamicRadioBalanceRight, value_down = 0.2, value_up = 0.0, name = _('r.2 Balance right'), category = {_('Radio'), _('Radio 2')}},
 
 -- Lights
-{down = 10001, name = _('Panel Light ON/OFF'), category = _('Lighting')},
-{down = 10002, name = _('Flood Light ON/OFF'), category = _('Lighting')},
-{down = 10003, name = _('Landing Lights ON/OFF'), category = _('Lighting')},
-{down = 10004, name = _('Navigation Lights ON/OFF'), category = _('Lighting')},
-{down = 10005, name = _('Taxi Lights AUTO/ON/OFF'), category = _('Lighting')},
-{down = 10006, name = _('Meme Light ON/OFF'), category = _('Lighting')},
-{down = 10007, name = _('Beacon Light ON/OFF'), category = _('Lighting')},
+{down = Keys.PanelLight, name = _('Panel Light ON/OFF'), category = _('Lighting')},
+{down = Keys.FloodLight, name = _('Flood Light ON/OFF'), category = _('Lighting')},
+{down = Keys.LdgLight, name = _('Landing Lights ON/OFF'), category = _('Lighting')},
+{down = Keys.NavLight, name = _('Navigation Lights ON/OFF'), category = _('Lighting')},
+{down = Keys.TaxiLgt, name = _('Taxi Lights AUTO/ON/OFF'), category = _('Lighting')},
+{down = Keys.MemeLgt, name = _('Meme Light ON/OFF'), category = _('Lighting')},
+{down = Keys.BcnLgt, name = _('Beacon Light ON/OFF'), category = _('Lighting')},
 
 --Misc
-{combos = {{key = 'T', reformers = {'LShift'}}}, down = 10100, name = _('Bomb Bay Door Toggle'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
+{combos = {{key = 'T', reformers = {'LShift'}}}, down = f117_commands.BOMB_BAY_TOGGLE, name = _('Bomb Bay Door Toggle'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
 
 })
 
