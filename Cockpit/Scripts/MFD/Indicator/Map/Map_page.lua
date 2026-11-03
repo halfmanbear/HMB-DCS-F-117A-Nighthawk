@@ -103,8 +103,6 @@ label("STAT",0,-.065);label("SMD",.030,-.065);label("DFRM",.058,-.065)
 -- PMAP and DMAP select the requested background; neither has map tiles yet.
 text("MAP DATA NOT LOADED",0,-.055,MAP_SMALL,"CenterCenter",
     {"F117_MAP_SOURCE_VISIBLE"},{{"parameter_in_range",0,-.1,.1}},nil,"yellow")
-text("CHART BACKEND: EXPERIMENTAL",0,-.050,MAP_SMALL,"CenterCenter",
-    {"F117_MAP_CHART_EXPERIMENTAL"},{{"parameter_in_range",0,.9,1.1}},nil,"yellow")
 local manual=group("F117_MAP_MANUAL",{"F117_MAP_MANUAL"},{{"parameter_in_range",0,.9,2.1}})
 label("LOOK",-.071,.023,manual);label("SCRL",-.071,-.011,manual)
 local looking=group("F117_MAP_LOOK_SELECTED",{"F117_MAP_LOOK"},{{"parameter_in_range",0,.9,1.1}},manual)

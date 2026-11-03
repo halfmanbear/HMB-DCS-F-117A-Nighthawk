@@ -168,9 +168,8 @@ Actual chart availability and appearance can vary with theatre and scale.
 
 Both PMAP/DMAP selections currently share this chart underlay. BGD/reference
 height settings remain UI state; no Harris elevation shading, cultural-layer
-filtering or independent DMAP data interpretation is implemented. The
-`CHART BACKEND: EXPERIMENTAL` annotation makes the pending live verification
-explicit; map/IRADS brightness controls retain their existing operation.
+filtering or independent DMAP data interpretation is implemented. Map/IRADS brightness
+controls retain their existing operation.
 
 ### Validation and live check
 
