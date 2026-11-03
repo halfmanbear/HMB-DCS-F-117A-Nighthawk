@@ -1,9 +1,14 @@
 # IRADS brightness and contrast
 
-IRADS now starts at 65% display brightness by day (08:00â€“17:00) and 16% at
+IRADS now starts at 45% display brightness by day (08:00â€“17:00) and 11% at
 night (19:00â€“06:00), with linear transitions from 06:00â€“08:00 and 17:00â€“19:00.
 This uses local mission clock time, not calculated solar elevation. Contrast
 starts at 80% by day and 96% at night, with the same twilight transitions. These are initial tuning values for in-game review.
+
+The centre camera image is much brighter than the symbols sharing its brightness
+control, and clips to solid green at full material colour. Its material colour,
+`irads_video_colour` in `display_readability.lua`, therefore holds the video at
+green 90 of 255 on top of that control. Symbols and the left EO repeater are unaffected.
 
 | Action | Default keyboard binding |
 | --- | --- |

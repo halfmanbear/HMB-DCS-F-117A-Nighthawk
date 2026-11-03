@@ -7,7 +7,7 @@ Flies the built EFM DLL outside DCS and scores it against the flight test data i
 | Command | What it does |
 |---|---|
 | `python tools/fm_bench/scorecard.py` | Flies every test and writes `results/scorecard.md`. Use `--only turn,accel` for some tests, `--dll` for another build and `--inertia roll,yaw,pitch` to try other values. |
-| `python tools/fm_bench/fit_performance.py` | Solves for the lift, drag, thrust and fuel constants that best fit the manual, using a point-mass copy of the EFM's equations. It only proposes constants: put them in the EFM and check them with the scorecard. |
+| `python tools/fm_bench/fit_performance.py` | Solves for the drag, thrust table, idle thrust and fuel constants that best fit the manual, using a point-mass copy of the EFM's equations. It only proposes constants: put them in the EFM, copy them over `fitted_constants.json` and check them with the scorecard. `--bench` also fits the row-by-row gap to the last scorecard, which must have been flown with `fitted_constants.json`. |
 | `python tools/fm_bench/inertia_sweep.py --inertia 40000,260000,225000` | Steps the stick and pedals at five flight conditions and reports response time, overshoot and oscillation. Repeat `--inertia` to compare values. |
 | `python tools/fm_bench/dcs_check.py --mission <miz>` | Flies one input sequence in DCS and on the bench, then compares them. Starts and closes DCS by itself in about 2.5 minutes. Overwrites `dcs.log` and the EFM's debug logs. |
 | `python tools/fm_bench/dcs_check.py --takeoff --mission <miz>` | Flies the takeoff worked example on manual page A3-4. The mission's player must start at an airfield. |
@@ -29,11 +29,15 @@ The manual gives steady-state performance, so these come from it: lift slope, dr
 
 ## Known differences from the manual
 
-- Level acceleration at 30,000 ft runs about 15% to 25% quick at 32,000 and 36,000 lb. At 52,000 lb and 20,000 ft, the last step to 424 KCAS is about 10% slow.
-- Sustained turns at low altitude from Mach 0.7 to 0.85 are up to 0.35 g short.
+- Two of the 249 manual tests are out of tolerance: 200 to 250 KCAS at 20,000 ft and 40,000 lb is 0.12 min quick, and the sea level turn at Mach 0.4 is 0.16 g high. Closing them by more fitting would push neighbouring rows out.
+- Thrust below Mach 0.30 isn't covered by the in-flight data. It rises to the engines' 94 kN rating at a standstill, set from the takeoff example.
 - Idle thrust is fitted up to 30,000 ft, where the deceleration data stops, and held constant above that. The manual's descent tables aren't checked.
-- The takeoff ground run is about 7% long, while the distance to clear 50 ft is about 4% short.
+- The takeoff ground run is about 7% long, while the distance to clear 50 ft is about 3% short.
 - There's no ground or gear model on the bench, so takeoff and landing need `dcs_check.py` or a flight. Landing distance isn't checked yet. `scenarios.ground_bumps` only checks that the flight controls ignore runway bumps while the wheels are reported on the ground, and `dcs_check.py --takeoff` reports the elevon movement on a real runway.
+
+## Runway ride
+
+The bench has no gear, so strut changes need DCS. For a fair comparison with a stock jet, use a power setting that gives it the same acceleration: on full afterburner the F-15C leaves the ground by about 520 m and never reaches the rougher part of the runway. At similar acceleration, load factor on the runway now matches the F-15C. Roll rate is still about 1.5 times higher while the bank movement is about the same. The aircraft rocks at about 3 Hz on its main gear against 1 to 2 Hz for the F-15C, which fits its wider gear.
 
 ## DCS behaviour this depends on
 
