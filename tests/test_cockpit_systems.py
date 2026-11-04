@@ -61,7 +61,7 @@ class CockpitSystemsTests(unittest.TestCase):
                 return lua.eval("""{new=function()return {
                     initialize=function()end,update=function()end,set_command=function()return false end}end,
                     initialize=function()end,update=function()end,set_command=function()return false end,
-                    default_side_brightness=function()return 1 end}""")
+                    default_side_brightness=function()return 1 end,default_dep_brightness=function()return 1 end}""")
             return load(path)
 
         g.dofile = modules
@@ -111,6 +111,65 @@ class CockpitSystemsTests(unittest.TestCase):
         g.SetCommand(10007, 1)
         g['update']()
         self.assertEqual(g.args[1001], 0)
+
+    def test_platypus_glow_follows_each_engine_rpm_through_a_thermal_lag(self):
+        lua, load = self.runtime()
+        lua.execute("""lrpm=0;rrpm=0
+            sensor.getEngineLeftRPM=function()return lrpm end
+            sensor.getEngineRightRPM=function()return rrpm end""")
+        load(SCRIPTS / 'Systems/lights_system.lua')
+        g = lua.globals()
+        g.post_initialize()
+        g.lrpm, g.rrpm = 1.0, 0.5
+        previous = 0
+        for _ in range(400):  # 20 s
+            g['update']()
+            self.assertGreaterEqual(g.args[1002], previous)
+            previous = g.args[1002]
+        self.assertGreater(g.args[1002], 0.95)
+        self.assertLessEqual(g.args[1002], 1)
+        self.assertEqual(g.args[1003], 0)
+        g.lrpm, g.rrpm = 0.0, 0.7  # left shut down, right at about ground idle
+        for _ in range(600):
+            g['update']()
+        self.assertLess(g.args[1002], 0.01)
+        self.assertAlmostEqual(g.args[1003], 0.0625, places=3)
+
+    def test_platypus_nozzles_and_glow_lights_lie_along_each_exhaust_slot(self):
+        text = (ROOT / 'F-117-NightHawk.lua').read_text(encoding='utf-8')
+        helpers = text[text.index('-- Platypus exhaust slots.'):text.index('F_117_NightHawk = {')]
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        nozzles, glow = lua.execute(helpers + '\nreturn platypus_nozzles(), platypus_glow_lights()')
+        nozzles = [nozzles[i] for i in range(1, len(nozzles) + 1)]
+        self.assertEqual(len(nozzles), 8)
+        inboard, outboard = (-5.29, 0.66), (-3.19, 2.48)
+        for n in nozzles:
+            x, y, z = n.pos[1], n.pos[2], n.pos[3]
+            side = -1 if n.engine_number == 1 else 1
+            self.assertEqual(math.copysign(1, z), side)  # engine 1 left, 2 right
+            t = (abs(z) - inboard[1]) / (outboard[1] - inboard[1])
+            self.assertTrue(0 < t < 1)
+            self.assertAlmostEqual(x, inboard[0] + (outboard[0] - inboard[0]) * t - 0.05)
+            self.assertAlmostEqual(y, -0.155)
+            o = n.orientation
+            self.assertAlmostEqual(math.hypot(o[1], o[2], o[3]), 1)
+            self.assertGreater(o[1], 0.98)  # flow runs aft...
+            self.assertEqual(math.copysign(1, o[3]), -side)  # ...and splays outboard
+        for engine in (1, 2):
+            self.assertAlmostEqual(sum(n.smokiness_level for n in nozzles
+                                       if n.engine_number == engine), 0.02)
+        lights = [glow.lights[i] for i in range(1, len(glow.lights) + 1)]
+        self.assertEqual(sorted(l.argument for l in lights), [1002, 1002, 1003, 1003])
+        for light in lights:
+            self.assertEqual(math.copysign(1, light.position[3]), -1 if light.argument == 1002 else 1)
+        self.assertIn('engines_nozzles = platypus_nozzles(),', text)
+        net = text[text.index('net_animation ='):]
+        net = net[:net.index('}')]
+        args = [int(line.split(',')[0]) for line in net.splitlines()
+                if line.strip()[:1].isdigit()]
+        self.assertIn(1002, args)
+        self.assertIn(1003, args)
+        self.assertLessEqual(len(args), 32)
 
     def test_color_action_rejects_selection_from_stale_source_lines(self):
         import sys

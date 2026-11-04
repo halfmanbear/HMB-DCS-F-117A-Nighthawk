@@ -1142,6 +1142,7 @@ function BrightnessAtSpawn()
     local side=irads_image.default_side_brightness(get_absolute_model_time())
     LDBrightness:set(1-side);RDBrightness:set(1-side);CDBrightness:set(1-side)
     left_dim:set(1-side);right_dim:set(1-side)
+    get_param_handle("F117_DEP_BRIGHTNESS"):set(irads_image.default_dep_brightness(get_absolute_model_time()))
 
 	-- Cold starts are dark through display power (Systems/Electrical.lua), not
 	-- the HUD brightness control: there is no HUD brightness bind yet.

@@ -31,7 +31,7 @@ class LeftEOTests(unittest.TestCase):
             if '/Systems/' in str(path):
                 if str(path).endswith(('Displays.lua','AlignedSensor.lua')):return load(path)
                 if str(path).endswith('IRADS_Diagnostics.lua'):return lua.eval('function()end')
-                return lua.eval('{new=function()return {initialize=function()end,update=function()end,set_command=function()return false end}end,initialize=function()end,update=function()end,set_command=function()return false end,default_side_brightness=function()return 1 end}')
+                return lua.eval('{new=function()return {initialize=function()end,update=function()end,set_command=function()return false end}end,initialize=function()end,update=function()end,set_command=function()return false end,default_side_brightness=function()return 1 end,default_dep_brightness=function()return 1 end}')
             return load(path)
         g.dofile=modules
         load(SCRIPTS/'Systems/Displays.lua');g.post_initialize()

@@ -184,9 +184,16 @@ local dest=cue("OCIP_DESTINATION","F117_OCIP_DEST_VALID","F117_OCIP_DEST_AZ","F1
 box(0,0,12,12,dest)
 local offset=cue("OCIP_OFFSET","F117_OCIP_OFFSET_VALID","F117_OCIP_OFFSET_AZ","F117_OCIP_OFFSET_EL")
 line({{0,6},{6,0},{0,-6},{-6,0},{0,6}},offset)
+-- HUD/IRADS cursor: open-centred cross at the IRADS look angle (TO 1F-117A-1 4-5),
+-- kept small so the aimpoint stays clear. Arms pass through the lock box edges.
 local cursor=cue("OCIP_IRADS_CURSOR","F117_OCIP_IRADS_VALID","F117_OCIP_IRADS_AZ","F117_OCIP_IRADS_EL")
-line({{-8,0},{8,0}},cursor)
-line({{0,-8},{0,8}},cursor)
+line({{-7,0},{-2,0}},cursor)
+line({{2,0},{7,0}},cursor)
+line({{0,-7},{0,-2}},cursor)
+line({{0,2},{0,7}},cursor)
+-- Lock box on the IRADS ground lock point; not a manual symbol, drawn on request.
+local lock=cue("OCIP_IRADS_LOCK","F117_OCIP_IRADS_LOCK_VALID","F117_OCIP_IRADS_LOCK_AZ","F117_OCIP_IRADS_LOCK_EL")
+box(0,0,10,10,lock)
 
 for _,z in ipairs(zones) do stencil(z[1],z[2],z[3],z[4],h_clip_relations.DECREASE_IF_LEVEL,3) end
 

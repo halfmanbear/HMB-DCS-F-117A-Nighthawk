@@ -51,7 +51,7 @@ class OcipHudTests(unittest.TestCase):
             bracket=state('OCIP_AOA_OPTIMUM',F117_OCIP_AOA=math.radians(aoa),F117_OCIP_APPROACH=1)
             vv=state('OCIP_VV')
             self.assertAlmostEqual(bracket[1]+arm*math.radians(1)*1000*unit,vv[1])
-        for cue in ['OCIP_DESTINATION','OCIP_OFFSET','OCIP_IRADS_CURSOR']:
+        for cue in ['OCIP_DESTINATION','OCIP_OFFSET','OCIP_IRADS_CURSOR','OCIP_IRADS_LOCK']:
             self.assertFalse(state(cue)[3])
         self.assertFalse(any(s[3] for e,s in model.scene(dict(DEFAULTS,**POWER_OFF)) if e.get('collimated')))
 
@@ -110,8 +110,9 @@ class OcipHudTests(unittest.TestCase):
         lua.execute('''
             values={north=200,up=0,east=0,pitch=0,roll=0,yaw=0}
             output={}
+            inputs={}
             function get_param_handle(name)
-                return {set=function(_,v) output[name]=v end}
+                return {set=function(_,v) output[name]=v end,get=function() return inputs[name] or 0 end}
             end
             sensor={getIndicatedAirSpeed=function() return 200 end,
                 getTrueAirSpeed=function() return 220 end,
@@ -226,8 +227,9 @@ class OcipHudTests(unittest.TestCase):
                     heading=math.rad(300),mach=.71,aoa=math.rad(12),slip=math.rad(2),
                     pitch=0,roll=0,north=100,up=0,east=0,yaw=0}
             output={}
+            inputs={}
             function get_param_handle(name)
-                return {set=function(_,v) output[name]=v end}
+                return {set=function(_,v) output[name]=v end,get=function() return inputs[name] or 0 end}
             end
             sensor={getIndicatedAirSpeed=function() return values.ias end,
               getTrueAirSpeed=function() return values.ias*1.1 end,
@@ -305,6 +307,76 @@ class OcipHudTests(unittest.TestCase):
         self.assertEqual(value('LADDER_VALID_P0'),0)
         vals.alt=22244/3.2808399;vals.vv=2500/196.850394;update(1)
         self.assertEqual(value('ALT'),22200) # high rate: nearest hundred feet
+
+    def test_irads_cursor_and_lock_box_follow_sensor(self):
+        lua,update=self.motion_runtime({'vv_filter_time':0})
+        g=lua.globals()
+        lua.execute('''sensor.getSelfCoordinates=function() return 1000,2000,3000 end''')
+        inputs,vals=g.inputs,g['values']
+        def out(name):return g.output['F117_OCIP_'+name]
+        update(.05)
+        self.assertEqual(out('IRADS_VALID'),0)
+        self.assertEqual(out('IRADS_LOCK_VALID'),0)
+        # Line of sight 5 degrees right and 5 down, aircraft level and heading north.
+        inputs.F117_IRADS_POWER=1;inputs.F117_IRADS_LOS_VALID=1
+        a=math.radians(5)
+        inputs.F117_IRADS_LOS_X=1;inputs.F117_IRADS_LOS_Y=-math.tan(a);inputs.F117_IRADS_LOS_Z=math.tan(a)
+        update(.05)
+        self.assertEqual(out('IRADS_VALID'),1)
+        self.assertAlmostEqual(out('IRADS_AZ'),math.tan(a))
+        self.assertAlmostEqual(out('IRADS_EL'),-math.tan(a))
+        self.assertEqual(out('IRADS_LOCK_VALID'),0)
+        # Body frame, same bank convention as the velocity vector: at 90 degrees
+        # bank a depressed line of sight becomes lateral.
+        vals.roll=math.pi/2
+        inputs.F117_IRADS_LOS_Y=-math.tan(a);inputs.F117_IRADS_LOS_Z=0;update(.05)
+        self.assertAlmostEqual(out('IRADS_AZ'),math.tan(a))
+        self.assertAlmostEqual(out('IRADS_EL'),0,places=10)
+        vals.roll=0
+        # Beyond the 20-degree total field of view the centre holds at 10 degrees.
+        inputs.F117_IRADS_LOS_Y=-1;inputs.F117_IRADS_LOS_Z=0;update(.05)
+        self.assertAlmostEqual(out('IRADS_AZ'),0,places=10)
+        self.assertAlmostEqual(out('IRADS_EL'),-math.tan(math.radians(10)))
+        # Looking aft and right still marks the right boundary.
+        inputs.F117_IRADS_LOS_X=-1;inputs.F117_IRADS_LOS_Y=0;inputs.F117_IRADS_LOS_Z=.2;update(.05)
+        self.assertAlmostEqual(out('IRADS_AZ'),math.tan(math.radians(10)))
+        self.assertAlmostEqual(out('IRADS_EL'),0,places=10)
+        # Lock: box and cursor on the lock point, which overrides the line of sight.
+        inputs.F117_IRADS_LOCK_VALID=1
+        inputs.F117_IRADS_LOCK_X=1000+5000;inputs.F117_IRADS_LOCK_Y=2000-500;inputs.F117_IRADS_LOCK_Z=3000+250
+        update(.05)
+        self.assertEqual(out('IRADS_LOCK_VALID'),1)
+        self.assertAlmostEqual(out('IRADS_LOCK_AZ'),.05)
+        self.assertAlmostEqual(out('IRADS_LOCK_EL'),-.1)
+        self.assertEqual((out('IRADS_AZ'),out('IRADS_EL')),(out('IRADS_LOCK_AZ'),out('IRADS_LOCK_EL')))
+        # Power off hides both, whatever the stale inputs say.
+        inputs.F117_IRADS_POWER=0;update(.05)
+        self.assertEqual(out('IRADS_VALID'),0)
+        self.assertEqual(out('IRADS_LOCK_VALID'),0)
+
+    def test_irads_cursor_stays_on_the_drawn_area(self):
+        lua,_=self.motion_runtime()
+        g=lua.globals()
+        layout=lua.execute((ROOT/'Cockpit/Scripts/HUD/Indicator/layout_profile.lua').read_text())
+        update=lua.execute((ROOT/'Cockpit/Scripts/HUD/Device/OCIP_data.lua').read_text())(
+            g.sensor,lua.table_from({'vv_filter_time':0,'layout':layout}))
+        g.inputs.F117_IRADS_POWER=1;g.inputs.F117_IRADS_LOS_VALID=1
+        # 9 degrees up is inside the TFOV but above the area's top edge.
+        g.inputs.F117_IRADS_LOS_X=1;g.inputs.F117_IRADS_LOS_Y=math.tan(math.radians(9));g.inputs.F117_IRADS_LOS_Z=0
+        update(.05)
+        top=(layout.origin_mrad[2]+math.radians(layout.half_height_deg)*1000)/1000
+        self.assertAlmostEqual(g.output['F117_OCIP_IRADS_EL'],top)
+        # The page draws the cue at the published coordinates.
+        model=Model('HUD',PAGES['HUD'].read_text())
+        unit=model.lua.globals().OCIP_U
+        params=dict(DEFAULTS,F117_OCIP_IRADS_VALID=1,F117_OCIP_IRADS_AZ=.05,F117_OCIP_IRADS_EL=-.02,
+            F117_OCIP_IRADS_LOCK_VALID=1,F117_OCIP_IRADS_LOCK_AZ=.05,F117_OCIP_IRADS_LOCK_EL=-.02)
+        scene={e['name']:state for e,state in model.scene(params)}
+        datum=scene['OCIP_DATUM']
+        for name in ('OCIP_IRADS_CURSOR','OCIP_IRADS_LOCK'):
+            self.assertTrue(scene[name][3])
+            self.assertAlmostEqual(scene[name][0]-datum[0],50*unit)
+            self.assertAlmostEqual(scene[name][1]-datum[1],-20*unit)
 
 
 if __name__=='__main__':unittest.main()

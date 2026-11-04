@@ -24,6 +24,61 @@
 -- SOURCES - books:
 -- Skunk Works: A Personal Memoir of My Years at Lockheed (by Ben R. Rich, Leo Janos)
 -- F-117 Nighthawk Stealth Fighter: An Illustrated Developmental History (by Yancy D. Mailes, Tony R. Landis)
+
+-- Platypus exhaust slots. Each engine exhausts through a flat, vaned slot about 2.85 m long
+-- and 0.10 m tall, swept along the aft deck trailing edge. DCS draws heat blur, smoke and
+-- contrails per nozzle, so each slot is split into narrow nozzles along its length to give
+-- a flat sheet of hot gas instead of one round plume. Slot centreline taken from the model.
+local PLATYPUS_SLOT = {inboard = {-5.29, -0.155, 0.66}, outboard = {-3.19, -0.155, 2.48}}
+local PLATYPUS_SEGMENTS = 4 -- nozzles per slot
+local PLATYPUS_SPLAY = math.rad(8) -- exhaust flow turns this far outboard of straight aft
+
+-- Point on a slot centreline: t = 0 inboard end, 1 outboard end; side -1 left, +1 right;
+-- aft moves the point behind the slot face, in metres.
+local function platypus_point(t, side, aft)
+    local a, b = PLATYPUS_SLOT.inboard, PLATYPUS_SLOT.outboard
+    return {a[1] + (b[1] - a[1]) * t - aft, a[2], side * (a[3] + (b[3] - a[3]) * t)}
+end
+
+local function platypus_nozzles()
+    local nozzles = {}
+    for engine, side in ipairs({-1, 1}) do -- engine 1 left, engine 2 right
+        for i = 1, PLATYPUS_SEGMENTS do
+            nozzles[#nozzles + 1] = {
+                engine_number = engine,
+                pos = platypus_point((i - 0.5) / PLATYPUS_SEGMENTS, side, 0.05),
+                -- Points back up the exhaust flow, so x is positive for flow going aft.
+                orientation = {math.cos(PLATYPUS_SPLAY), 0, -side * math.sin(PLATYPUS_SPLAY)},
+                diameter = 0.30, -- m: same area as a quarter of the 2.85 x 0.10 m slot
+                exhaust_length_ab = 0.76, -- m: afterburner flame length; none fitted
+                exhaust_length_ab_K = 0.76, -- Afterburner flame animation factor
+                smokiness_level = 0.005, -- Engine smoke, up to 1.0; 0.02 per engine in total
+            }
+        end
+    end
+    return nozzles
+end
+
+-- Faint heat glow off the hot slot and lower lip at night. Two dim orange lights per slot,
+-- just behind the slot face. Brightness follows draw arguments 1002 (left) and 1003 (right),
+-- which Cockpit/Scripts/Systems/lights_system.lua drives from engine rpm.
+local function platypus_glow_lights()
+    local lights = {}
+    for engine, side in ipairs({-1, 1}) do
+        for _, t in ipairs({0.3, 0.7}) do
+            lights[#lights + 1] = {
+                typename = "omnilight",
+                position = platypus_point(t, side, 0.15),
+                argument = 1001 + engine,
+                color = {1.0, 0.30, 0.08, 0.12}, -- dull orange; fourth value is brightness
+                range = 1.8, -- m: lights the slot lip and aft deck, not the ground
+                movable = false,
+            }
+        end
+    end
+    return {typename = "collection", lights = lights}
+end
+
 F_117_NightHawk = {
     ---------------------------------------------------------------------------
     -- Identity and database registration
@@ -128,8 +183,8 @@ F_117_NightHawk = {
     -- surfaces, and the whole-wing debris models don't suit them.
     DamageParts = {},
     -- Model draw arguments sent over the network, so other players see them move.
-    -- Limit is 32, per the earlier note here (stock F-5E's comment says 16). 28 are in use;
-    -- enabling the 12 commented entries as well would put the list 8 over.
+    -- Limit is 32, per the earlier note here (stock F-5E's comment says 16). 30 are in use;
+    -- enabling the 12 commented entries as well would put the list 10 over.
     net_animation =
     {
         0,  -- Nose gear
@@ -168,12 +223,21 @@ F_117_NightHawk = {
         --903,-- IRADS rotate
         --1000,-- Meme light
         1001,-- Beacon rotate
+        1002,-- Left platypus heat glow
+        1003,-- Right platypus heat glow
         --1010,-- Left elevon damage (outer)
         --1011,-- Left elevon damage (inner)
         --1014,-- Right elevon damage (inner)
         --1015,-- Right elevon damage (outer)
     },
     effects_presets = {{effect = "OVERWING_VAPOR", file = current_mod_path.."/Effects/f-117-nighthawk_overwingVapor.lua"}}, -- Extra visual effects
+    -- Lights defined here, not in the model. The model's own lights run on their draw
+    -- arguments and aren't listed. The group number is one AI never switches on, so only
+    -- arguments 1002 and 1003 control the glow.
+    lights_data = {
+        typename = "collection",
+        lights = {[WOLALIGHT_CABIN_WORK or 14] = platypus_glow_lights()},
+    },
     wing_tip_pos = {-6.627, -0.265, 6.6}, -- Wingtip position for visual effects
     fires_pos = { -- Fire effect positions when damaged; stock files mark this for deprecation
         { -0.865, 1.01, 1 },
@@ -248,24 +312,7 @@ F_117_NightHawk = {
     -- Paul Crickmore's book gives 10800 lb, with possible losses in the airframe and platypus exhaust.
     thrust_sum_max = 8200, -- Military thrust
     thrust_sum_ab = 8200, -- Afterburner thrust; same as military, as there is no afterburner
-    engines_nozzles = {
-        [1] = { -- Left exhaust nozzle
-            pos = {-4.604, 0.039, -1.427}, -- Nozzle position for visual effects
-            orientation = { 0.962, 0.087, 0.258 }, -- Exhaust direction vector: 5 deg vertical, 15 deg horizontal
-            diameter = 0.585, -- m: nozzle diameter
-            exhaust_length_ab = 0.76, -- m: afterburner flame length
-            exhaust_length_ab_K = 0.76, -- Afterburner flame animation factor
-            smokiness_level = 0.02, -- Engine smoke, up to 1.0
-        },
-        [2] = { -- Right exhaust nozzle
-            pos = {-4.604, 0.039, 1.427}, -- Nozzle position for visual effects
-            orientation = { 0.962, 0.087, -0.258 }, -- Exhaust direction vector: 5 deg vertical, -15 deg horizontal
-            diameter = 0.585, -- m: nozzle diameter
-            exhaust_length_ab = 0.76, -- m: afterburner flame length
-            exhaust_length_ab_K = 0.76, -- Afterburner flame animation factor
-            smokiness_level = 0.02, -- Engine smoke, up to 1.0
-        },
-    },
+    engines_nozzles = platypus_nozzles(), -- Four per slot; see PLATYPUS_SLOT at the top
 
     ---------------------------------------------------------------------------
     -- Landing gear and ground handling
