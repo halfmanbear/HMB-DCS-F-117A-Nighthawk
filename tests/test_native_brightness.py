@@ -14,7 +14,7 @@ class NativeBrightnessTests(unittest.TestCase):
                 get=function()return values[name] or 0 end,
                 set=function(_,v)values[name]=v end} end
             values.CDBrightness=.9;values.HUDBrightness=.7;values.LDBrightness=.88
-            values.RDBrightness=.86;values.F117_IRADS_BRIGHTNESS=.16
+            values.RDBrightness=.86;values.F117_IRADS_BRIGHTNESS=.16;values.F117_DEP_BRIGHTNESS=.5
             -- Displays fully powered up (Systems/Electrical.lua).
             for _,d in ipairs({"HUD","CMDI_L","CMDI_R","SD","DEP"}) do values["F117_FADE_"..d]=1 end
         ''')
@@ -31,7 +31,7 @@ class NativeBrightnessTests(unittest.TestCase):
         ''')
         module=lua.execute((SCRIPTS/'Systems/NativeBrightness.lua').read_text()).new()
         module.initialize()
-        for actual,expected in zip(g.gains.values(),[.35,0,.035,0,0,.7]):
+        for actual,expected in zip(g.gains.values(),[.35,0,.035,0,0,.35]):
             self.assertAlmostEqual(actual,expected)
         g.ready=False;module.update();v=g['values']
         self.assertAlmostEqual(v.F117_HUD_DRAW_BRIGHTNESS,.35)
@@ -53,7 +53,7 @@ class NativeBrightnessTests(unittest.TestCase):
         module=lua.execute((SCRIPTS/'Systems/NativeBrightness.lua').read_text()).new()
         module.initialize();v=g['values']
         self.assertAlmostEqual(v.F117_HUD_DRAW_BRIGHTNESS,.7)
-        self.assertAlmostEqual(v.F117_DEP_DRAW_BRIGHTNESS,.7)
+        self.assertAlmostEqual(v.F117_DEP_DRAW_BRIGHTNESS,.35)
         self.assertAlmostEqual(v.F117_IRADS_DIM_OPACITY,.84)
         g.ready=True;module.update()
         self.assertEqual(v.F117_NATIVE_BRIGHTNESS_ACTIVE,1)
@@ -62,15 +62,15 @@ class NativeBrightnessTests(unittest.TestCase):
         self.assertEqual(v.F117_DEP_DRAW_BRIGHTNESS,1)
         for param in ['F117_LEFT_DIM_OPACITY','F117_RIGHT_DIM_OPACITY','F117_IRADS_DIM_OPACITY']:
             self.assertEqual(v[param],0)
-        # The sixth gain is the DEP, which follows the HUD brightness control.
+        # The sixth gain is the DEP: HUD brightness times its time-of-day default.
         self.assertEqual(len(g.gains),6)
-        for actual,expected in zip(g.gains.values(),[.7,.12,.14,.16,.16,.7]):
+        for actual,expected in zip(g.gains.values(),[.7,.12,.14,.16,.16,.35]):
             self.assertAlmostEqual(actual,expected)
         g.ready=False;module.update()
         self.assertEqual(v.F117_NATIVE_BRIGHTNESS_ACTIVE,0)
         self.assertAlmostEqual(v.F117_IRADS_DRAW_BRIGHTNESS,.16)
         self.assertAlmostEqual(v.F117_LEFT_DIM_OPACITY,.88)
-        self.assertAlmostEqual(v.F117_DEP_DRAW_BRIGHTNESS,.7)
+        self.assertAlmostEqual(v.F117_DEP_DRAW_BRIGHTNESS,.35)
 
     def test_eo_image_brightness_is_independent_of_right_map(self):
         lua=self.runtime();g=lua.globals()
@@ -130,7 +130,7 @@ class NativeBrightnessTests(unittest.TestCase):
         image=lua.execute((SCRIPTS/'Systems/IRADS_ImageControls.lua').read_text())
         image.initialize();image.set_command(lua.globals().irads_image_commands.BRIGHTNESS_UP,1)
         v=lua.globals()['values']
-        self.assertAlmostEqual(v.F117_IRADS_BRIGHTNESS,.16)
+        self.assertAlmostEqual(v.F117_IRADS_BRIGHTNESS,.11)
         self.assertEqual(v.F117_IRADS_DRAW_BRIGHTNESS,1)
         self.assertEqual(v.F117_IRADS_DIM_OPACITY,0)
 

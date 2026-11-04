@@ -1,3 +1,39 @@
+## HUD/IRADS cursor and lock box (3 November 2026)
+
+Needs the matching EFM build.
+
+- **HUD/IRADS cursor.** A small open-centred cross on the HUD now marks where
+  the IRADS is looking (TO 1F-117A-1, Figure 4-4 item 7). Outside the 20 deg
+  total field of view, or off the drawn HUD area, its centre holds at the edge
+  in the direction of the sensor. Once locked it sits on the lock point.
+- **Lock box.** A 10 mrad box marks the IRADS ground lock point. The manual has
+  no HUD lock box; it was added on request.
+- The EFM publishes the IRADS view direction as `F117_IRADS_LOS_VALID` and
+  `F117_IRADS_LOS_X/Y/Z` (world unit vector). It is invalid when the IRADS is
+  off or its image has not been drawn for 0.5 s.
+
+## Platypus exhaust heat haze and night glow (3 November 2026)
+
+- **Heat haze.** Each engine's two old exhaust points sat 0.2 m high and inboard
+  of the real slots, and were copied from another aircraft. Each platypus slot
+  (2.85 m by 0.10 m, measured from the model) now feeds four narrow nozzles along
+  its length. The DCS heat blur, smoke and contrails form a flat sheet behind each
+  slot instead of a round plume. Flow runs aft with 8 deg outboard splay. Total
+  smoke per engine is unchanged.
+- **Night glow.** Two dim orange lights per slot light the slot lip and aft deck.
+  Draw arguments 1002 (left) and 1003 (right) follow each engine's rpm with a
+  6 s thermal lag: none below 60 %, a trace at ground idle, full at military
+  power. Both arguments go over the network.
+
+## Liveries cover the whole airframe again (3 November 2026)
+
+- All nine liveries now texture every skin, bay and door material of the current
+  exterior model. Its re-export renamed most skin materials (`Aircraft_01.006`
+  and so on), so most of the airframe had kept the default texture.
+- `tools/sync_livery_materials.py` rebuilds the livery tables from the model;
+  rerun it after any exterior re-export. `tests/test_liveries.py` fails when
+  they fall out of step.
+
 ## Engine starts on start air, two engines, ground carts (3 November 2026)
 
 Needs the matching EFM build.

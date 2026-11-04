@@ -6,7 +6,9 @@ local native_active=get_param_handle("F117_NATIVE_BRIGHTNESS_ACTIVE")
 local draw_brightness=get_param_handle("F117_IRADS_DRAW_BRIGHTNESS")
 local dim=get_param_handle("F117_IRADS_DIM_OPACITY")
 local band=get_param_handle("F117_IRADS_CONTRAST_BAND")
-local b,c=.45,.80
+-- Defaults are dim enough for night flying; the floor stays below the night preset.
+local LOW=.04
+local b,c=.35,.80
 local function clamp(value,low,high) return math.max(low,math.min(high,value)) end
 local function finite(v) return type(v)=="number" and v==v and math.abs(v)<math.huge end
 local function daylight_fraction(seconds)
@@ -16,13 +18,17 @@ local function daylight_fraction(seconds)
     return daylight
 end
 local function default_brightness(seconds)
-    return .11+(.45-.11)*daylight_fraction(seconds)
+    return .06+(.35-.06)*daylight_fraction(seconds)
 end
 local function default_contrast(seconds)
     return .96-(.96-.80)*daylight_fraction(seconds)
 end
 local function default_side_brightness(seconds)
     return .12+(1-.12)*daylight_fraction(seconds)
+end
+-- DEP gain under the HUD brightness control; full HUD by day still dims it a little.
+local function default_dep_brightness(seconds)
+    return .30+(.85-.30)*daylight_fraction(seconds)
 end
 local function publish()
     brightness:set(b);contrast:set(c)
@@ -39,10 +45,10 @@ local function set_command(command,value)
     if command==commands.BRIGHTNESS_AXIS or command==commands.CONTRAST_AXIS then
         if finite(value) then
             local unit=(clamp(value,-1,1)+1)/2
-            if command==commands.BRIGHTNESS_AXIS then b=.08+.92*unit else c=.35+.65*unit end
+            if command==commands.BRIGHTNESS_AXIS then b=LOW+(1-LOW)*unit else c=.35+.65*unit end
         end
-    elseif command==commands.BRIGHTNESS_UP then b=clamp(b+.05,.08,1)
-    elseif command==commands.BRIGHTNESS_DOWN then b=clamp(b-.05,.08,1)
+    elseif command==commands.BRIGHTNESS_UP then b=clamp(b+.05,LOW,1)
+    elseif command==commands.BRIGHTNESS_DOWN then b=clamp(b-.05,LOW,1)
     elseif command==commands.CONTRAST_UP then c=clamp(c+.05,.35,1)
     elseif command==commands.CONTRAST_DOWN then c=clamp(c-.05,.35,1)
     elseif command==commands.RESET then initialize();return true
@@ -51,4 +57,5 @@ local function set_command(command,value)
     return true
 end
 return {initialize=initialize,set_command=set_command,default_brightness=default_brightness,
-        default_contrast=default_contrast,default_side_brightness=default_side_brightness}
+        default_contrast=default_contrast,default_side_brightness=default_side_brightness,
+        default_dep_brightness=default_dep_brightness}

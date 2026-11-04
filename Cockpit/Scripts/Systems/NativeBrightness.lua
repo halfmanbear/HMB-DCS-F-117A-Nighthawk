@@ -12,7 +12,9 @@ function M.new()
     local eo_dim=get_param_handle("F117_LEFT_EO_DIM_OPACITY")
     local map_dim=get_param_handle("F117_MAP_DIM_OPACITY")
     local hud_draw=get_param_handle("F117_HUD_DRAW_BRIGHTNESS")
-    -- The DEP follows the HUD brightness control (manual 4-4).
+    -- The DEP follows the HUD brightness control (manual 4-4), scaled by its
+    -- time-of-day default so it is not full bright at night.
+    local dep=get_param_handle("F117_DEP_BRIGHTNESS")
     local dep_draw=get_param_handle("F117_DEP_DRAW_BRIGHTNESS")
     local irads_draw=get_param_handle("F117_IRADS_DRAW_BRIGHTNESS")
     local left_dim=get_param_handle("F117_LEFT_DIM_OPACITY")
@@ -30,7 +32,7 @@ function M.new()
     local function update()
         local enabled=false
         local fl,fr,fs=f("CMDI_L"),f("CMDI_R"),f("SD")
-        local hud_gain,dep_gain=hud:get()*f("HUD"),hud:get()*f("DEP")
+        local hud_gain,dep_gain=hud:get()*f("HUD"),hud:get()*dep:get()*f("DEP")
         local left_gain=1-left:get()
         if eo:get()==1 then left_gain=math.min(left_gain,irads:get()) end
         left_gain=left_gain*fl

@@ -13,6 +13,53 @@ return function(sensor,options)
     local filtered_n,filtered_u,filtered_e
     local previous_ias,approach=nil,false
     local function finite(v) return type(v)=="number" and v==v and math.abs(v)<1e12 end
+    local inputs={}
+    local function get(name)
+        if not inputs[name] then inputs[name]=get_param_handle(name) end
+        local v=inputs[name]:get()
+        return finite(v) and v or 0
+    end
+    -- HUD/IRADS cursor (TO 1F-117A-1 4-5): when the look angle is outside the
+    -- 20-degree total field of view its centre stays on the boundary. A fitted
+    -- layout (layout_profile.lua) additionally keeps it on the drawn area.
+    local tfov=math.tan(math.rad(options.tfov_half_deg or 10))
+    local area
+    if options.layout then
+        local l=options.layout
+        local w,h=math.rad(l.half_width_deg)*1000,math.rad(l.half_height_deg)*1000
+        area={left=(l.origin_mrad[1]-w)/1000,right=(l.origin_mrad[1]+w)/1000,
+              bottom=(l.origin_mrad[2]-h)/1000,top=(l.origin_mrad[2]+h)/1000}
+    end
+    -- World direction (north, up, east) to the aircraft frame (forward, right, up).
+    -- getHeading() is counter-clockwise, hence the sign change.
+    local function body(n,u,e,heading,pitch,roll)
+        local h=-heading
+        local ch,sh,cp,sp=math.cos(h),math.sin(h),math.cos(pitch),math.sin(pitch)
+        local cr,sr=math.cos(roll),math.sin(roll)
+        local along=n*ch+e*sh
+        local level_right=-n*sh+e*ch
+        local level_up=u*cp-along*sp
+        return along*cp+u*sp,level_right*cr-level_up*sr,level_up*cr+level_right*sr
+    end
+    -- Optical-plane coordinates (right/forward, up/forward), held on the boundary.
+    local function project(n,u,e,heading,pitch,roll)
+        local f,r,up=body(n,u,e,heading,pitch,roll)
+        local lateral=math.sqrt(r*r+up*up)
+        if not (finite(f) and finite(lateral)) or f*f+lateral*lateral<1e-12 then return nil end
+        local x,y
+        if f>0 and lateral<=tfov*f then x,y=r/f,up/f
+        elseif lateral>1e-9 then x,y=tfov*r/lateral,tfov*up/lateral
+        else x,y=0,-tfov end -- directly aft: no defined bearing, hold at the bottom
+        if area then
+            local scale=1
+            if x>area.right then scale=math.min(scale,area.right/x) end
+            if x<area.left then scale=math.min(scale,area.left/x) end
+            if y>area.top then scale=math.min(scale,area.top/y) end
+            if y<area.bottom then scale=math.min(scale,area.bottom/y) end
+            x,y=x*scale,y*scale
+        end
+        return x,y
+    end
     local ladder={}
     for degrees=-85,85,5 do
         local tag=degrees<0 and "N"..(-degrees) or "P"..degrees
@@ -63,15 +110,7 @@ return function(sensor,options)
                 filtered_e=filtered_e+(ve-filtered_e)*weight
             end
             vn,vu,ve=filtered_n,filtered_u,filtered_e
-            local h=-sensor.getHeading()
-            local ch,sh,cp,sp=math.cos(h),math.sin(h),math.cos(pitch),math.sin(pitch)
-            local cr,sr=math.cos(roll),math.sin(roll)
-            local along=vn*ch+ve*sh
-            local forward=along*cp+vu*sp
-            local level_right=-vn*sh+ve*ch
-            local level_up=vu*cp-along*sp
-            local right=level_right*cr-level_up*sr
-            local up=level_up*cr+level_right*sr
+            local forward,right,up=body(vn,vu,ve,sensor.getHeading(),pitch,roll)
             valid=forward>1 and vn*vn+vu*vu+ve*ve>25
             if valid then x=right/forward;y=up/forward end
         end
@@ -83,5 +122,27 @@ return function(sensor,options)
         set("VV_VALID",valid and 1 or 0)
         set("INS_VALID",valid and 1 or 0)
 
+        -- IRADS: the lock point (EFM world metres) gets the box; the cursor
+        -- follows the sensor's rendered line of sight, or the lock when locked.
+        local heading=sensor.getHeading()
+        local powered=get("F117_IRADS_POWER")>.5
+        local lx,ly
+        if powered and get("F117_IRADS_LOCK_VALID")>.5 and sensor.getSelfCoordinates then
+            local ox,oy,oz=sensor.getSelfCoordinates()
+            if finite(ox) and finite(oy) and finite(oz) then
+                lx,ly=project(get("F117_IRADS_LOCK_X")-ox,get("F117_IRADS_LOCK_Y")-oy,
+                    get("F117_IRADS_LOCK_Z")-oz,heading,pitch,roll)
+            end
+        end
+        set("IRADS_LOCK_VALID",lx and 1 or 0)
+        set("IRADS_LOCK_AZ",lx or 0)
+        set("IRADS_LOCK_EL",ly or 0)
+        local cx,cy=lx,ly
+        if not cx and powered and get("F117_IRADS_LOS_VALID")>.5 then
+            cx,cy=project(get("F117_IRADS_LOS_X"),get("F117_IRADS_LOS_Y"),get("F117_IRADS_LOS_Z"),heading,pitch,roll)
+        end
+        set("IRADS_VALID",cx and 1 or 0)
+        set("IRADS_AZ",cx or 0)
+        set("IRADS_EL",cy or 0)
     end
 end

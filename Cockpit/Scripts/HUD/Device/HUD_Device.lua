@@ -5,7 +5,8 @@ local update_time_step = 0.001 --update will be called 1000 times per second
 make_default_activity(update_time_step)
 -- Display data aligns after power-up; see Systems/AlignedSensor.lua.
 local sensor_data = dofile(LockOn_Options.script_path.."Systems/AlignedSensor.lua")(get_base_data())
-local update_ocip = dofile(LockOn_Options.script_path.."HUD/Device/OCIP_data.lua")(sensor_data)
+local update_ocip = dofile(LockOn_Options.script_path.."HUD/Device/OCIP_data.lua")(sensor_data,
+        {layout=dofile(LockOn_Options.script_path.."HUD/Indicator/layout_profile.lua")})
 
 -- Conversions
 

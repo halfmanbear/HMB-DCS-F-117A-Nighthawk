@@ -152,6 +152,33 @@ Tests cover native movement units, the capture's 494-knot / -4710-ft/min descent
 noise attenuation, immediate attitude projection and invalid-data recovery.
 Live DCS verification is still required for placement and the preferred feel.
 
+## HUD/IRADS cursor and lock box, 2026-11-03
+
+TO 1F-117A-1 (1992) page 4-5, item 7: the HUD/IRADS cursor is an open-centred
+cross at the IRADS look angle. Outside the 20-degree total field of view
+(Figure 4-3) its centre stays on the boundary, so about half of it shows.
+
+- Source: the EFM publishes the rendered IRADS view direction as a world unit
+  vector, `F117_IRADS_LOS_X/Y/Z` (north, up, east), with `F117_IRADS_LOS_VALID`.
+  It goes invalid with IRADS power off or when the image has not been drawn for
+  0.5 s. The lock point comes from the existing `F117_IRADS_LOCK_*` parameters.
+- `OCIP_data.lua` turns each direction into the aircraft frame with the same
+  heading/pitch/bank transform as the flight-path marker, and publishes
+  right/forward and up/forward as `F117_OCIP_IRADS_AZ/EL` and
+  `F117_OCIP_IRADS_LOCK_AZ/EL`. Directions beyond 10 degrees off the optical
+  axis, including aft, are held at 10 degrees along their bearing. The HUD
+  device also passes `layout_profile.lua`, so the centre never leaves the
+  drawn area (its top edge is about 4.6 degrees above the optical axis).
+- When locked, the cursor uses the lock point rather than the camera ray.
+- Symbols: the cross has 2 mrad gaps and 5 mrad arms (14 mrad across), smaller
+  than the manual's "large" cross by request. The 10 mrad lock box is not a
+  manual symbol and was added on request. Both are occluded by readout boxes
+  like the other cues.
+
+Tests: `test_irads_cursor_and_lock_box_follow_sensor` and
+`test_irads_cursor_stays_on_the_drawn_area` in `tests/test_ocip_hud.py`.
+Not yet observed in DCS.
+
 ## Cockpit research context
 
 The requested OCIP III simulator defaults are left VSD, centre green IRADS and

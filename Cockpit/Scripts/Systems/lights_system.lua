@@ -129,7 +129,30 @@ function update_flashing_ext()
 end
 --Flash Logic end
 
+-- Platypus heat glow, draw arguments 1002 (left) and 1003 (right). The slot tiles heat and
+-- cool slowly, so the glow follows engine rpm through a lag. Nothing shows below 60 % rpm,
+-- a trace at ground idle, and full glow at military power. The lights' brightness and
+-- colour are set in lights_data in F-117-NightHawk.lua.
+local GLOW_RPM_START = 0.60 -- rpm fraction: get_base_data reports 0 to 1 for this EFM
+local GLOW_TIME_CONSTANT = 6.0 -- s
+local glow = {0, 0}
+
+local function glow_target(rpm)
+    local x = math.max(0, math.min(1, ((rpm or 0) - GLOW_RPM_START) / (1 - GLOW_RPM_START)))
+    return x * x
+end
+
+function update_platypus_glow()
+    local k = update_time_step / (GLOW_TIME_CONSTANT + update_time_step)
+    local rpm = {sensor_data:getEngineLeftRPM(), sensor_data:getEngineRightRPM()}
+    for i = 1, 2 do
+        glow[i] = glow[i] + (glow_target(rpm[i]) - glow[i]) * k
+        set_aircraft_draw_argument_value(1001 + i, glow[i])
+    end
+end
+
 function update()
+    update_platypus_glow()
     local anticoll = update_anticoll_value()
     local flashon_ext = update_flashing_ext()
     flood_param:set(FLOOD_LGT)
