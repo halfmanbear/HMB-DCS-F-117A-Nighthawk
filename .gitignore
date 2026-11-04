@@ -34,6 +34,7 @@ __pycache__/
 # Keep only the Blender sources for currently referenced models
 /blender_files/*
 !/blender_files/README.md
+!/blender_files/f-117-nighthawk-exterior.blend
 !/blender_files/f-117-nighthawk_canopy.blend
 !/blender_files/f-117-nighthawk-oblomok.blend
 !/blender_files/integrated_collision/

@@ -28,8 +28,8 @@ local function props(e,parent,params,controllers,additive)
     e.blend_mode=additive and blend_mode.IBM_REGULAR_ADDITIVE_ALPHA or blend_mode.IBM_REGULAR
     e.element_params=params;e.controllers=controllers;Add(e);return e
 end
-local function line(points,colour,parent)
-    local e=strokes.line(points,1,MAP_LINE_WEIGHT or 1);e.material=MAP_MATERIALS[colour or "symbol"]
+local function line(points,colour,parent,weight)
+    local e=strokes.line(points,1,weight or MAP_LINE_WEIGHT or 1);e.material=MAP_MATERIALS[colour or "symbol"]
     return props(e,parent)
 end
 -- Static label geometry: stretched to the window like label positions.
@@ -69,10 +69,14 @@ local function group(name,params,controllers,parent)
     local e=CreateElement "ceSimple";e.name=name
     props(e,parent,params,controllers);return e.name
 end
-local function label(value,x,y,parent,align)
+-- Bottom option row: size, weight and selection box shared with VSD and HSD.
+-- Its sizes are divided by the page scale so they stay fixed on the glass.
+local ROW=dofile(LockOn_Options.script_path.."MFD/Indicator/cmdi_option_row.lua")
+local OPTION={sd=ROW.stringdefs(window.scale),weight=ROW.weight}
+local function label(value,x,y,parent,align,style)
     local e=CreateElement "ceStringSLine";e.value=value;e.init_pos={X(x),Y(y),0}
-    e.stringdefs=MAP_SMALL;e.alignment=align or "CenterCenter"
-    e.material=MAP_FONTS.symbol;strokes.text(e,MAP_TEXT_WEIGHT);props(e,parent)
+    e.stringdefs=style and style.sd or MAP_SMALL;e.alignment=align or "CenterCenter"
+    e.material=MAP_FONTS.symbol;strokes.text(e,style and style.weight or MAP_TEXT_WEIGHT);props(e,parent)
 end
 -- Format must match the stored type: "%s" with a numeric parameter crashes DCS,
 -- and Lua set() stores numeric-looking strings such as "25" as numbers.
@@ -101,8 +105,13 @@ param_label("RANGE",.070,.034,nil,"%.0f")
 sline({{.067,.027},{.070,.022},{.073,.027},{.067,.027}})
 readout("ORIENTATION_TEXT",.077,.001,"RightCenter")
 readout("TDC_TEXT",.077,-.020,"RightCenter")
-label("HSD",-.048,-.065);label("MAP",-.024,-.065);box(-.024,-.065,.021,.007)
-label("STAT",.001,-.065);label("SMD",.025,-.065);label("DFRM",.050,-.065)
+-- One call per line: the layout editor moves the first call on a source line.
+label("HSD",-.048,-.065,nil,nil,OPTION)
+label("MAP",-.024,-.065,nil,nil,OPTION)
+line(ROW.outline(X(-.024),Y(-.065),window.scale),"symbol",nil,ROW.weight)
+label("STAT",.001,-.065,nil,nil,OPTION)
+label("SMD",.025,-.065,nil,nil,OPTION)
+label("DFRM",.050,-.065,nil,nil,OPTION)
 -- No ALERT is asserted without an actual alert data source.
 -- PMAP and DMAP select the requested background; neither has map tiles yet.
 text("MAP DATA NOT LOADED",0,-.055,MAP_SMALL,"CenterCenter",
