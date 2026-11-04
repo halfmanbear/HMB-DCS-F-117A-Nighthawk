@@ -252,13 +252,22 @@ text("",.0030,0,SM,"LeftCenter",{"F117_AT_CAS_COMMAND"},{{"text_using_parameter"
 local arsLine=group({-.030,-.0335},nil,{"F117_ARS_ACTIVE"},{{"parameter_in_range",0,.9,1.1}})
 text("",0,0,VAL,"LeftCenter",{"F117_ARS_MIN_ALT"},{{"text_using_parameter",0,0}},{"ARS  %5.0f"},"red",arsLine)
 
--- Bottom option row.
-box(-.028,-.0415,.008,.0028,"green")
-text("VSD",-.028,-.0415,SM,nil,nil,nil,nil,"green")
-line({{-.018,-.0415},{-.0148,-.0415}});line({{-.0132,-.0415},{-.010,-.0415}})
-line(circle(-.014,-.0415,.0008));line({{-.014,-.0407},{-.014,-.0395}})
-text("STAT",0,-.0415,SM)
-text("DEP",.026,-.0415,SM)
+-- Bottom option row: size, weight and selection box shared with HSD and MAP.
+-- Row sits clear of the ETA box above and the aperture edge below.
+local ROW=dofile(LockOn_Options.script_path.."MFD/Indicator/cmdi_option_row.lua")
+local function label(value,x,y,colour)
+    local e=CreateElement "ceStringSLine"
+    e.value=value;e.init_pos={x,y,0};e.alignment="CenterCenter"
+    e.material=VSD_FONTS[colour or "white"];e.stringdefs=ROW.stringdefs()
+    strokes.text(e,ROW.weight)
+    return props(e)
+end
+line(ROW.outline(-.028,-.041),"green",nil,nil,.00020*ROW.weight)
+label("VSD",-.028,-.041,"green")
+line({{-.018,-.041},{-.0148,-.041}});line({{-.0132,-.041},{-.010,-.041}})
+line(circle(-.014,-.041,.0008));line({{-.014,-.0402},{-.014,-.0390}})
+label("STAT",0,-.041)
+label("DEP",.026,-.041)
 
 F117_SIDE_DIM_PARAMETER="F117_LEFT_DIM_OPACITY"
 F117_SIDE_DIM_ROOT=ROOT.name

@@ -25,22 +25,24 @@ STANDARD_CELLS = {
 
 
 def edm_collision_nodes(path):
-    """Walk the collision section, which runs to the end of the file."""
+    """Walk the collision section. It ends the file, or is followed by another section such as
+    LIGHT_NODES, depending on which tool wrote the model."""
     raw = path.read_bytes()
     size = struct.unpack_from('<I', raw, 5)[0]
     strings = raw[9:9 + size - 1].split(b'\0')
     shell, segments = strings.index(b'model::ShellNode'), strings.index(b'model::SegmentsNode')
+    sections = {i for i, s in enumerate(strings) if s.endswith(b'_NODES') or s == b'CONNECTORS'}
     marker = struct.pack('<I', strings.index(b'SHELL_NODES'))
     start = raw.rfind(marker)
     while start > 0:
-        nodes = walk(raw, start + 8, struct.unpack_from('<I', raw, start + 4)[0], shell, segments)
+        nodes = walk(raw, start + 8, struct.unpack_from('<I', raw, start + 4)[0], shell, segments, sections)
         if nodes is not None:
             return nodes
         start = raw.rfind(marker, 0, start)
     raise AssertionError('collision section not found')
 
 
-def walk(raw, pos, count, shell, segments):
+def walk(raw, pos, count, shell, segments, sections):
     nodes = []
     try:
         for _ in range(count):
@@ -62,7 +64,9 @@ def walk(raw, pos, count, shell, segments):
                 return None
     except (struct.error, UnicodeDecodeError, KeyError):
         return None
-    return nodes if pos == len(raw) else None
+    if pos == len(raw) or (pos + 4 <= len(raw) and struct.unpack_from('<I', raw, pos)[0] in sections):
+        return nodes
+    return None
 
 
 def efm_source():

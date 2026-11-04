@@ -6,27 +6,29 @@ Model hashes are SHA256, shortened to 12 characters except in the current state.
 
 ## Current state
 
-As of 2026-11-03. None of this is committed yet.
+As of 2026-11-04. None of this is committed yet.
 
 | Part | Location | Identity |
 |---|---|---|
-| Exterior model | `Shapes/f-117-nighthawk.edm` | `b314ca7fa7f66af7d663a3da017bc41776c8b392fff3bf86b5a9157b371117ac` |
+| Exterior model | `Shapes/f-117-nighthawk.edm`, exported from `F-117 Exterior` on 2026-11-04 | `991a733a6711dc49237da830a03caec2d358e06a06fc481f274261aa73a628f9` |
 | Damage table | `F-117-NightHawk.lua` | 25 cells, `00a6e68c8947` |
 | EFM source | `EFM Source Code/F_117_NightHawk.cpp` in the EFM repository | `d241a56` plus uncommitted changes, `b09f58c2f0cf` |
 | EFM binary | Build output, loaded through the local proxy | `32d64e264d8a`, built 2026-11-03 16:10 |
 | Store profiles | `Cockpit/Scripts/Systems/Weapons.lua` `classify()` and the EFM `kCcrpStoreModels` | 14 profiles in the same order; `tests/test_store_profiles.py` checks both |
-| Blender scene | `F-117 Damage Sections`, in the two projects listed below | Stamped with the model hash |
+| Blender source | `F-117 Exterior` in `blender_files/f-117-nighthawk-exterior.blend`, imported from the script-built `b314ca7fa7f6` | Stamped with `b314ca7fa7f6`, the model it was imported from |
 
 ## Blender projects
 
-Paths are under `blender_files/`, and `IC` means `blender_files/integrated_collision/`. The first
-six rows were checked by comparing triangle counts per damage name against the model. The others
-come from each folder's README and overall counts.
+Paths are under `blender_files/`, and `IC` means `blender_files/integrated_collision/`. The
+exterior project was checked with `tools/check_edm_export.py`. The next six rows were checked by
+comparing triangle counts per damage name against the model. The others come from each folder's
+README and overall counts.
 
 | Project | Scene | Model | Damage table | EFM | Status |
 |---|---|---|---:|---|---|
-| `IC/exposed_controls/f-117-nighthawk-exposed-controls.blend` (tracked) | `F-117 Damage Sections` | `b314ca7fa7f6` | 25 | 25-cell | **Current** |
-| `IC/f-117-nighthawk-integrated-collision.blend` | `F-117 Damage Sections` | `b314ca7fa7f6` | 25 | 25-cell | **Current** |
+| `f-117-nighthawk-exterior.blend` (tracked) | `F-117 Exterior` | `991a733a6711` | 25 | 25-cell | **Current source**: export from here |
+| `IC/exposed_controls/f-117-nighthawk-exposed-controls.blend` (tracked) | `F-117 Damage Sections` | `b314ca7fa7f6` | 25 | 25-cell | Review copy of the collision only |
+| `IC/f-117-nighthawk-integrated-collision.blend` | `F-117 Damage Sections` | `b314ca7fa7f6` | 25 | 25-cell | Review copy of the collision only |
 | `IC/exposed_controls/f-117-nighthawk-exposed-controls.blend` | `F117 complete EDM - exposed controls` | `57e1fb9298d6` | 9 | 9-cell | Both 2.0.0 dev releases |
 | `IC/exposed_controls/f-117-nighthawk-exposed-controls.compressed.blend` | `F117 complete EDM - exposed controls` | `57e1fb9298d6` | 9 | 9-cell | The file committed in `f1bb490` |
 | `IC/exposed_controls/f-117-nighthawk-exposed-controls.blend` | `F117 symmetric collision export` | `8c95f0985f0c` | 9 | 9-cell | Local only |
@@ -89,26 +91,48 @@ The package workflow builds whatever EFM commit is on the matching branch when t
 
 ## Exporting from Blender
 
-Do not export the exterior model from any of these projects.
+Export the exterior model only from `F-117 Exterior` in `blender_files/f-117-nighthawk-exterior.blend`.
 
-- The installed model is built by `IC/add_damage_sections.py`, which patches the collision section
-  of `IC/exposed_controls/f-117-nighthawk.edm`.
+1. Open it in Blender 4.5 with the official EDM exporter and the iEDM_10 importer enabled. The
+   importer's export hook must include the fix for reopened files (iEDM changelog, Unreleased):
+   without it, visibility-animated parts export kilometres out of place.
+2. Edit. The collision objects are hidden and drawn as wireframe; Alt+H shows them. Don't hide
+   the `Collision` collection, because the exporter skips hidden collections.
+3. Export to `Shapes/f-117-nighthawk.edm`. The scene's EDM export path is already set to it.
+4. Run `blender -b --python tools/check_edm_export.py`. It compares the export with the model at
+   git HEAD, and fails if the collision, connectors, lights or boxes changed. Visual changes are
+   listed, but don't fail the check.
+5. Update **Current state**, then run `python -m pytest tests/test_damage_model.py`.
+
+A fresh export of the unedited scene passes the check against `b314ca7fa7f6`. It isn't
+byte-identical, for three reasons:
+
+- The exporter drops triangles with no area, about 2% of the total. The surface area per material
+  is unchanged.
+- The wheel contacts' gear bones are written as position and rotation argument nodes. The
+  contacts sit in the same place with the gear up and down, and within 5 mm mid-travel.
+- Node names change. DCS doesn't use them; connector names are unchanged.
+
+To rebuild the project from the installed model, run `blender -b --python
+tools/build_exterior_blend.py`.
+
+Don't export from the other projects:
+
 - `F-117 Damage Sections` holds plain meshes for review, without the parent links or collision node
   types the model needs.
 - The older `Scene` collision uses names the `Damage` table doesn't have, such as `CABIN_LEFT_SIDE`
   and `ELERON_L`.
 
-Getting a visual edit from Blender into the model while keeping the sections has not been tested.
+`IC/add_damage_sections.py` built `b314ca7fa7f6` by patching the collision section of
+`IC/exposed_controls/f-117-nighthawk.edm`. Section changes can now be made in Blender instead.
 
 ## Keeping this page current
 
 When the model or the damage cells change:
 
-1. Rebuild and install the model, as described in `IC/damage_sections/README.md`.
-2. Run `IC/add_damage_section_scene.py` on the current projects, adding any new scene to its
-   `HISTORICAL` list.
-3. Update **Current state**, then add a row to the tables above.
-4. Run `python -m pytest tests/test_damage_model.py`.
+1. Export the model from `F-117 Exterior`, as described above, and run `tools/check_edm_export.py`.
+2. Update **Current state**, then add a row to the tables above.
+3. Run `python -m pytest tests/test_damage_model.py`.
 
 The test fails if this page names a different model from the installed one, if the Lua table and
 model names differ, or if the EFM's cells differ from the model's. It also fails if the built EFM is

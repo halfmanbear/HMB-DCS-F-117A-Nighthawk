@@ -136,12 +136,22 @@ for i,name in ipairs({"D_TEXT","TTG_TEXT","RNG_TEXT"}) do
 end
 box(0.0386,-0.0305,.0193,.0045)
 text("DME",0.0301,-0.0305,SM,"LeftCenter")
-text("HSD",-.0252,-.0405,SD)
-box(-.0252,-.0405,.0108,.0036,"paleyellow") -- HSD is the selected page; legend text stays white
-text("MAP",-.0119,-.0405,SD)
-text("STAT",.0012,-.0405,SD)
-text("SMD",.0149,-.0405,SD)
-text("DFRM",.0282,-.0405,SD)
+-- Bottom option row: size, weight and selection box shared with VSD and MAP.
+local ROW=dofile(LockOn_Options.script_path.."MFD/Indicator/cmdi_option_row.lua")
+local function label(value,x,y)
+    local e=CreateElement "ceStringSLine"
+    e.value=value;e.init_pos={x,y,0};e.alignment="CenterCenter"
+    e.material=HSD_FONTS.white;e.stringdefs=ROW.stringdefs()
+    strokes.text(e,ROW.weight)
+    return props(e)
+end
+label("HSD",-.0252,-.0405)
+-- HSD is the selected page; legend text stays white.
+line(ROW.outline(-.0252,-.0405),"paleyellow",nil,nil,.00020*ROW.weight)
+label("MAP",-.0119,-.0405)
+label("STAT",.0012,-.0405)
+label("SMD",.0149,-.0405)
+label("DFRM",.0282,-.0405)
 
 F117_SIDE_DIM_PARAMETER="F117_RIGHT_DIM_OPACITY"
 F117_SIDE_DIM_ROOT=ROOT.name

@@ -4,17 +4,24 @@ Only the projects associated with currently referenced aircraft models are track
 
 | Blender project | Runtime model |
 | --- | --- |
-| `integrated_collision/exposed_controls/f-117-nighthawk-exposed-controls.blend` | `Shapes/f-117-nighthawk.edm` |
+| `f-117-nighthawk-exterior.blend` | `Shapes/f-117-nighthawk.edm` |
 | `f-117-nighthawk_canopy.blend` | `Shapes/f-117-nighthawk_canopy.edm` |
 | `f-117-nighthawk-oblomok.blend` | `Shapes/f-117-nighthawk-oblomok.edm` |
 
 `docs/model-efm-compatibility.md` records which project and scene hold each model,
 and which Lua damage table and EFM each model needs.
 
-The exterior model is built by script rather than exported, so do not export it from
-Blender. `integrated_collision/damage_sections/README.md` explains how to rebuild it.
-The exterior project's `F-117 Damage Sections` scene is a review copy of the installed
-collision, and its other scenes hold earlier geometry.
+`f-117-nighthawk-exterior.blend` has one scene, `F-117 Exterior`, which exports the
+whole exterior model. `Vehicle` holds the visuals, and `Vehicle/Collision` holds the 25
+damage-cell sections, the control-surface shells and the wheel contacts. The collision
+objects are hidden and drawn as wireframe; press Alt+H to show them. Don't hide the
+`Collision` collection itself: the exporter skips hidden collections, and the model
+would lose its damage cells. "Exporting from Blender" in
+`docs/model-efm-compatibility.md` gives the steps.
+
+`integrated_collision/exposed_controls/f-117-nighthawk-exposed-controls.blend` is kept
+as history. Its scenes are imports of earlier models and review copies, so don't export
+from it.
 Older collision candidates, the original exterior project, detached-wing projects,
 and development outputs remain local and ignored. The aircraft currently selects
 a stock ejection seat, so the separate custom seat project is also excluded.

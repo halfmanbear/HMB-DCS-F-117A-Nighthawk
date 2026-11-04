@@ -23,11 +23,15 @@ Presets =
             AlbedoSRGB = 0.86,
             
             OpacityMax = 0.25,
-            OpacityOverPower = {-- vapor power -> normalized opacity. In this case opacity = sqrt(vapor power)
+            -- Vapour power -> opacity. For this aircraft the power stays near 0.05 below
+            -- about 7 deg AoA and rises to about 0.12 at 12 deg, so the cloud starts near
+            -- 8 deg and is full by 11.5 deg. The EFM fades the leading-edge vortices out
+            -- over the same range, as the cloud replaces them.
+            OpacityOverPower = {
                 {0.0,   0.0},
-                {0.125, 0.35355339059327376220042218105242},
-                {0.25,  0.5},
-                {0.5,   0.70710678118654752440084436210485},
+                {0.07,  0.0},
+                {0.09,  0.45},
+                {0.115, 1.0},
                 {1.0,   1.0},
             },
         }

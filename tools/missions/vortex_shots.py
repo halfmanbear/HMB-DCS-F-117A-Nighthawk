@@ -2,6 +2,7 @@
 
     python tools/missions/vortex_shots.py            # fly and capture
     python tools/missions/vortex_shots.py --build-only
+    python tools/missions/vortex_shots.py --power-map  # AoA sweep at three speeds, top view only
 
 Builds a mission from the Caucasus free flight quick start: a clean F-117 at 600 m over
 the Black Sea at noon with no wind. A temporary hook in Saved Games/DCS/Scripts/Hooks:
@@ -30,6 +31,16 @@ from missions.store_drop_test import lua_string  # noqa: E402
 MOD = HERE.parents[1]
 TEMPLATE = MOD / 'Missions/QuickStart/F-117A-NightHawk - Caucasus - Free Flight.miz'
 RESULTS = HERE / 'results/vortex'
+STEPS = "{{'cruise', nil}, {'aoa06', 6}, {'aoa09', 9}, {'aoamax', 99}, {'fastmax', 99, 260}}"
+SHOTS = """{
+    {'top',   {-4, 22, -3},  {-1, 0, 0}},   -- plan view from above, like the in-game reference
+    {'side',  {3, 9, -17},   {-1.5, 0, 0}}, -- above the left wing, like the airshow photo
+    {'rear',  {-20, 7, 6},   {0, 0, 0}},    -- behind and above the right wing
+}"""
+# Power map: one top shot per AoA step at each entry speed.
+MAP_STEPS = '{' + ', '.join(
+    f"{{'v{v}_a{aoa:02d}', {aoa}, {v}}}" for v in (150, 200, 250) for aoa in (4, 5, 6, 7, 8, 9, 10, 99)) + '}'
+MAP_SHOTS = "{{'top', {-4, 22, -3}, {-1, 0, 0}}}"
 DCS_EXE = Path(r'E:\Eagle Dynamics\DCS World\bin-mt\DCS.exe')
 SAVED_GAMES = MOD.parents[2]
 LOGS = SAVED_GAMES / 'Logs'
@@ -42,13 +53,9 @@ HOOK = r"""-- Temporary hook written by tools/missions/vortex_shots.py. Safe to 
 local logs = lfs.writedir() .. 'Logs\\'
 local SPEED, ALT = {SPEED}, {ALT}
 -- name, target AoA (deg; nil = 1 g cruise, 99 = full aft stick), entry speed (m/s; nil = SPEED)
-local STEPS = {{ {{'cruise', nil}}, {{'aoa06', 6}}, {{'aoa09', 9}}, {{'aoamax', 99}}, {{'fastmax', 99, 260}} }}
+local STEPS = {STEPS}
 -- Camera points in the body frame (forward, up, right), metres, looking at the target point.
-local SHOTS = {{
-    {{'top',   {{-4, 22, -3}},  {{-1, 0, 0}}}},   -- plan view from above, like the in-game reference
-    {{'side',  {{3, 9, -17}},   {{-1.5, 0, 0}}}}, -- above the left wing, like the airshow photo
-    {{'rear',  {{-20, 7, 6}},   {{0, 0, 0}}}},    -- behind and above the right wing
-}}
+local SHOTS = {SHOTS}
 local hook = {{}}
 local handle, startTime, finished
 local step, phase, phaseTime, steadySince = 1, 'accelerate', 0, nil
@@ -132,7 +139,7 @@ function hook.onSimulationFrame()
     end
     if not me then return finish('aircraft lost') end
     local t = now - startTime
-    if t > 700 then return finish('timed out at step ' .. step .. ' ' .. phase) end
+    if t > 1300 then return finish('timed out at step ' .. step .. ' ' .. phase) end
 
     local tas = Export.LoGetTrueAirSpeed() or 0
     local aoa = Export.LoGetAngleOfAttack() or 0 -- degrees, despite Export.lua
@@ -149,7 +156,7 @@ function hook.onSimulationFrame()
         local climb = clamp((ALT - me.LatLongAlt.Alt) * 0.08, -30, 15)
         pitchCmd = clamp(0.02 * (climb - vy) - 0.6 * me.Pitch, -0.4, 0.4)
         integ = 0
-        if tas > entry - 6 and math.abs(ALT - me.LatLongAlt.Alt) < 400 and now - phaseTime > 4 then
+        if math.abs(tas - entry) < 6 and math.abs(ALT - me.LatLongAlt.Alt) < 400 and now - phaseTime > 4 then
             phase, phaseTime, steadySince = (target == nil) and 'hold' or 'roll', now, nil
         end
     elseif phase == 'roll' then
@@ -206,8 +213,10 @@ function hook.onSimulationFrame()
     local rollCmd = clamp(1.5 * (bankWanted - me.Bank), -0.6, 0.6)
     Export.LoSetCommand(2002, rollCmd)
     Export.LoSetCommand(2003, 0)
-    -- Hold the entry speed when wings level; full power in the turns.
-    local throttle = (target == nil) and clamp(0.08 * (tas - SPEED), -1, 1) or -1
+    -- Settle on the entry speed (or hold it in the 1 g step); full power in the turns.
+    local throttle = -1
+    if phase == 'accelerate' then throttle = clamp(0.08 * (tas - entry), -1, 1)
+    elseif target == nil then throttle = clamp(0.08 * (tas - SPEED), -1, 1) end
     Export.LoSetCommand(2004, throttle)
     if math.floor(t * 4) ~= math.floor((t - 0.02) * 4) then
         handle:write(string.format('%.2f,%s,%s,%.0f,%.1f,%.2f,%.2f,%.2f,%.3f,%.3f\n',
@@ -286,21 +295,21 @@ def capture(name, before):
         return None
 
 
-def run(mission):
+def run(mission, steps=STEPS, shots=SHOTS):
     if 'DCS.exe' in subprocess.run(['tasklist', '/FI', 'IMAGENAME eq DCS.exe'], capture_output=True, text=True).stdout:
         raise SystemExit('Close DCS first.')
     request, done, flight = LOGS / 'F117_vortex_shot.req', LOGS / 'F117_vortex_shots.done', LOGS / 'F117_vortex_shots.csv'
-    for old in (request, done, flight):
+    for old in (request, done, flight, RESULTS / 'shots.csv'):
         old.unlink(missing_ok=True)
-    HOOK_PATH.write_text(HOOK.format(SPEED=SPEED, ALT=ALT), encoding='utf-8')
+    HOOK_PATH.write_text(HOOK.format(SPEED=SPEED, ALT=ALT, STEPS=steps, SHOTS=shots), encoding='utf-8')
     process = subprocess.Popen([str(DCS_EXE), '--mission', str(mission)])
     taken = []
     before = screenshots()
     try:
-        deadline = time.time() + 1000
+        deadline = time.time() + 1500
         while not done.exists():
             if time.time() > deadline:
-                print('DCS did not finish in 12 minutes')
+                print('DCS did not finish in 25 minutes')
                 break
             if process.poll() is not None:
                 print('DCS closed early')
@@ -308,6 +317,8 @@ def run(mission):
             if request.exists():
                 time.sleep(0.05)
                 name = request.read_text().strip()
+                with (RESULTS / 'shots.csv').open('a') as times:
+                    times.write(f'{name},{time.time():.3f}\n')
                 path = capture(name, before)
                 before = screenshots()
                 if path:
@@ -338,12 +349,17 @@ def run(mission):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--build-only', action='store_true', help='write the mission without starting DCS')
+    parser.add_argument('--power-map', action='store_true',
+                        help='sweep AoA at 150, 200 and 250 m/s with top shots only, into results/vortex/power_map')
     args = parser.parse_args()
+    global RESULTS
+    if args.power_map:
+        RESULTS = RESULTS / 'power_map'
     RESULTS.mkdir(parents=True, exist_ok=True)
     mission = RESULTS / 'vortex_shots.miz'
     build_mission(mission)
     if not args.build_only:
-        run(mission)
+        run(mission, MAP_STEPS, MAP_SHOTS) if args.power_map else run(mission)
 
 
 if __name__ == '__main__':
