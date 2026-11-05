@@ -260,6 +260,15 @@ class AlignmentTests(unittest.TestCase):
         self.assertAlmostEqual(s.getVerticalVelocity(), 5)
         self.assertEqual(s.getMachNumber(), .5)
 
+    def test_aligned_sensor_takes_airspeeds_from_the_efm_when_valid(self):
+        lua, g = runtime()
+        v = g['values']
+        lua.execute('sensor.getIndicatedAirSpeed=function()return 90 end;sensor.getTrueAirSpeed=function()return 70 end')
+        s = g.dofile(SCRIPTS / 'Systems/AlignedSensor.lua')(g.sensor)
+        self.assertEqual((s.getIndicatedAirSpeed(), s.getTrueAirSpeed()), (90, 70))  # No EFM air data yet.
+        v.F117_AIR_DATA_VALID, v.F117_CAS_MPS, v.F117_TAS_MPS = 1, 80, 81
+        self.assertEqual((s.getIndicatedAirSpeed(), s.getTrueAirSpeed()), (80, 81))
+
     def test_power_up_reseeds_alignment(self):
         lua, g = device()
         v = g['values']

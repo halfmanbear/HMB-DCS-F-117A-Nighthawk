@@ -6,6 +6,10 @@ local native_active=get_param_handle("F117_NATIVE_BRIGHTNESS_ACTIVE")
 local draw_brightness=get_param_handle("F117_IRADS_DRAW_BRIGHTNESS")
 local dim=get_param_handle("F117_IRADS_DIM_OPACITY")
 local band=get_param_handle("F117_IRADS_CONTRAST_BAND")
+-- The sensor display's L (level) and G (gain) bars, 0 to 1. The sim has no
+-- separate IR level and gain, so they show the brightness and contrast settings.
+local level=get_param_handle("F117_IRADS_LEVEL")
+local gain=get_param_handle("F117_IRADS_GAIN")
 -- Defaults are dim enough for night flying; the floor stays below the night preset.
 local LOW=.04
 local b,c=.35,.80
@@ -35,6 +39,7 @@ local function publish()
     local native=native_active:get()==1
     draw_brightness:set(native and 1 or b)
     dim:set(native and 0 or 1-b);band:set(math.floor((c-.35)*100+.5))
+    level:set((b-LOW)/(1-LOW));gain:set((c-.35)/.65)
 end
 local function initialize()
     local seconds=get_absolute_model_time()

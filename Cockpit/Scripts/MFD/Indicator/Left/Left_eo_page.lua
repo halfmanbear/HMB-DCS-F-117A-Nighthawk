@@ -61,7 +61,9 @@ end
 -- ONE avoids applying centre brightness: native left brightness or its final
 -- black fallback layer dims the complete EO picture and symbols together.
 F117_IRADS_OVERLAY_OPTIONS={repeater=true,root_name="F117_LEFT_EO_SYMBOLOGY",
-    parent=content.name,scale=EO_SCALE,level=1,brightness_parameter="ONE"}
+    parent=content.name,scale=EO_SCALE,level=1,brightness_parameter="ONE",
+    -- The rounded aperture, not the video, sets the visible width here.
+    edge_half_width=.050/EO_SCALE}
 dofile(LockOn_Options.script_path.."MFD/Indicator/MFD_base_page.lua")
 F117_IRADS_OVERLAY_OPTIONS=nil
 F117_SIDE_DIM_PARAMETER="F117_LEFT_EO_DIM_OPACITY"

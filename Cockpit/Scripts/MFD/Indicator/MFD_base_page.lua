@@ -5,6 +5,7 @@ local readability = dofile(LockOn_Options.script_path.."display_readability.lua"
 
 -- Green centre sensor display; the left CMDI repeater is grayscale.
 local sensor_colour=F117_IRADS_OVERLAY_OPTIONS and {230,230,230,255} or {0,255,0,255}
+MFD_COLOUR = sensor_colour
 MFD_WHITE = MakeMaterial(nil, sensor_colour)
 
 -- Font for symbology text

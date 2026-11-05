@@ -199,8 +199,8 @@ class LayoutEditorTests(unittest.TestCase):
         def visible(value):
             return {s[5] for e,s in model.scene(dict(DEFAULTS,F117_IRADS_LOCK_VALID=value)) if s[3]}
         self.assertIn('SRCH',visible(0))
-        self.assertNotIn('POINT',visible(0))
-        self.assertIn('POINT',visible(1))
+        self.assertNotIn('CUED',visible(0))
+        self.assertIn('CUED',visible(1))
         self.assertNotIn('SRCH',visible(1))
 
     def test_hud_has_physical_glass_masks_separate_from_collimated_symbols(self):
@@ -251,18 +251,18 @@ class LayoutEditorTests(unittest.TestCase):
 
     def test_drag_updates_actual_text_source(self):
         model=self.load('MFD')
-        target=next(e for e in model.elements if e.get('value')=='W-HOT')
+        target=next(e for e in model.elements if e.get('value')=='LG')
         changed=move_source(model.source,target,.01,-.02)
         updated=Model('MFD',changed)
-        moved=next(e for e in updated.elements if e.get('value')=='W-HOT')
+        moved=next(e for e in updated.elements if e.get('value')=='LG')
         self.assertAlmostEqual(moved['init_pos'][0],target['init_pos'][0]+.01)
         self.assertAlmostEqual(moved['init_pos'][1],target['init_pos'][1]-.02)
         unchanged=next(e for e in updated.elements if e.get('value')=='SRCH')
-        self.assertEqual(unchanged['init_pos'],[-.073,-.049])
+        self.assertEqual(unchanged['init_pos'],[-.07039,.03875])
 
     def test_multi_move_and_scale_real_text_and_geometry(self):
         model=self.load('MFD')
-        labels=[next(e for e in model.elements if e.get('value')==name) for name in ['W-HOT','SRCH']]
+        labels=[next(e for e in model.elements if e.get('value')==name) for name in ['LG','SRCH']]
         changed=transform_selection(model.source,labels,model,DEFAULTS,dx=.01,dy=.02)
         moved=Model('MFD',changed)
         for before in labels:
@@ -284,10 +284,10 @@ class LayoutEditorTests(unittest.TestCase):
     def test_shared_loop_moves_once_and_parent_rotation_is_respected(self):
         model=self.load('MFD')
         ticks=[e for e in model.elements if e['_etype']=='ceSMultiLine' and len(e['vertices'])==2
-               and abs(e['vertices'][0][0]+.073)<1e-8]
+               and abs(e['vertices'][0][0]+.0634)<1e-8]
         self.assertEqual(len(ticks),5)
         result=Model('MFD',transform_selection(model.source,ticks,model,DEFAULTS,dx=.01))
-        self.assertAlmostEqual(result.by_name[ticks[0]['name']]['vertices'][0][0],-.063)
+        self.assertAlmostEqual(result.by_name[ticks[0]['name']]['vertices'][0][0],-.0534)
         source='''local p=group("P",0,0)
 text("X",.1,.2,2,p)
 '''
@@ -330,7 +330,7 @@ text("E",2,3,2.8,edit_group,nil,nil,nil,nil,nil,"EDIT_CHILD")
         try:
             editor=Editor(root);editor.mode.set('MFD');editor.switch()
             root.update_idletasks();editor.redraw()
-            hits=[h for h in editor.hits if h.element.get('value') in ['W-HOT','SRCH']]
+            hits=[h for h in editor.hits if h.element.get('value') in ['LG','SRCH']]
             self.assertEqual(len(hits),2)
             x0=min(h.box[0] for h in hits)-8+editor.offset[0]
             y0=min(h.box[1] for h in hits)-8+editor.offset[1]
@@ -340,7 +340,7 @@ text("E",2,3,2.8,edit_group,nil,nil,nil,nil,nil,"EDIT_CHILD")
             editor.motion(SimpleNamespace(x=x1,y=y1))
             editor.release(SimpleNamespace(x=x1,y=y1))
             names={h.element.get('value') for h in editor.selection}
-            self.assertTrue({'W-HOT','SRCH'}<=names)
+            self.assertTrue({'LG','SRCH'}<=names)
             old=editor.text()
             editor.keypress(SimpleNamespace(keysym='Right',state=0))
             self.assertNotEqual(editor.text(),old)
