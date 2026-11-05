@@ -10,6 +10,11 @@ return function(sensor,param)
     local hdg=param("F117_ALIGN_HDG_ERR")
     local adc=param("F117_ADC_BLEND")
     local function blend() local b=adc:get();return b<0 and 0 or b>1 and 1 or b end
+    -- Airspeeds from the EFM's air data. With wind set, DCS's own true airspeed is ground speed
+    -- and its indicated airspeed reads high; without the EFM these fall back to DCS.
+    local airValid=param("F117_AIR_DATA_VALID")
+    local cas=param("F117_CAS_MPS")
+    local tas=param("F117_TAS_MPS")
     local aligned={
         getPitch=function() return sensor.getPitch()+pitch:get() end,
         getRoll=function() return sensor.getRoll()+roll:get() end,
@@ -18,6 +23,14 @@ return function(sensor,param)
         getMagneticHeading=function() return wrap(sensor.getMagneticHeading()+hdg:get()) end,
         getBarometricAltitude=function() return sensor.getBarometricAltitude()*blend() end,
         getVerticalVelocity=function() return sensor.getVerticalVelocity()*blend() end,
+        getIndicatedAirSpeed=function()
+            if airValid:get()>.5 then return cas:get() end
+            return sensor.getIndicatedAirSpeed()
+        end,
+        getTrueAirSpeed=function()
+            if airValid:get()>.5 then return tas:get() end
+            return sensor.getTrueAirSpeed()
+        end,
     }
     return setmetatable(aligned,{__index=function(_,k) return sensor[k] end})
 end

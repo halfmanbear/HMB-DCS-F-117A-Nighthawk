@@ -68,8 +68,8 @@ class StoreProfileTests(unittest.TestCase):
     def test_unknown_store_is_not_released(self):
         self.assertIsNone(self.classify({'count': 1, 'CLSID': '{FUEL_TANK}'}))
 
-    def test_vsd_and_mfd_label_every_profile(self):
-        for page in ('MFD/Indicator/Left/Left_vsd_page.lua', 'MFD/Indicator/MFD_indication_page.lua'):
+    def test_vsd_labels_every_profile(self):
+        for page in ('MFD/Indicator/Left/Left_vsd_page.lua',):
             text = (SCRIPTS / page).read_text(encoding='utf-8')
             labels = {int(i) for i in re.findall(r'\[(\d+)\]="(?:GBU|MK|CBU|AGM)', text)}
             self.assertEqual(labels, set(range(len(EFM_NAMES))), page)

@@ -18,12 +18,16 @@ local PANEL_IAS      = get_param_handle("PANEL_IAS")      -- m/s
 local PANEL_AOA      = get_param_handle("PANEL_AOA")      -- radians
 local PANEL_FUEL     = get_param_handle("PANEL_FUEL")     -- kg (0–8255)
 
+-- Calibrated airspeed from the EFM's air data (see Systems/AlignedSensor.lua); DCS's own reads high in wind.
+local AIR_DATA_VALID = get_param_handle("F117_AIR_DATA_VALID")
+local EFM_CAS        = get_param_handle("F117_CAS_MPS")
+
 -- BaroAlt cycle constant (1000 ft = 304.8 m per revolution)
 local BARO_CYCLE = 304.8
 
 function update(dt)
     PANEL_PITCH:set(sensor_data.getPitch() * RAD_TO_DEG)
-    PANEL_IAS:set(sensor_data.getIndicatedAirSpeed())
+    PANEL_IAS:set(AIR_DATA_VALID:get() > 0.5 and EFM_CAS:get() or sensor_data.getIndicatedAirSpeed())
     PANEL_AOA:set(sensor_data.getAngleOfAttack())
 
     local baro = sensor_data.getBarometricAltitude()

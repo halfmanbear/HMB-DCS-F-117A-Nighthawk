@@ -97,6 +97,7 @@ class IRADSImageTests(unittest.TestCase):
         self.assertEqual(self.v.F117_IRADS_CONTRAST_BAND,61)
         model=Model('MFD',PAGES['MFD'].read_text())
         for e,state in model.scene(dict(DEFAULTS,F117_IRADS_DRAW_BRIGHTNESS=.22)):
-            if e['_etype']!='ceSimple' and state[3]:self.assertAlmostEqual(state[4],.22)
+            # The black bands behind the top and bottom rows stay opaque.
+            if e['_etype']!='ceSimple' and state[3] and '_BAND_' not in e['name']:self.assertAlmostEqual(state[4],.22)
 
 if __name__=='__main__':unittest.main()

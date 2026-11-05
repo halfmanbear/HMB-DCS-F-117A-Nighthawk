@@ -1156,8 +1156,9 @@ function update()
     display_compositor.update()
     native_brightness.update()
     irads_terrain.update()
-    irads_readouts.update()
+    -- Navigation first: the IRADS readouts show its range and TTG.
     navigation.update()
+    irads_readouts.update()
     map_outline.update()
     check_irads_terrain()
 

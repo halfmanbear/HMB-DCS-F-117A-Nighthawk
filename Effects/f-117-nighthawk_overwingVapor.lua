@@ -18,7 +18,7 @@ Presets =
             ParticleSize = 2.7,
             ScaleOverAgeFactor = 1.8, -- scale = ParticleSize * (1 + (normalized age) * ScaleOverAgeFactor)
             
-            VaporLengthMax = 7.0, -- meters
+            VaporLengthMax = 3.0, -- meters
             
             AlbedoSRGB = 0.86,
             

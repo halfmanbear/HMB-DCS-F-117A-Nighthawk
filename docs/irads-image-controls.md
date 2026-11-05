@@ -101,3 +101,22 @@ been recalibrated. See [README](../README.md#ocip-iii-displays).
 Offline checks cover format exclusivity, power gating, native write-only element
 properties, sensor-state isolation, FOV dispatch and brightness. Live imagery,
 colour, stencil clipping, native baking and VR require an in-DCS mission check.
+
+## Sensor display symbols
+
+The symbol layout follows TO 1F-117A-1 Figure 4-17 and the recorded frames in
+`docs/reference/CockpitImages/IRADS`: a grid of 30 columns by 15 rows, with the
+top row (ALT, range, TTI or TTG) and bottom row (target latitude and longitude, or
+the gray scale with no target) on black bands outside the picture.
+
+- Range reads `LR` in feet while the laser fires, `ER` in feet while designated
+  without it, and `R` in nautical miles to the INS destination otherwise.
+- Time reads `TTI` from release until the designation is dropped, holding at 00:00
+  after impact. Otherwise it reads `TTG` to the release point while designated, or
+  to the INS destination.
+- The letters over the reticle are the laser mode: `A` armed, `AF` firing, `AX`
+  designated but not firing.
+- The jet's IR level and gain aren't modelled separately, so the `L` and `G` bars
+  show the brightness and contrast settings above.
+- Release faults such as `BAY CLOSED` appear at the lower right. `RDY` appears at
+  the upper left when release is ready.
