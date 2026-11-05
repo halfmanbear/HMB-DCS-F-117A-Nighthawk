@@ -16,10 +16,10 @@ Snapshot: 30 October 2026. Two parts:
 
 | Piece | Where |
 |---|---|
-| Lua cockpit devices (LIGHTS, DISPLAYS, WEAPONS, MISCFUNC, …) | `Cockpit/Scripts/device_init.lua`, `devices.lua` |
+| Lua cockpit devices (LIGHTS, DISPLAYS, WEAPONS, CONTROL_STICK, …) | `Cockpit/Scripts/device_init.lua`, `devices.lua` |
 | Lua → EFM command path (`dispatch_action(nil, cmd, value)`) | `Systems/Displays.lua`; received by `ed_fm_set_command` (EFM `F_117_NightHawk.cpp`) |
 | EFM → cockpit parameter path (`ed_get_cockpit_param_api`) | EFM `F_117_NightHawk.cpp` |
-| Click-command ID range from 5000 (`click_cmd`) | `Cockpit/Scripts/command_defs.lua` |
+| Command IDs, each written out (lights are `Keys.*`, 10140–10146) | `Cockpit/Scripts/command_defs.lua` |
 
 The EFM needs no new plumbing. It only changes for systems it owns
 (engine start, gear, master arm, laser and similar).

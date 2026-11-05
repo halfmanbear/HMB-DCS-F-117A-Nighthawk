@@ -47,32 +47,30 @@ declare_plugin(
     }
 )
 
-mount_vfs_texture_path(current_mod_path .. "/Theme/ME")
-mount_vfs_model_path(current_mod_path .. "/Shapes")
-mount_vfs_model_path(current_mod_path .. "/Cockpit/Shape")
-mount_vfs_texture_path(current_mod_path .. "/Textures/F-117-NightHawk-TEXTURES")
-mount_vfs_texture_path(current_mod_path .. "/Cockpit/Textures/F-117-NightHawk-CPT-TEXTURES") --
-mount_vfs_liveries_path(current_mod_path .. "/Liveries")
+local function mod_file(path)
+    return current_mod_path .. "/" .. path
+end
 
-----------------------------------------------------------------------------------------
+for _, folder in ipairs({"Theme/ME", "Textures/F-117-NightHawk-TEXTURES",
+                         "Cockpit/Textures/F-117-NightHawk-CPT-TEXTURES"}) do
+    mount_vfs_texture_path(mod_file(folder))
+end
+for _, folder in ipairs({"Shapes", "Cockpit/Shape"}) do
+    mount_vfs_model_path(mod_file(folder))
+end
+mount_vfs_liveries_path(mod_file("Liveries"))
 
-local cfg_path = current_mod_path .. "/FM/config.lua"
-dofile(cfg_path)
-FM[1] = self_ID
-FM[2] = "F_117_NightHawk"
-FM.config_path = cfg_path
--- FM.old not needed for make_flyable (was FC3 profile inheritance for MAC_flyable)
+-- External flight model: FM/config.lua fills the FM table, then the EFM DLL is
+-- named by plugin and binary.
+local fm_config = mod_file("FM/config.lua")
+dofile(fm_config)
+FM.config_path = fm_config
+FM[1], FM[2] = self_ID, "F_117_NightHawk"
 
+dofile(mod_file("Views.lua"))
+make_view_settings(self_ID, ViewSettings, SnapViews)
 
--------------------------------------------------------------------------------------
-
-dofile(current_mod_path .. "/Views.lua")
-make_view_settings("F-117-NightHawk", ViewSettings, SnapViews)
-
--------------------------------------------------------------------------------
-
-local support_cockpit = current_mod_path .. "/Cockpit/Scripts/"
-make_flyable("F-117-NightHawk", support_cockpit, FM, current_mod_path .. "/comm.lua")
+make_flyable(self_ID, mod_file("Cockpit/Scripts/"), FM, mod_file("comm.lua"))
 
 -- The AI uses the IRADS sensor DCS already declares; the player's IRADS is created by the EFM.
 

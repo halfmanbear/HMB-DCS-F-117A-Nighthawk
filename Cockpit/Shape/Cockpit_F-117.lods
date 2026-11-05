@@ -1,5 +1,1 @@
-model = {
-	lods = {
-		{"Cockpit_F-117.edm",20000.000000},
-	},
-}
+model = {lods = {{"Cockpit_F-117.edm", 20000.0}}}

@@ -144,7 +144,7 @@ class DamageModelTests(unittest.TestCase):
 
     def test_cockpit_click_sound_is_bundled(self):
         lights = (ROOT / 'Cockpit/Scripts/Systems/lights_system.lua').read_text(encoding='utf-8-sig')
-        proto = re.search(r'btnpress = sndhost:create_sound\("([^"]+)"\)', lights).group(1)
+        proto = re.search(r'click = sound_host:create_sound\("([^"]+)"\)', lights).group(1)
         definition = (ROOT / 'Sounds/sdef' / f'{proto}.sdef').read_text()
         wave_name = re.search(r'wave = "([^"]+)"', definition).group(1)
         with wave.open(str(ROOT / 'Sounds' / f'{wave_name}.wav')) as sound:

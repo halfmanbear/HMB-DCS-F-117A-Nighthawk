@@ -37,7 +37,6 @@ The approach bracket enters below 200 knots, leaves above 230 and uses the curre
 12-degree optimum; one degree high AOA aligns its top arm with the flight-path
 marker, as specified in the manual.
 
-The old oversized source is preserved as `HUD_previous_indication_page.lua`.
 Existing VSD/HSD parameter bindings and their behaviour are unchanged.
 
 ## Calibration and limitations

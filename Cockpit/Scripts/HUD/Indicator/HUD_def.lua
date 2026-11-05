@@ -165,13 +165,6 @@ HUD_DAY_COLOR               = {255,255,255,255}
 HUD_DARK_COLOR               = {0,0,0,255}
 
 
-HUD_HORIZON = MakeMaterial(HUD_IND_TEX_PATH.."HUD/JAS_HUD_Symbols", GREEN)
-HUD_POSITIVE_PITCH = MakeMaterial(HUD_IND_TEX_PATH.."HUD/PitchLines", GREEN)
-HUD_NEGATIVE_PITCH = MakeMaterial(HUD_IND_TEX_PATH.."HUD/PitchLinesNegative", GREEN)
-HUD_HeadingScale = MakeMaterial(HUD_IND_TEX_PATH.."HUD/HUD_HeadingScale", GREEN)
-HUD_AimingCircle = MakeMaterial(HUD_IND_TEX_PATH.."HUD/WVR_AimingCircle", GREEN)
-HUD_AimingCircleThin = MakeMaterial(HUD_IND_TEX_PATH.."HUD/WVR_AimingCircleThin", GREEN)
-HUD_GroundCollisionWarning = MakeMaterial(HUD_IND_TEX_PATH.."HUD/GroundCollisionWarning", GREEN)
 
 
 

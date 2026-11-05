@@ -108,7 +108,7 @@ class CockpitSystemsTests(unittest.TestCase):
             self.assertLess(phase, 1)
             self.assertAlmostEqual((phase - previous) % 1, .05 * 85 / 60)
             previous = phase
-        g.SetCommand(10007, 1)
+        g.SetCommand(g.Keys.BcnLgt, 1)
         g['update']()
         self.assertEqual(g.args[1001], 0)
 

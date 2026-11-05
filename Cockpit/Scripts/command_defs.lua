@@ -1,33 +1,24 @@
-start_custom_command = 10000
-local __count_custom = start_custom_command
-local function __custom_counter()
-    __count_custom = __count_custom + 1
-    return __count_custom
-end
-
+-- Global cockpit commands (no cockpit_device_id): every Lua device and the EFM
+-- receive them. Each ID is written out, because saved user bindings store the
+-- number. Never renumber one; add new commands with a fresh ID instead.
+-- 10100-10129 belong to the EFM tables below and 10200 to the damage monitor.
 Keys = {
-    PlanePickleOn = 350,
-    PlanePickleOff = 351,
-    LeftEngineStart = 311,
-    RightEngineStart = 312,
-    LeftEngineStop = 313,
-    RightEngineStop = 314,
-    PowerOnOff = 315,
+    PowerOnOff        = 315,   -- stock iCommandPowerOnOff
+    IRADSZoomIn       = 10008, -- the EFM matches these two by number (Inputs.h)
+    IRADSZoomOut      = 10009,
+    MFDOverlayToggle  = 10010,
+    APUToggle         = 10011,
+    GroundPowerToggle = 10012,
+    GroundAirToggle   = 10013,
 
-    -- The custom button starts from here, and can be automatically increased from 10000 to avoid conflicts
-    PanelLight       = __custom_counter(), -- 10001
-    FloodLight       = __custom_counter(), -- 10002
-    LdgLight         = __custom_counter(), -- 10003
-    NavLight         = __custom_counter(), -- 10004
-    TaxiLgt          = __custom_counter(), -- 10005
-    MemeLgt          = __custom_counter(), -- 10006
-    BcnLgt           = __custom_counter(), -- 10007
-    IRADSZoomIn      = __custom_counter(), -- 10008
-    IRADSZoomOut     = __custom_counter(), -- 10009
-    MFDOverlayToggle = __custom_counter(), -- 10010
-    APUToggle        = __custom_counter(), -- 10011
-    GroundPowerToggle = __custom_counter(), -- 10012
-    GroundAirToggle  = __custom_counter(), -- 10013
+    -- Lighting, handled by Systems/lights_system.lua.
+    PanelLight = 10140,
+    FloodLight = 10141,
+    LdgLight   = 10142,
+    NavLight   = 10143,
+    TaxiLgt    = 10144,
+    MemeLgt    = 10145,
+    BcnLgt     = 10146,
 }
 
 -- Global EFM commands (no cockpit_device_id). Member names follow the FA-18C
@@ -69,18 +60,6 @@ f117_commands =
     NWS_AUTHORITY_OFF       = 10129, -- stick NWS authority button released: back to 10 deg
 }
 
-
---Incremental click commands from 5000
-start_command = 5000
-local __count_click = start_command - 1
-local function __click_counter()
-    __count_click = __count_click + 1
-    return __count_click
-end
-
-click_cmd = {
-    GearLevel = __click_counter()
-}
 
 -- Stubs for ported Gripen systems (Displays.lua, FC3.lua).
 -- Each unknown key gets a unique ID via __index so listen_command() doesn't crash.

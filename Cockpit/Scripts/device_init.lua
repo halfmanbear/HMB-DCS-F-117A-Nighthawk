@@ -1,24 +1,29 @@
-dofile(LockOn_Options.script_path .. "devices.lua")
-dofile(LockOn_Options.script_path.."materials.lua")
+local scripts = LockOn_Options.script_path
+dofile(scripts .. "devices.lua")
+dofile(scripts .. "materials.lua")
 
-attributes = {
-    "avNightVisionGogglesV2",
+attributes = {"avNightVisionGogglesV2"}
+
+MainPanel = {"ccMainPanel", scripts .. "mainpanel_init.lua"}
+
+local function lua_device(script)
+    return {"avLuaDevice", scripts .. script}
+end
+
+-- devices.IRADS and devices.TAILHOOK have no creator: the EFM creates the
+-- player's IRADS sensor and runs the tail hook (command 69, draw argument 25).
+creators = {
+    [devices.NVG]           = {"avNightVisionGogglesV2", scripts .. "HELMET/NVG.lua"},
+    [devices.LIGHTS]        = lua_device("Systems/lights_system.lua"),
+    [devices.CONTROL_STICK] = lua_device("Systems/control_stick.lua"),
+    [devices.BOMB_BAY]      = lua_device("Systems/bomb_bay.lua"),
+    [devices.HUD]           = lua_device("HUD/Device/HUD_Device.lua"),
+    [devices.DISPLAYS]      = lua_device("Systems/Displays.lua"),
+    [devices.FC3]           = lua_device("Systems/FC3.lua"),
+    [devices.GAUGES]        = lua_device("Systems/Gauges.lua"),
+    [devices.WEAPONS]       = {"avSimpleWeaponSystem", scripts .. "Systems/Weapons.lua"},
+    [devices.ELECTRICAL]    = lua_device("Systems/Electrical.lua"),
 }
-
-MainPanel = {"ccMainPanel", LockOn_Options.script_path .. "mainpanel_init.lua"}
-
-creators = {}
-creators[devices.NVG]                    = {"avNightVisionGogglesV2", LockOn_Options.script_path.. "HELMET/NVG.lua"}
-creators[devices.LIGHTS]                 = {"avLuaDevice", LockOn_Options.script_path.. "Systems/lights_system.lua"}
-creators[devices.MISCFUNC]               = {"avLuaDevice", LockOn_Options.script_path.. "Systems/MiscFunc.lua"}
-creators[devices.BOMB_BAY]               = {"avLuaDevice", LockOn_Options.script_path.. "Systems/bomb_bay.lua"}
-creators[devices.TAILHOOK]               = {"avLuaDevice", LockOn_Options.script_path.. "Systems/tailhook.lua"}
-creators[devices.HUD]                    = {"avLuaDevice", LockOn_Options.script_path.."HUD/Device/HUD_Device.lua"}
-creators[devices.DISPLAYS]               = {"avLuaDevice", LockOn_Options.script_path.."Systems/Displays.lua"}
-creators[devices.FC3]                    = {"avLuaDevice", LockOn_Options.script_path.."Systems/FC3.lua"}
-creators[devices.GAUGES]                 = {"avLuaDevice", LockOn_Options.script_path.."Systems/Gauges.lua"}
-creators[devices.WEAPONS]                = {"avSimpleWeaponSystem", LockOn_Options.script_path.."Systems/Weapons.lua"}
-creators[devices.ELECTRICAL]             = {"avLuaDevice", LockOn_Options.script_path.."Systems/Electrical.lua"}
 
 indicators = {}
 
