@@ -285,6 +285,25 @@ def sideslip(sim, weight_lb, kcas, alt_ft, side):
     return {'deg': beta, 'bank': roll}
 
 
+def pedal_step(sim, weight_lb, kcas, alt_ft, side):
+    """Half pedal for 6 seconds, then let go: how far the sideslip overshoots, in percent of the steady value.
+
+    TO 1F-117A-1 page 6-1 says the flight controls give "essentially dead-beat damping in all three axes".
+    """
+    h = alt_ft * FT_TO_M
+    pilot = _level(sim, weight_lb, alt_ft, mach_from_cas(kcas, h), seconds=6.0)
+    pilot.yaw_axis = 0.5 * side
+    held = []
+    pilot.fly(6.0, lambda s: held.append(s.beta))
+    steady = sum(held[-int(0.9 / DT):]) / int(0.9 / DT)
+    pilot.yaw_axis = 0.0
+    released = []
+    pilot.fly(6.0, lambda s: released.append(s.beta))
+    sign = 1.0 if steady > 0.0 else -1.0
+    return {'step': 100.0 * (max(sign * b for b in held) - abs(steady)) / abs(steady),
+            'release': 100.0 * max(0.0, max(-sign * b for b in released)) / abs(steady)}
+
+
 def load_factor(sim, weight_lb, kcas, alt_ft):
     h = alt_ft * FT_TO_M
     pilot = _level(sim, weight_lb, alt_ft, mach_from_cas(kcas, h), seconds=6.0)

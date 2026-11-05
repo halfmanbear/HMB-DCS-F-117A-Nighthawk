@@ -111,6 +111,8 @@ def build_jobs(targets, groups):
             for side in (1.0, -1.0):
                 jobs.append((('sideslip', row['kcas'], side), 'sideslip', dict(
                     weight_lb=block['weight_lb'], kcas=row['kcas'], alt_ft=block['alt_ft'], side=side)))
+                jobs.append((('pedal_step', row['kcas'], side), 'pedal_step', dict(
+                    weight_lb=block['weight_lb'], kcas=row['kcas'], alt_ft=block['alt_ft'], side=side)))
     if 'g' in groups:
         block = targets['load_factor']
         for row in block['rows']:
@@ -210,6 +212,10 @@ def score(targets, results, groups):
             for side, label in ((1.0, 'one way'), (-1.0, 'other way')):
                 got = results[('sideslip', row['kcas'], side)]
                 rows.append(_row('Full-pedal sideslip', f"{row['kcas']} KCAS, {label}", 'deg', row['deg'], abs(got['deg']), 1.0))
+                got = results[('pedal_step', row['kcas'], side)]
+                # Page 6-1: "essentially dead-beat damping in all three axes". 10% is the bench's reading of that.
+                rows.append(_row('Sideslip overshoot, half-pedal step', f"{row['kcas']} KCAS, {label}", '%', 0.0, got['step'], 10.0))
+                rows.append(_row('Sideslip overshoot after pedal release', f"{row['kcas']} KCAS, {label}", '%', 0.0, got['release'], 10.0))
     if 'g' in groups:
         for row in targets['load_factor']['rows']:
             got = results[('g', row['kcas'])]

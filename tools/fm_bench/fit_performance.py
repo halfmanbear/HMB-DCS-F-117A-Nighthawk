@@ -40,8 +40,13 @@ MDIV = 0.85
 MLIMIT = 0.91  # Same as Mlimit in the EFM. The manual has no data above Mach 0.90, so the barrier isn't fitted.
 BARRIER = 0.096098
 CHORD = 6.422  # The EFM's mean chord (m).
-CZQ = -30.0  # About what the EFM's Czq table gives between 0 and 15 degrees.
+# Lift from a steady pitch rate, per unit of q c / 2V, as in Aerodynamics/AeroModel.h in the EFM. The wing and fins
+# add 0.7 (kCnq), but holding the rate against the airframe's pitch damping (kCmq -2.2) takes up-elevon, and on
+# this tailless aircraft that loses 6.15: elevon lift over elevon pitching moment is 0.0078 / 0.00279. Net, a
+# steady pull loses lift. Cz is negative for lift, so this is positive.
+CZQ = 5.45
 SMOOTHNESS = 6.0  # Weight on sharp changes of slope in the thrust table, per unit of log thrust.
+LAPSE_WEIGHT = 30.0  # Weight on Mach 0.30 thrust falling below Mach 0.50, per unit of log thrust.
 INSIDE = 0.6  # Being this far inside a tolerance is good enough, so most of the penalty starts here.
 EDGE = 0.92  # And a row this close to its tolerance is pushed back hard.
 EDGE_WEIGHT = 5.0
@@ -263,9 +268,14 @@ def residuals(x, targets, cna, alpha0, gaps):
     log_thrust = np.log(x[len(DRAG_NAMES):].reshape(len(TABLE_ALT_FT), len(TABLE_MACH)))
     # Thrust has no reason to change slope sharply between table points. The Mach spacing isn't even, so this compares slopes.
     mach_slope = np.diff(log_thrust, axis=1) / np.diff(TABLE_MACH_ARRAY) * 0.2
+    # A low-bypass turbofan's net thrust at maximum dry power falls from a standstill to about Mach 0.5 as ram drag
+    # grows, before ram recovery lifts it again. The manual has little data at Mach 0.30, so without this the fit
+    # can trade low-speed thrust against drag due to lift and leave Mach 0.30 below Mach 0.50.
+    low_speed_dip = np.maximum(log_thrust[:, 1] - log_thrust[:, 0], 0.0)
     return np.concatenate([shaped,
                            SMOOTHNESS * np.diff(log_thrust, 2, axis=0).ravel(),
-                           SMOOTHNESS * np.diff(mach_slope, axis=1).ravel()])
+                           SMOOTHNESS * np.diff(mach_slope, axis=1).ravel(),
+                           LAPSE_WEIGHT * low_speed_dip])
 
 
 def bench_gaps(targets, cna, alpha0, constants):

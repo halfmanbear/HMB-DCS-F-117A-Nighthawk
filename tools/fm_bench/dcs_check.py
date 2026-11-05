@@ -192,7 +192,7 @@ LANDING_HOOK = r"""-- Temporary hook written by tools/fm_bench/dcs_check.py. Saf
 local ux, uz, aimX, aimZ = __UX__, __UZ__, __AIMX__, __AIMZ__
 local chute, brakeIas = __CHUTE__, __BRAKE__
 local finalIas, touchdownIas = __FINAL__, __TOUCHDOWN__
-local wheelHeight, tanGlide = __WHEEL__, math.tan(math.rad(3))
+local wheelHeight, tanGlide, idleHeight = __WHEEL__, math.tan(math.rad(3)), __IDLE__
 local path = lfs.writedir() .. 'Logs\\F117_bench_check.csv'
 local handle, startTime, lastTime, finished
 local phase = 0 -- 0 approach, 1 flare, 2 main gear down, 3 nose gear down
@@ -286,11 +286,11 @@ function hook.onSimulationFrame()
             vsCmd = -math.min(gs * tanGlide, 0.65 + 0.19 * math.max(0, above))
         end
         -- Page 2-12 retards the throttles to idle "in the flare and touchdown phase". The approach setting is held
-        -- into the flare and cut to idle 10 ft above the runway, so touchdown speed is a result, not a target.
+        -- into the flare and cut to idle 10 ft above the runway (--idle-ft), so touchdown speed is a result, not a target.
         if phase == 0 then
             throttle = throttleFor(iasCmd, ias, dt)
             flareThrottle = throttle
-        elseif above > 3.0 then
+        elseif above > idleHeight then
             throttle = flareThrottle
         end
         local accel = clamp(1.2 * (vsCmd - vs), -3, 3)
@@ -419,11 +419,11 @@ def landing_cas_per_tas():
     return math.sqrt(density / 1.225)
 
 
-def landing_hook(geometry, chute):
+def landing_hook(geometry, chute, idle_ft):
     ux, uz, aim_x, aim_z = geometry
     values = {'__UX__': ux, '__UZ__': uz, '__AIMX__': aim_x, '__AIMZ__': aim_z, '__CHUTE__': 'true' if chute else 'false',
               '__BRAKE__': LANDING_CASES[chute][0] * KT_TO_MPS, '__FINAL__': LANDING_FINAL_KCAS * KT_TO_MPS,
-              '__TOUCHDOWN__': LANDING_TOUCHDOWN_KCAS * KT_TO_MPS, '__WHEEL__': LANDING_WHEEL_HEIGHT_M,
+              '__TOUCHDOWN__': LANDING_TOUCHDOWN_KCAS * KT_TO_MPS, '__WHEEL__': LANDING_WHEEL_HEIGHT_M, '__IDLE__': idle_ft * FT_TO_M,
               '__CAS_PER_TAS__': landing_cas_per_tas()}
     text = LANDING_HOOK
     for key, value in values.items():
@@ -431,7 +431,7 @@ def landing_hook(geometry, chute):
     return text
 
 
-def landing_report(rows, chute):
+def landing_report(rows, chute, idle_ft):
     """Compare a scripted landing with the manual's worked example."""
     brake_kt, roll_ft, total_ft = LANDING_CASES[chute]
     fifty = next((row for row in rows if row['phase'] >= 1), None)
@@ -448,7 +448,7 @@ def landing_report(rows, chute):
         return lines + ['| Landing | | did not touch down |']
     glide = [row for row in rows if row['phase'] == 0 and row['t'] >= fifty['t'] - 10.0]
     lines += [f"| Throttle on the glideslope, last 10 s | | {sum(r['throttle'] for r in glide) / len(glide):.0%} |",
-              f"| Throttle in the flare | retarded to idle | approach setting to 10 ft, then idle (scripted) |",
+              f"| Throttle in the flare | retarded to idle | approach setting to {idle_ft:.0f} ft, then idle (scripted) |",
               f"| Speed at 50 ft, KCAS | {LANDING_FINAL_KCAS:.0f} | {fifty['ias_mps'] / KT_TO_MPS:.0f} |",
               f"| 50 ft to touchdown, s | 7.5 | {touch['t'] - fifty['t']:.1f} |",
               f"| Touchdown speed, KCAS | {LANDING_TOUCHDOWN_KCAS:.0f} | {touch['ias_mps'] / KT_TO_MPS:.0f} |",
@@ -666,6 +666,8 @@ def main():
                         help='fly the manual\'s landing example at Kobuleti, with and without the chute (needs a Caucasus mission)')
     parser.add_argument('--wind-from', type=float, default=250.0,
                         help='mission wind direction for --landing; the report shows the headwind DCS actually gave')
+    parser.add_argument('--idle-ft', type=float, default=10.0,
+                        help='with --landing, height above the runway where the throttle is cut to idle')
     parser.add_argument('--no-chute-only', action='store_true', help='with --landing, fly only the landing without the chute')
     parser.add_argument('--fuel-kg', type=float, default=WEIGHT_LB * LB_TO_KG - EMPTY_KG, help='internal fuel in the DCS mission')
     parser.add_argument('--bench-weight-lb', type=float, help='weight flown on the bench (default: empty weight plus the fuel)')
@@ -681,10 +683,11 @@ def main():
                  f'{LANDING_WEIGHT_LB:.0f} lb at Kobuleti (59 ft), 10 C. The manual example also has a 0.5% upslope, '
                  'which this runway does not model.', '']
         for chute in ((False,) if args.no_chute_only else (True, False)):
-            rows = run_dcs(args.dcs, args.saved_games, mission, landing_hook(geometry, chute))
-            lines += landing_report(rows, chute) + ['']
+            rows = run_dcs(args.dcs, args.saved_games, mission, landing_hook(geometry, chute, args.idle_ft))
+            lines += landing_report(rows, chute, args.idle_ft) + ['']
             print('\n'.join(lines))
-        (RESULTS / 'dcs_check_landing.md').write_text('\n'.join(lines), encoding='utf-8')
+        report = 'dcs_check_landing.md' if args.idle_ft == 10.0 else f'dcs_check_landing_idle{args.idle_ft:.0f}ft.md'
+        (RESULTS / report).write_text('\n'.join(lines), encoding='utf-8')
         return
     if args.takeoff:
         mission = RESULTS / 'dcs_check_takeoff.miz'
