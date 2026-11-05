@@ -5,8 +5,6 @@ matching EFM build.
 
 ## Check in DCS
 
-- **EFM:** fly the current EFM build. Its callback and input code was restructured
-  on 5 November 2026 and has only been checked on `tools/fm_bench`.
 - HUD: the OCIP conformal correction, and the IRADS cursor and 10 mrad lock box,
   have not been seen in DCS (`docs/hud-ocip-design.md`).
 - Moving map: the chart backend on the centre screen needs an in-DCS check. The
@@ -47,13 +45,3 @@ these exist. Details, manual pages and sizes are in
 Resume plan in `docs/cockpit-and-manual-gaps.md` part 1. Start with one switch end
 to end: `Switch_07` to nav lights. First confirm which object type the Blender EDM
 exporter needs for `PNT_` click zones.
-
-## EFM tests
-
-Four EFM regressions fail, unchanged from before the 5 November restructure:
-
-- `irads_input_regression.py` expects `PanelLight=10001`; this mod defines `10140`.
-- `irads_tracking_store_regression.py` expects old keybinding text.
-- `weapon_delivery_regression.py`: its mock lacks
-  `CockpitInterop::GetIRADSLineOfSight`.
-- `lerx_vortex_regression.py`: its combined version, count and opacity assertion.

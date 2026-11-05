@@ -3,14 +3,8 @@
 /_input_irads_fix_*/
 /_irads_*/
 
-# Superseded model copies
-/Cockpit/Shape/old-*.edm
-/Shapes/old-*.edm
-/Shapes/v1-f-117-nighthawk.edm
-
-# Runtime logs and machine-specific proxy configuration
+# Runtime logs
 /bin/*.log
-/bin/efm.proxy.ini
 
 # Generated Blender development outputs
 /blender_files/**/build/
@@ -26,10 +20,6 @@ __pycache__/
 /tools/layout_editor_backups/
 /tools/fm_bench/.cache/
 /tools/fm_bench/results/
-
-# Local-only reference material (manual OCR text; not for distribution)
-/docs/reference/
-/Lockheed F-117A Nighthawk Utility Flight Manual.pdf
 
 # Keep only the Blender sources for currently referenced models
 /blender_files/*

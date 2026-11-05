@@ -5,6 +5,7 @@ Only the projects associated with currently referenced aircraft models are track
 | Blender project | Runtime model |
 | --- | --- |
 | `f-117-nighthawk-exterior.blend` | `Shapes/f-117-nighthawk.edm` |
+| `Cockpit_F-117.blend` (local, ignored) | `Cockpit/Shape/Cockpit_F-117.edm` |
 | `f-117-nighthawk_canopy.blend` | `Shapes/f-117-nighthawk_canopy.edm` |
 | `f-117-nighthawk-oblomok.blend` | `Shapes/f-117-nighthawk-oblomok.edm` |
 
@@ -34,3 +35,11 @@ EDM exporter into the corresponding runtime model paths above.
 Blender source projects are excluded from the installable runtime ZIP. No source
 projects or historical files have been moved or deleted by this tracking setup.
 
+
+Both `f-117-nighthawk-exterior.blend` and `Cockpit_F-117.blend` hold the reworked
+textures (2026-11-05). Their images load PNGs from `dist/exterior-texture-remake/sources/`
+and `dist/cockpit-texture-remake/sources/`, so keep those folders.
+
+`_archive/` (local, ignored) holds every superseded blend moved out of this folder and
+`dist/`: the pre-texture-rework masters, detached-wing, seat and uncompressed copies, and
+`dist` checkpoints and originals.
