@@ -144,8 +144,8 @@ def package(root, dll, efm_root, channel, output, tag=""):
                 f'F-117A Nighthawk {info["version"]} ({channel})\n\n'
                 f'Extract {MOD_FOLDER} into Saved Games/DCS/Mods/aircraft/.\n'
                 'See credits.txt for contributor credits.\n'
-                'Mod fork: https://github.com/WatchBambi/DCS-F-117\n'
-                'EFM fork: https://github.com/WatchBambi/DCS-F-117-EFM\n'
+                'Original mod base: https://github.com/WatchBambi/DCS-F-117\n'
+                'EFM origin (since fully reworked): https://github.com/WatchBambi/DCS-F-117-EFM\n'
                 f'EFM development: https://github.com/{EFM_REPOSITORY}\n'
                 'Build provenance is recorded in build-manifest.json.\n'))
         shutil.copyfile(archive, destination)

@@ -2,11 +2,9 @@
 
 Community Discord: https://discord.gg/qj6wz48jAn
 
-This mod is a substantial rework and fork of [WatchBambi/DCS-F-117](https://github.com/WatchBambi/DCS-F-117).
+This mod is a substantial rework of [WatchBambi/DCS-F-117](https://github.com/WatchBambi/DCS-F-117), with a fully reworked External Flight Model. See Credits below.
 
-The External Flight Model used by this mod is also a substantial rework and fork of [WatchBambi/DCS-F-117-EFM](https://github.com/WatchBambi/DCS-F-117-EFM).
-
-- Current EFM source code and related work: [halfmanbear/HMB-DCS-F-117A-EFM](https://github.com/halfmanbear/HMB-DCS-F-117A-EFM)
+- EFM source code and related work: [halfmanbear/HMB-DCS-F-117A-EFM](https://github.com/halfmanbear/HMB-DCS-F-117A-EFM)
 
 ## Install
 
@@ -24,10 +22,12 @@ Before flying, open the Controls menu for `F-117-NightHawk`, then use the `Adjus
 
 At minimum, bind or verify these commands:
 
-- `Air-To-Ground Mode` - required to employ munitions
-- `Electro-Optical System On/Off` - required to enable the targeting MFD in Air-To-Ground mode
+- `(7) Air-To-Ground Mode` - required to employ munitions
+- `IRADS On/Off` (O) - required to enable the targeting MFD in Air-To-Ground mode
 - `IRADS FOV - Narrow` / `IRADS FOV - Wide` (or the `IRADS FOV (Wide / Narrow)` axis)
-- `Weapon Release` - for automatic bomb bay door opening on release, do not bind `Weapon Fire`
+- `Master Arm / Safe` - starts SAFE
+- `Weapon Station Next` / `Weapon Station Previous` - select the store
+- `Weapon Release (Pickle)` (RAlt+Space) - for automatic bomb bay door opening on release, do not bind `Weapon Fire`
 - `Bomb Bay Door Toggle` - manual bay door override, one binding per door set: `Bomb Bay Doors Toggle (Both)`
   (LShift+T), `Bomb Bay Door Toggle (Selected Store)` (LShift+LCtrl+T), `Bomb Bay Door Toggle (Left)`
   (LShift+LAlt+T) and `Bomb Bay Door Toggle (Right)` (LShift+RAlt+T)
@@ -36,21 +36,12 @@ At minimum, bind or verify these commands:
 - `Refueling Hatch`
 - `Tail Hook` - optional
 
-### IRADS input migration
+### IRADS controls
 
-After updating, rebind any saved controls that used the old custom zoom IDs or
-stock laser / sensor axes. Use `Throttle Designator Controller` directions and
-`Depress / Slew Stop` to slew and designate; use `IRADS Designation Clear` to clear.
-`TDC Slew Horizontal` and `TDC Slew Vertical` now route directly to the EFM IRADS
-sensor. The FOV axis selects wide/narrow; its centre retains the previous selection.
-The unsupported `Target Box Size` axis has been removed. `DLIR MFD Overlay Toggle`
-is available for keyboard and joystick assignment.
-
-The EFM repository's `Cockpit/Scripts` directory keeps copies of some cockpit
-Lua files. This mod's files are the ones DCS loads, so change them here and copy
-them over; `tests/test_efm_lua_copies.py` fails when a copy falls behind. IRADS
-motion is handled by the EFM. Cockpit FOV controls dispatch absolute endpoint
-selections, avoiding the legacy intermediate zoom preset.
+Use `Throttle Designator Controller` directions (or the `TDC Slew Horizontal` and
+`TDC Slew Vertical` axes) and `Depress / Slew Stop` to slew and designate, and
+`IRADS Designation Clear` to clear. `DLIR MFD Overlay Toggle` is available for
+keyboard and joystick assignment.
 
 ## Cold start
 
@@ -103,12 +94,9 @@ Format selection preserves sensor power, pointing and designation. MAP uses the
 existing navigation overlay and configured chart source; terrain imagery depends
 on that source being available.
 
-IRADS has two selectable FOVs: **wide and narrow**. Rebind saved FOV buttons to
-`IRADS FOV - Wide` / `IRADS FOV - Narrow`: these now use cockpit commands that
-select the installed EFM's endpoints directly. Legacy direct EFM command IDs can
-still access its old intermediate preset. The axis uses -1 wide and +1 narrow;
-its centre retains the previous selection, with hysteresis around zero. The
-existing endpoint optics are retained; no new historical FOV angles are asserted.
+IRADS has two selectable FOVs: **wide and narrow**, on `IRADS FOV - Wide` /
+`IRADS FOV - Narrow`. The axis uses -1 wide and +1 narrow; its centre retains the
+previous selection, with hysteresis around zero.
 
 ## HUD and IRADS cursor
 
@@ -119,13 +107,13 @@ the matching EFM build.
 
 ## Weapon delivery
 
-1. `Air-To-Ground Mode`, then `Electro-Optical System On/Off`. Master Arm starts SAFE.
+1. `(7) Air-To-Ground Mode`, then `IRADS On/Off`. Master Arm starts SAFE.
 2. Slew the IRADS and designate terrain with `Depress / Slew Stop`. POINT and RNG on
    the display show the lock state. Slewing again exits point track.
 3. `IRADS Laser Arm/Safe` plus a valid designation gives code-1688 illumination.
    Laser-guided bombs need a live laser spot until impact. JDAMs take the designated
    coordinate and need no laser.
-4. `Weapon Station Next / Previous` selects the store. Hold `Weapon Release`
+4. `Weapon Station Next / Previous` selects the store. Hold `Weapon Release (Pickle)`
    (Right Alt+Space) to give CCRP consent. The EFM opens the bay of the selected store
    only, releases one store when every release gate passes, then steps to the next loaded
    station. Press again for the next store and its bay. A bay you opened by hand stays
@@ -147,12 +135,12 @@ selects PAARS. Details are in [docs/systems/autothrottle-paars.md](docs/systems/
 This package currently includes:
 
 - Nine liveries covering every skin, bay and door material of the exterior model
-- Quick start missions (Caucasus day, Nevada night) and five Nevada night training
+- Three quick start missions (Caucasus free flight, Caucasus SA-3 strike, Nevada night free flight) and five Nevada night training
   lessons under `Missions/Training`, all generated by `tools/missions/build_missions.py`
 - All 14 pylon stores release from the bays, and all are stock DCS weapons: GBU-27,
   GBU-10 and GBU-12 (laser code 1688), GBU-31(V)1/B, GBU-31(V)3/B and GBU-32(V)2/B
   JDAMs, AGM-154A/B/C JSOW, CBU-105, Mk-82, Mk-84, and the trial AGM-65D and AGM-65E
-  Mavericks. Missions made before the stock JDAM change need those JDAMs re-armed.
+  Mavericks.
 - A 25-cell damage model, platypus exhaust heat haze with night glow, and overwing vapour
 - Cockpit lighting, power, engine start and display scripts
 
@@ -170,16 +158,16 @@ This package currently includes:
 
 - `docs/displays/`, `docs/systems/`, `docs/models/`, `docs/reviews/` hold the design notes; `docs/packaging.md` covers releases.
 - `blender_files/` has the Blender sources for the shipped models. `texture_sources/` has the texture source library and UV work.
-- `dist/` is release output only. `work/` (ignored) is local working data: the texture export staging folder and legacy remake sources.
+- `dist/` is release output only.
 
 ## Credits
 
-- Initial development, EFM, EDMs, and base mod project: `@JinxxDCS`, `@WatchBambi`
-- Latest development, fixes, improvements, and new features: `HalfManBear (HMB)`
+- Initial development and base mod project, including the community liveries, textures and EDM models that remain from it: `@JinxxDCS`, `@WatchBambi`
+- Latest development, fixes, improvements, and new features, including the fully reworked EFM: `HalfManBear (HMB)`
 
 ## Legal / Attribution
 
-Please keep attribution to the upstream projects when redistributing or further forking this work:
+Please keep attribution to the upstream project when redistributing or further forking this work:
 
-- Original Mod fork base: [WatchBambi/DCS-F-117](https://github.com/WatchBambi/DCS-F-117)
-- Original EFM fork base:[WatchBambi/DCS-F-117-EFM](https://github.com/WatchBambi/DCS-F-117-EFM).
+- Original mod base (community liveries, textures and EDM models): [WatchBambi/DCS-F-117](https://github.com/WatchBambi/DCS-F-117)
+- The EFM started from [WatchBambi/DCS-F-117-EFM](https://github.com/WatchBambi/DCS-F-117-EFM) and has since been fully reworked.

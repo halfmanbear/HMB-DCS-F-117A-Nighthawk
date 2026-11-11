@@ -1,5 +1,5 @@
-INITIAL DEVELOPMENT (EFM, EDMs, Complete Base Mod for this project)
+INITIAL DEVELOPMENT (Base Mod, including the community liveries, textures and EDM models that remain from it)
 @JinxxDCS, @WatchBambi on the DCS F-117 Discord
 
-LATEST DEVELOPMENT (Fixes, Imrovements & New Features)
+LATEST DEVELOPMENT (Fixes, Improvements & New Features, including the fully reworked EFM)
 HalfManBear (HMB)
