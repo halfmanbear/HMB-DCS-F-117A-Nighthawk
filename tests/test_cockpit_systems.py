@@ -141,7 +141,7 @@ class CockpitSystemsTests(unittest.TestCase):
         lua = LuaRuntime(unpack_returned_tuples=True)
         nozzles, glow = lua.execute(helpers + '\nreturn platypus_nozzles(), platypus_glow_lights()')
         nozzles = [nozzles[i] for i in range(1, len(nozzles) + 1)]
-        self.assertEqual(len(nozzles), 8)
+        self.assertEqual(len(nozzles), 2)  # one per slot, so the heat haze stays light
         inboard, outboard = (-5.29, 0.66), (-3.19, 2.48)
         for n in nozzles:
             x, y, z = n.pos[1], n.pos[2], n.pos[3]
@@ -153,7 +153,7 @@ class CockpitSystemsTests(unittest.TestCase):
             self.assertAlmostEqual(y, -0.155)
             o = n.orientation
             self.assertAlmostEqual(math.hypot(o[1], o[2], o[3]), 1)
-            self.assertGreater(o[1], 0.98)  # flow runs aft...
+            self.assertAlmostEqual(o[1], math.cos(math.radians(30)))  # flow runs aft...
             self.assertEqual(math.copysign(1, o[3]), -side)  # ...and splays outboard
         for engine in (1, 2):
             self.assertAlmostEqual(sum(n.smokiness_level for n in nozzles

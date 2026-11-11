@@ -30,8 +30,8 @@
 -- contrails per nozzle, so each slot is split into narrow nozzles along its length to give
 -- a flat sheet of hot gas instead of one round plume. Slot centreline taken from the model.
 local PLATYPUS_SLOT = {inboard = {-5.29, -0.155, 0.66}, outboard = {-3.19, -0.155, 2.48}}
-local PLATYPUS_SEGMENTS = 4 -- nozzles per slot
-local PLATYPUS_SPLAY = math.rad(12) -- exhaust flow turns this far outboard of straight aft
+local PLATYPUS_SEGMENTS = 1 -- nozzles per slot; each one adds a heat-blur emitter, so more means a denser haze
+local PLATYPUS_SPLAY = math.rad(30) -- exhaust flow turns this far outboard of straight aft
 
 -- Point on a slot centreline: t = 0 inboard end, 1 outboard end; side -1 left, +1 right;
 -- aft moves the point behind the slot face, in metres.
@@ -52,7 +52,7 @@ local function platypus_nozzles()
                 diameter = 0.05, -- m: same area as a quarter of the 2.85 x 0.10 m slot
                 exhaust_length_ab = 5.00, -- m: afterburner flame length; none fitted
                 exhaust_length_ab_K = 5.00, -- Afterburner flame animation factor
-                smokiness_level = 0.005, -- Engine smoke, up to 1.0; 0.02 per engine in total
+                smokiness_level = 0.02 / PLATYPUS_SEGMENTS, -- Engine smoke, up to 1.0; 0.02 per engine in total
             }
         end
     end
@@ -62,16 +62,16 @@ end
 -- Faint heat glow off the hot slot and lower lip at night. Two dim orange lights per slot,
 -- just behind the slot face. Brightness follows draw arguments 1002 (left) and 1003 (right),
 -- which Cockpit/Scripts/Systems/lights_system.lua drives from engine rpm.
-local function platypus_glow_lights()
+local function platypus_glow_lights(diag_color)
     local lights = {}
     for engine, side in ipairs({-1, 1}) do
         for _, t in ipairs({0.3, 0.7}) do
             lights[#lights + 1] = {
                 typename = "omnilight",
                 position = platypus_point(t, side, 0.15),
-                argument = 1001 + engine,
-                color = {1.0, 0.30, 0.08, 0.12}, -- dull orange; fourth value is brightness
-                range = 1.8, -- m: lights the slot lip and aft deck, not the ground
+                argument = (not diag_color) and (1001 + engine) or nil, -- TEMP TEST: diag lights have no argument
+                color = diag_color or {1.0, 0.30, 0.08, 0.65}, -- TEMP TEST was 0.12; dull orange; fourth value is brightness
+                range = 4.0, -- TEMP TEST was 1.8; m: lights the slot lip and aft deck, not the ground
                 movable = false,
             }
         end
@@ -238,7 +238,15 @@ F_117_NightHawk = {
     -- arguments 1002 and 1003 control the glow.
     lights_data = {
         typename = "collection",
-        lights = {[WOLALIGHT_CABIN_WORK or 14] = platypus_glow_lights()},
+        lights = {
+            [WOLALIGHT_CABIN_WORK or 14] = {typename = "collection", lights = {
+                platypus_glow_lights(),
+                platypus_glow_lights({1.0, 1.0, 0.0, 0.65}), -- TEMP TEST yellow, group 14, no argument
+            }},
+            [12] = platypus_glow_lights({0.0, 1.0, 0.0, 0.65}), -- TEMP TEST green, group 12, no argument
+            [3] = platypus_glow_lights({0.0, 0.3, 1.0, 0.65}), -- TEMP TEST blue, group 3, no argument
+            [9] = platypus_glow_lights({1.0, 0.0, 1.0, 0.65}), -- TEMP TEST magenta, group 9, no argument
+        },
     },
     wing_tip_pos = {-6.627, -0.265, 6.6}, -- Wingtip position for visual effects
     fires_pos = { -- Fire effect positions when damaged; stock files mark this for deprecation

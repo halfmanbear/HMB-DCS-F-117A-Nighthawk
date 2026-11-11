@@ -44,9 +44,6 @@ venv/
 !/blender_files/f-117-nighthawk-oblomok.blend
 !/blender_files/integrated_collision/
 /blender_files/integrated_collision/*
-!/blender_files/integrated_collision/exposed_controls/
-/blender_files/integrated_collision/exposed_controls/*
-!/blender_files/integrated_collision/exposed_controls/f-117-nighthawk-exposed-controls.blend
 
 # Local scratch renders and migration backups
 /tmp/
