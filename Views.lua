@@ -1,168 +1,59 @@
+-- Cockpit, chase and arcade cameras, and the cockpit snap views.
+-- Model axes, metres: x forward, y up, z right.
+
 ViewSettings = {
     Cockpit = {
-        [1] = {
-            -- player slot 1
-            CockpitLocalPoint = {5.32, 1.21, -0.004},
-            CameraViewAngleLimits = {20.000000, 105.000000},
-            CameraAngleRestriction = {false, 90.000000, 0.400000},
-            CameraAngleLimits = {200.000000, -110.000000, 110.000000},
-            EyePoint = {0.000000, 0.000000, 0.000000},
-            NightVisionGoggles = { enable = true }, --exp
+        [1] = { -- player seat
+            CockpitLocalPoint = {5.32, 1.21, -0.004}, -- head position in the exterior model
+            EyePoint = {0, 0, 0},
+            CameraViewAngleLimits = {20, 105}, -- field of view, degrees
+            CameraAngleRestriction = {false, 90, 0.4},
+            CameraAngleLimits = {200, -110, 110}, -- yaw range, then pitch down and up
             limits_6DOF = {
-                x = {-0.050000, 0.450000},
-                y = {-0.200000, 0.200000},
-                z = {-0.220000, 0.220000},
-                roll = 90.000000
+                x = {-0.05, 0.45},
+                y = {-0.2, 0.2},
+                z = {-0.22, 0.22},
+                roll = 90,
             },
             ShoulderSize = 0.2,
-            Allow360rotation = false
-        }
-    }, -- Cockpit
-    Chase = {
-        LocalPoint = {1.3, 3.604000, 0.000000},
-        AnglesDefault = {180.000000, -8.000000}
-    }, -- Chase
-    Arcade = {
-        LocalPoint = {-13.790000, 6.204000, 0.000000},
-        AnglesDefault = {0.000000, -8.000000}
-    } -- Arcade
+            Allow360rotation = false,
+            NightVisionGoggles = {enable = true},
+        },
+    },
+    Chase  = {LocalPoint = {1.3, 3.604, 0}, AnglesDefault = {180, -8}},
+    Arcade = {LocalPoint = {-13.79, 6.204, 0}, AnglesDefault = {0, -8}},
 }
 
-SnapViews = {
-    [1] = {
-        -- player slot 1
-        [1] = {
-            viewAngle = 71.824692,
-             --FOV
-            hAngle = 0.000000,
-            vAngle = -32.458889,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [2] = {
-            viewAngle = 33.361835,
-             --FOV
-            hAngle = 41.045925,
-            vAngle = -40.805656,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [3] = {
-            viewAngle = 30.427544,
-             --FOV
-            hAngle = 0.000000,
-            vAngle = -41.808968,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [4] = {
-            viewAngle = 34.392349,
-             --FOV
-            hAngle = -32.597401,
-            vAngle = -35.293747,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [5] = {
-            viewAngle = 87.468338,
-             --FOV
-            hAngle = 129.012665,
-            vAngle = 14.547977,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [6] = {
-            viewAngle = 43.977936,
-             --FOV
-            hAngle = 0.000000,
-            vAngle = -4.951577,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [7] = {
-            viewAngle = 87.468338,
-             --FOV
-            hAngle = -129.012665,
-            vAngle = 14.491872,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [8] = {
-            viewAngle = 87.468338,
-             --FOV
-            hAngle = 82.862923,
-            vAngle = -9.500000,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [9] = {
-            viewAngle = 87.468338,
-             --FOV
-            hAngle = 0.000000,
-            vAngle = 38.979362,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [10] = {
-            viewAngle = 87.468338,
-             --FOV
-            hAngle = -82.461266,
-            vAngle = -12.843998,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [11] = {
-            --look at left  mirror
-            viewAngle = 68.786629,
-             --FOV
-            hAngle = 15.618313,
-            vAngle = 7.522498,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [12] = {
-            --look at right mirror
-            viewAngle = 69.165199,
-             --FOV
-            hAngle = -15.683434,
-            vAngle = 8.549150,
-            x_trans = 0.000000,
-            y_trans = 0.000000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        },
-        [13] = {
-            --default view
-            viewAngle = 87.468338,
-             --FOV
-            hAngle = 0.000000,
-            vAngle = -9.500000,
-            x_trans = 0.113927,
-            y_trans = -0.020000,
-            z_trans = 0.000000,
-            rollAngle = 0.000000
-        }
+-- One snap view: field of view, then yaw and pitch in degrees,
+-- then an optional head offset forward and up in metres.
+local function snap(fov, yaw, pitch, forward, up)
+    return {
+        viewAngle = fov,
+        hAngle = yaw,
+        vAngle = pitch,
+        x_trans = forward or 0,
+        y_trans = up or 0,
+        z_trans = 0,
+        rollAngle = 0,
     }
+end
+
+local WIDE = 87.468338
+
+SnapViews = {
+    [1] = { -- player seat, views 1 to 13 in order
+        snap(71.824692, 0, -32.458889),
+        snap(33.361835, 41.045925, -40.805656),
+        snap(30.427544, 0, -41.808968),
+        snap(34.392349, -32.597401, -35.293747),
+        snap(WIDE, 129.012665, 14.547977),
+        snap(43.977936, 0, -4.951577),
+        snap(WIDE, -129.012665, 14.491872),
+        snap(WIDE, 82.862923, -9.5),
+        snap(WIDE, 0, 38.979362),
+        snap(WIDE, -82.461266, -12.843998),
+        snap(68.786629, 15.618313, 7.522498),
+        snap(69.165199, -15.683434, 8.54915),
+        snap(WIDE, 0, -9.5, 0.113927, -0.02), -- 13: default view
+    },
 }

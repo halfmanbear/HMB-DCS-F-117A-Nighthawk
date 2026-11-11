@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-05",
+  "method": "New SVG geometry and editable system-font text; no traced vertices or copied pixels",
+  "input_textures": [],
+  "input_meshes": [],
+  "uv_coordinates_used": false,
+  "reference_document": "USAF TO 00-105E-9, revision 11, 1 February 2006; mirrored primary document",
+  "local_reference": "docs/reference/TO00-105E-9-R11-Segment12.pdf (untracked)",
+  "reference_sha256": "9c266d222fe1ec368c4238eb1acf37dd0bc13f3a1cbf725242f66447c6d248c9",
+  "evidence": {
+    "rescue-symbol": {
+      "source": "USAF TO 00-105E-9 rev 11 (AF1 R11 Segment 12 PDF), local copy under docs/reference/",
+      "pdf_page": 35,
+      "printed_page": "F-117A.3",
+      "scope": "Diagram shows RESCUE in a right-pointing arrow"
+    },
+    "ejection-symbol": {
+      "source": "USAF TO 00-105E-9 rev 11 (AF1 R11 Segment 12 PDF), local copy under docs/reference/",
+      "pdf_page": 35,
+      "printed_page": "F-117A.3",
+      "scope": "Diagram shows triangle with DANGER and UPWARD EJECTION SEAT"
+    },
+    "fire-pierce-symbol": {
+      "source": "USAF TO 00-105E-9 rev 11 (AF1 R11 Segment 12 PDF), local copy under docs/reference/",
+      "pdf_page": 35,
+      "printed_page": "F-117A.3",
+      "scope": "Diagram shows broken-corner frame, centre dot, FIRE / PIERCE"
+    },
+    "no-step-zone": {
+      "source": "USAF TO 00-105E-9 rev 11 (AF1 R11 Segment 12 PDF), local copy under docs/reference/",
+      "pdf_page": 35,
+      "printed_page": "F-117A.3",
+      "scope": "Diagram identifies blow-in doors as NO STEP; does not verify a painted legend"
+    }
+  },
+  "limitations": [
+    "Symbol identity/wording from the manual; dimensions, font and spacing are editorial",
+    "Colours are visual approximations, not sampled aircraft paint standards",
+    "Grey variants are editorial and not verified for a particular aircraft or date",
+    "Left-pointing rescue variant is an adaptation; do not mirror the text",
+    "Not a complete exterior stencil inventory; no unit insignia, serials or livery sets",
+    "Exact rescue instructions and small unreadable legends are deliberately omitted"
+  ],
+  "sources": [
+    {
+      "file": "exterior_vectors/rescue-arrow-right-colour-reference.svg",
+      "width": 1024,
+      "height": 256,
+      "kind": "exterior symbol",
+      "sha256": "0304b14734164378ffb164b930ff813167eb16b290d0f8b3db656d105306c0c8",
+      "evidence": "rescue-symbol",
+      "variant": "colour-reference",
+      "placement": "Choose direction to point at the actual new rescue access panel"
+    },
+    {
+      "file": "exterior_vectors/rescue-arrow-left-colour-reference.svg",
+      "width": 1024,
+      "height": 256,
+      "kind": "exterior symbol",
+      "sha256": "03842c0c9574ef0fd4e1ea44a9df1bbe93f84f1d42f05f556ecb5340adcb4d05",
+      "evidence": "rescue-symbol",
+      "variant": "colour-reference",
+      "placement": "Choose direction to point at the actual new rescue access panel"
+    },
+    {
+      "file": "exterior_vectors/ejection-triangle-colour-reference.svg",
+      "width": 1024,
+      "height": 896,
+      "kind": "exterior symbol",
+      "sha256": "14af874cd8763313e594bb13508ef0971b3c9613c891316fa713c24a14a1202f",
+      "evidence": "ejection-symbol",
+      "variant": "colour-reference"
+    },
+    {
+      "file": "exterior_vectors/fire-pierce-colour-reference.svg",
+      "width": 512,
+      "height": 512,
+      "kind": "exterior symbol",
+      "sha256": "b23d12c7d2ef8f877a3bb9ab97c489ab727183a75bff4a6a300d1f807170adb8",
+      "evidence": "fire-pierce-symbol",
+      "variant": "colour-reference"
+    },
+    {
+      "file": "exterior_vectors/rescue-arrow-right-grey-study.svg",
+      "width": 1024,
+      "height": 256,
+      "kind": "exterior symbol",
+      "sha256": "157edead35727c908a6009107b411166d43735d01e71d0ace92722c940694bca",
+      "evidence": "rescue-symbol",
+      "variant": "grey-study",
+      "placement": "Choose direction to point at the actual new rescue access panel"
+    },
+    {
+      "file": "exterior_vectors/rescue-arrow-left-grey-study.svg",
+      "width": 1024,
+      "height": 256,
+      "kind": "exterior symbol",
+      "sha256": "407b5e3267e5fe038473ae31c76fc4020eceb74a5273cd4bce6ddeff8f126c9e",
+      "evidence": "rescue-symbol",
+      "variant": "grey-study",
+      "placement": "Choose direction to point at the actual new rescue access panel"
+    },
+    {
+      "file": "exterior_vectors/ejection-triangle-grey-study.svg",
+      "width": 1024,
+      "height": 896,
+      "kind": "exterior symbol",
+      "sha256": "5cdf57c3435a73279ff8a160f0c3e43d70fb5c6385d272e255012df3d11f154e",
+      "evidence": "ejection-symbol",
+      "variant": "grey-study"
+    },
+    {
+      "file": "exterior_vectors/fire-pierce-grey-study.svg",
+      "width": 512,
+      "height": 512,
+      "kind": "exterior symbol",
+      "sha256": "d850dfb445ffed5c659d8b52a2c6e4facc4f99dac94c81acc1af54fe5a113cce",
+      "evidence": "fire-pierce-symbol",
+      "variant": "grey-study"
+    },
+    {
+      "file": "exterior_vectors/no-step-wording-study.svg",
+      "width": 1024,
+      "height": 160,
+      "kind": "legend",
+      "sha256": "3cefc9f650d9a5575c1eae62388de2962669fcb954f9b114a8d217fffa94d4b8",
+      "evidence": "no-step-zone",
+      "status": "Generic wording only; the figure identifies no-step zones, not this painted stencil"
+    },
+    {
+      "file": "exterior_vectors/exterior-markings-proof.svg",
+      "width": 2048,
+      "height": 2048,
+      "kind": "review only",
+      "sha256": "68d254e0addadfab4916f3c05c9460af4a370d732c9f82a7c337429f8d4afb48"
+    }
+  ]
+}

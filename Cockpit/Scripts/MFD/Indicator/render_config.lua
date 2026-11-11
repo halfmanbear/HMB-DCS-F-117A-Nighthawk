@@ -1,0 +1,27 @@
+-- Named textures are produced by F117Displays.dll/ccIndicatorBake.
+-- Camera target 0 remains reserved for the EFM/IRADS camera bridge.
+return {
+    -- Three-screen native bake. Set false to draw all three pages directly.
+    enabled=true,
+    -- Opt-in centre holder test: static colour/UV card, no native baking.
+    -- Needs enabled=false; see docs/displays/compositor-diagnostics.md.
+    holder_test=false,
+    -- Centre-only native bake; needs enabled=false and ignores holder_test when active.
+    bake_test=false,
+    -- "pattern", "map", or "text" (fixed font text versus line glyphs).
+    bake_test_source="map",
+    -- Show the selected diagnostic source directly, with the holder hidden.
+    bake_test_direct=false,
+    -- Controlled map-bake experiment: route strokes outside the specular pass.
+    bake_test_specular=false,
+    -- resolution=nil uses DCS's exposed option, falling back to 1024 pixels.
+    resolution=1024,
+    -- half_width/half_height size the holder quad. connector_* are the source
+    -- indicator's default extents: half of the measured connector spans.
+    left={texture="F117_LCD_LEFT",half_width=.0521,half_height=.0498,
+        connector_half_width=.05369,connector_half_height=.04526},
+    right={texture="F117_LCD_RIGHT",half_width=.0528,half_height=.0498,
+        connector_half_width=.05369,connector_half_height=.04526},
+    centre={texture="F117_LCD_CENTRE",half_width=.0881,half_height=.0748,
+        connector_half_width=.08767,connector_half_height=.07249},
+}

@@ -1,0 +1,12 @@
+# Binary assets: never diff, merge or convert line endings
+*.dds binary
+*.edm binary
+*.blend binary
+*.xcf binary
+*.dll binary
+*.png binary
+*.tga binary
+*.ogg binary
+*.wav binary
+*.miz binary
+*.zip binary
