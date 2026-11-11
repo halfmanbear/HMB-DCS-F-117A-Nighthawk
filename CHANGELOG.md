@@ -6,16 +6,16 @@ matching EFM build.
 ## Check in DCS
 
 - HUD: the OCIP conformal correction, and the IRADS cursor and 10 mrad lock box,
-  have not been seen in DCS (`docs/hud-ocip-design.md`).
+  have not been seen in DCS (`docs/displays/hud-ocip-design.md`).
 - Moving map: the chart backend on the centre screen needs an in-DCS check. The
   last compositor run showed the chart but faint or missing labels; repeat it at
-  `resolution=1024` (`docs/compositor-diagnostics.md`).
+  `resolution=1024` (`docs/displays/compositor-diagnostics.md`).
 
 ## Navigation (the main gap)
 
 All three displays show dashes for destination, range, TTG, course and DME until
 these exist. Details, manual pages and sizes are in
-`docs/cockpit-and-manual-gaps.md` part 2.
+`docs/systems/cockpit-and-manual-gaps.md` part 2.
 
 1. Flight plan, waypoints and destination steering (DEST, CRS LINE, CRS SEL,
    MAN HDG), with track select and auto-sequencing.
@@ -42,6 +42,6 @@ these exist. Details, manual pages and sizes are in
 
 ## Clickable cockpit (on hold)
 
-Resume plan in `docs/cockpit-and-manual-gaps.md` part 1. Start with one switch end
+Resume plan in `docs/systems/cockpit-and-manual-gaps.md` part 1. Start with one switch end
 to end: `Switch_07` to nav lights. First confirm which object type the Blender EDM
 exporter needs for `PNT_` click zones.

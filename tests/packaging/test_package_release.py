@@ -9,7 +9,7 @@ import unittest
 import zipfile
 
 
-MODULE_PATH = Path(__file__).resolve().parents[2] / "tools" / "package_release.py"
+MODULE_PATH = Path(__file__).resolve().parents[2] / "tools" / "release" / "package_release.py"
 spec = importlib.util.spec_from_file_location("package_release", MODULE_PATH)
 packager = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(packager)

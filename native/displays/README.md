@@ -58,7 +58,7 @@ holder readiness gates, glyphs and unchanged HUD optics.
 
 ## Compatibility and testing in DCS
 
-Use the [static centre holder test](../../docs/compositor-diagnostics.md) first
+Use the [static centre holder test](../../docs/displays/compositor-diagnostics.md) first
 to isolate texture sampling and presentation from native baking. It needs no
 DLL rebuild and is disabled by default.
 
@@ -112,7 +112,7 @@ The build now also runs `test_brightness.cpp` against DCS Lua, covering material
 capture/deduplication, source order, all six gains (including the DEP), video conversion, idempotent
 configuration, missing source fallback, failed material resolution, retry, page
 state closure
-and the actual DLL export. See `docs/irads-image-controls.md` for controls
+and the actual DLL export. See `docs/displays/irads-image-controls.md` for controls
 and runtime verification limits.
 
 
@@ -133,5 +133,5 @@ with an instrumented parameter store.
 only the uniquely marked, version-checked generic chart device registered by
 this mod. It is not a Hornet/F-15E device transplant. The build now also runs
 `test_charts.cpp` against real DCS Lua; those checks do not render map pixels.
-See [native map investigation](../../docs/native-map-rendering.md) for layouts,
+See [native map investigation](../../docs/displays/native-map-rendering.md) for layouts,
 live-check requirements and rollback.

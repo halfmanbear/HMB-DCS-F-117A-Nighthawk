@@ -12,7 +12,7 @@ from lupa.lua51 import LuaRuntime
 
 ROOT = Path(__file__).resolve().parents[1]
 EDM = ROOT / 'Shapes/f-117-nighthawk.edm'
-_spec = importlib.util.spec_from_file_location('package_release', ROOT / 'tools/package_release.py')
+_spec = importlib.util.spec_from_file_location('package_release', ROOT / 'tools/release/package_release.py')
 package_release = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(package_release)
 STANDARD_CELLS = {
@@ -115,7 +115,7 @@ class DamageModelTests(unittest.TestCase):
                          {name: STANDARD_CELLS[name] for name in ('WHEEL_F', 'WHEEL_L', 'WHEEL_R')})
 
     def test_compatibility_doc_names_the_installed_model(self):
-        doc = (ROOT / 'docs/model-efm-compatibility.md').read_text(encoding='utf-8')
+        doc = (ROOT / 'docs/models/model-efm-compatibility.md').read_text(encoding='utf-8')
         current = re.search(r'\| Exterior model \|[^|]*\| `([0-9a-f]{64})` \|', doc).group(1)
         self.assertEqual(current, hashlib.sha256(EDM.read_bytes()).hexdigest())
 

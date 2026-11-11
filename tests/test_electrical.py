@@ -8,7 +8,7 @@ from lupa.lua51 import LuaRuntime
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / 'Cockpit/Scripts'
-sys.path.insert(0, str(ROOT / 'tools'))
+sys.path.insert(0, str(ROOT / 'tools/cockpit'))
 from layout_editor import Model, PAGES, DEFAULTS, POWER_OFF, convert  # noqa: E402
 
 DISPLAYS = ['DEP', 'HUD', 'CMDI_L', 'SD', 'CMDI_R']

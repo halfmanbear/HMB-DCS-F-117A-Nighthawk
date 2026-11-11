@@ -58,7 +58,7 @@ jobs:
           CHANNEL: ${{ steps.channel.outputs.channel }}
           RELEASE_TAG: ${{ steps.channel.outputs.tag }}
         run: |
-          $arguments = @('mod/tools/package_release.py', 'metadata', '--channel', $env:CHANNEL)
+          $arguments = @('mod/tools/release/package_release.py', 'metadata', '--channel', $env:CHANNEL)
           if ($env:RELEASE_TAG) { $arguments += @('--tag', $env:RELEASE_TAG) }
           python @arguments
           if ($LASTEXITCODE -ne 0) { throw 'Invalid version metadata.' }
@@ -97,7 +97,7 @@ jobs:
           CHANNEL: ${{ steps.channel.outputs.channel }}
           RELEASE_TAG: ${{ steps.channel.outputs.tag }}
         run: |
-          $arguments = @('mod/tools/package_release.py', 'package', '--channel', $env:CHANNEL,
+          $arguments = @('mod/tools/release/package_release.py', 'package', '--channel', $env:CHANNEL,
             '--efm-root', 'efm', '--dll', (Join-Path $env:RUNNER_TEMP 'efm-package-build/bin/F_117_NightHawk.dll'),
             '--output', 'dist')
           if ($env:RELEASE_TAG) { $arguments += @('--tag', $env:RELEASE_TAG) }

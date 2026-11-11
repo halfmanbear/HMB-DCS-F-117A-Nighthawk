@@ -2,7 +2,7 @@
 import math,sys,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT/'tools'))
+sys.path.insert(0,str(ROOT/'tools/cockpit'))
 from check_display_calibration import runtime
 from layout_editor import Model,PAGES,DEFAULTS,POWER_OFF,convert
 S=ROOT/'Cockpit/Scripts'

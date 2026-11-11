@@ -75,8 +75,9 @@ Air-to-ground mode: 7   Navigation mode: 1
 IRADS on/off: O   Slew: ; . , /   Designate / slew stop: Enter   Clear: Backspace
 IRADS field of view: ] narrow, [ wide
 Laser arm / safe: LShift+L (code 1688)
-Weapon release (pickle): hold RAlt+Space. The bay opens and the store drops at the release point.
-Bay doors: LShift+T   Jettison: LCtrl+W"""
+Weapon release (pickle): hold RAlt+Space. The selected store's bay opens and the store drops at the release point.
+Bay doors: LShift+T both, LShift+LCtrl+T selected store, LShift+LAlt+T left, LShift+RAlt+T right
+Jettison: LCtrl+W"""
 
 DELIVERY = """\
 The attack sequence:

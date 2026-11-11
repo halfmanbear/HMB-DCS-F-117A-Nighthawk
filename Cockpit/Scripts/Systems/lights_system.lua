@@ -83,12 +83,30 @@ local function update_platypus_glow()
     end
 end
 
+-- Inlet fan, draw arguments 324 (left) and 325 (right). Each is a rotation phase, 0 to 1,
+-- one full turn per unit, and wraps like the beacon's. The turn rate follows engine rpm.
+-- The device runs at 1/STEP = 20 Hz, so the fan would strobe once it passes half a blade
+-- spacing per step: 17 blades is 10.6 degrees, about 35 rev/min. The rate is capped just
+-- under that, which makes full power a slow, steady turn rather than a flicker.
+local TURBINE_FULL_RPM = 30 -- fan rev/min shown at full engine rpm
+local turbine_phase = {0, 0}
+
+local function update_turbines()
+    local rpm = {base_data:getEngineLeftRPM(), base_data:getEngineRightRPM()}
+    for i = 1, 2 do
+        local fraction = math.max(0, math.min(1, rpm[i] or 0))
+        turbine_phase[i] = (turbine_phase[i] + STEP * fraction * TURBINE_FULL_RPM / 60) % 1
+        set_aircraft_draw_argument_value(323 + i, turbine_phase[i])
+    end
+end
+
 local function level(on)
     return on and 1 or 0
 end
 
 function update()
     update_platypus_glow()
+    update_turbines()
     beacon_phase = (beacon_phase + STEP * BEACON_RPM / 60) % 1
     for name, light in pairs(LIGHTS) do
         set_aircraft_draw_argument_value(light[2], level(light_on[name]))

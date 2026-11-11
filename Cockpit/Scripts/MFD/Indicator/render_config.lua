@@ -4,7 +4,7 @@ return {
     -- Three-screen native bake. Set false to draw all three pages directly.
     enabled=true,
     -- Opt-in centre holder test: static colour/UV card, no native baking.
-    -- Needs enabled=false; see docs/compositor-diagnostics.md.
+    -- Needs enabled=false; see docs/displays/compositor-diagnostics.md.
     holder_test=false,
     -- Centre-only native bake; needs enabled=false and ignores holder_test when active.
     bake_test=false,

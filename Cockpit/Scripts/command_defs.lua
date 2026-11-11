@@ -42,7 +42,10 @@ hotas_commands =
 -- (Master Arm SAFE and ARMED, bay open, no designation) released nothing on 350.
 f117_commands =
 {
-    BOMB_BAY_TOGGLE        = 10100, -- bombay
+    BOMB_BAY_TOGGLE        = 10100, -- bombay: both bays together
+    BOMB_BAY_SELECTED_TOGGLE = 10130, -- bombaySelected: the bay of the selected store
+    BOMB_BAY_LEFT_TOGGLE   = 10131, -- bombayLeft: station 1
+    BOMB_BAY_RIGHT_TOGGLE  = 10132, -- bombayRight: station 2
     WEAPON_RELEASE_ON      = 10103, -- weaponReleaseHoldOn
     WEAPON_RELEASE_OFF     = 10104, -- weaponReleaseHoldOff
     IRADS_DESIGNATION_CLEAR = 10117,

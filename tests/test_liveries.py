@@ -6,14 +6,14 @@ from pathlib import Path
 from lupa import LuaRuntime
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'tools'))
+sys.path.insert(0, str(ROOT / 'tools/models'))
 import sync_livery_materials as sync  # noqa: E402
 
 
 class LiveryTests(unittest.TestCase):
     def test_liveries_cover_every_textured_material(self):
         self.assertEqual(sync.sync(check=True), [],
-                         'run python tools/sync_livery_materials.py')
+                         'run python tools/models/sync_livery_materials.py')
 
     def test_model_still_has_suffixed_skin_materials(self):
         materials = sync.edm_materials()

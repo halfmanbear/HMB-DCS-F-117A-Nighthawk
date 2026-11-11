@@ -41,7 +41,7 @@ pairs the new model with the old mapping. See `model-efm-compatibility.md`.
 
 ## Package contents
 
-`tools/package_release.py` reads a committed Git snapshot and includes the runtime
+`tools/release/package_release.py` reads a committed Git snapshot and includes the runtime
 folders listed in `RUNTIME_DIRS` and the top-level files listed in `ROOT_FILES`.
 Only approved runtime file extensions are included. Update those lists when adding
 a new runtime folder or asset format.
@@ -95,7 +95,7 @@ For a local packaging check with an already built real DLL (paths supplied by th
 caller, not committed in scripts):
 
 ```powershell
-python tools/package_release.py package --channel dev --efm-root ../efm-checkout --dll ../build/F_117_NightHawk.dll --output dist
+python tools/release/package_release.py package --channel dev --efm-root ../efm-checkout --dll ../build/F_117_NightHawk.dll --output dist
 ```
 
 This exports committed mod files; uncommitted changes are intentionally excluded.

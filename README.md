@@ -28,7 +28,9 @@ At minimum, bind or verify these commands:
 - `Electro-Optical System On/Off` - required to enable the targeting MFD in Air-To-Ground mode
 - `IRADS FOV - Narrow` / `IRADS FOV - Wide` (or the `IRADS FOV (Wide / Narrow)` axis)
 - `Weapon Release` - for automatic bomb bay door opening on release, do not bind `Weapon Fire`
-- `Bomb Bay Door Toggle` - manual bay door override
+- `Bomb Bay Door Toggle` - manual bay door override, one binding per door set: `Bomb Bay Doors Toggle (Both)`
+  (LShift+T), `Bomb Bay Door Toggle (Selected Store)` (LShift+LCtrl+T), `Bomb Bay Door Toggle (Left)`
+  (LShift+LAlt+T) and `Bomb Bay Door Toggle (Right)` (LShift+RAlt+T)
 - `IRADS Laser Arm/Safe` - arms the EFM laser for laser-guided munitions
 - `Drag Chute` - recommended for shorter-field landings
 - `Refueling Hatch`
@@ -124,9 +126,10 @@ the matching EFM build.
    Laser-guided bombs need a live laser spot until impact. JDAMs take the designated
    coordinate and need no laser.
 4. `Weapon Station Next / Previous` selects the store. Hold `Weapon Release`
-   (Right Alt+Space) to give CCRP consent. The EFM opens the bay and releases one store
-   when every release gate passes, then steps to the next loaded station. Press again
-   for the next store.
+   (Right Alt+Space) to give CCRP consent. The EFM opens the bay of the selected store
+   only, releases one store when every release gate passes, then steps to the next loaded
+   station. Press again for the next store and its bay. A bay you opened by hand stays
+   open until you close it. See [docs/systems/weapon-bays.md](docs/systems/weapon-bays.md).
 
 ALIGN TARGET means the lateral offset is too large and OUT OF RANGE means the estimated
 range window is missed. The JDAM alignment limit (30 deg) and the laser-guided limit
@@ -137,7 +140,7 @@ released weapon.
 
 `J` engages CAS HOLD at the current airspeed once airborne and `J` again disengages.
 `LCtrl+J` is the A/T disconnect button and `LAlt+9` the stick disengage paddle. `LAlt+3`
-selects PAARS. Details are in [docs/autothrottle-paars.md](docs/autothrottle-paars.md).
+selects PAARS. Details are in [docs/systems/autothrottle-paars.md](docs/systems/autothrottle-paars.md).
 
 ## Included content
 
@@ -157,8 +160,17 @@ This package currently includes:
 
 - `tools/fm_bench/` flies the built EFM against the flight manual data; see its README.
 - `tools/missions/` builds the missions and runs DCS store-release tests.
-- `tools/sync_livery_materials.py` rebuilds the livery tables after an exterior re-export.
+- `tools/cockpit/` has Layout Studio, the offline display checks, and the HUD, font and combiner generators.
+- `tools/models/` builds the exterior Blender project, checks EDM exports and runs `sync_livery_materials.py`, which rebuilds the livery tables after an exterior re-export.
+- `tools/textures/` is the UV, paint, export and install pipeline for the texture work; `tools/textures/legacy/` holds the retired remake scripts.
+- `tools/release/package_release.py` builds the runtime ZIP.
 - `tests/` holds the offline tests: `python -m pytest tests`.
+
+## Repository layout
+
+- `docs/displays/`, `docs/systems/`, `docs/models/`, `docs/reviews/` hold the design notes; `docs/packaging.md` covers releases.
+- `blender_files/` has the Blender sources for the shipped models. `texture_sources/` has the texture source library and UV work.
+- `dist/` is release output only. `work/` (ignored) is local working data: the texture export staging folder and legacy remake sources.
 
 ## Credits
 

@@ -142,8 +142,9 @@ text("",-.04491,-.05485,SD,"LeftCenter",{"F117_IRADS_CLOCK_TEXT"},{{"text_using_
 
 -- Row 12, right: release faults, in the failure message position. Normal
 -- states (safe, no target, ready, released, on the ground) show nothing here.
+-- No bay-door fault (code 6): the bay opens by itself on release.
 local status={
-    [4]="NO STORE",[5]="LASER NOT READY",[6]="BAY CLOSED",[7]="NO SOLUTION",
+    [4]="NO STORE",[5]="LASER NOT READY",[7]="NO SOLUTION",
     [8]="OUT OF RANGE",[11]="LAUNCH RETRY",[13]="LAUNCH UNAVAILABLE",[14]="ALIGN TARGET"
 }
 for code,label in pairs(status) do

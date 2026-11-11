@@ -149,7 +149,10 @@ join(res.keyCommands,{
 {down = Keys.BcnLgt, name = _('Beacon Light ON/OFF'), category = _('Lighting')},
 
 -- Misc
-{down = f117_commands.BOMB_BAY_TOGGLE, name = _('Bomb Bay Door Toggle'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
+{down = f117_commands.BOMB_BAY_TOGGLE, name = _('Bomb Bay Doors Toggle (Both)'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
+{down = f117_commands.BOMB_BAY_SELECTED_TOGGLE, name = _('Bomb Bay Door Toggle (Selected Store)'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
+{down = f117_commands.BOMB_BAY_LEFT_TOGGLE, name = _('Bomb Bay Door Toggle (Left)'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
+{down = f117_commands.BOMB_BAY_RIGHT_TOGGLE, name = _('Bomb Bay Door Toggle (Right)'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
 
 })
 -- joystick axes 

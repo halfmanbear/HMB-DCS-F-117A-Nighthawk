@@ -5,7 +5,7 @@ import unittest
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools/cockpit'))
 from layout_editor import DEFAULTS, POWER_OFF, Model, PAGES, Renderer, move_source, transform_selection, recolor_selection, Editor, measured_boundary, measured_surfaces, hud_working_area, MODE_PARAMS, PREVIEW_ONLY, SURFACES, SCREENS, SCREEN_SURFACE, DEFAULT_SCREEN, context_params, page_scale, layout_boundary
 
 
@@ -90,7 +90,7 @@ class LayoutEditorTests(unittest.TestCase):
         import subprocess
         with tempfile.TemporaryDirectory() as folder:
             out=Path(folder)/'eo.png'
-            result=subprocess.run([sys.executable,'-B',str(Path(__file__).resolve().parents[1]/'tools/layout_editor.py'),
+            result=subprocess.run([sys.executable,'-B',str(Path(__file__).resolve().parents[1]/'tools/cockpit/layout_editor.py'),
                 '--render','Left EO','--output',str(out)],capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
             self.assertGreater(out.stat().st_size,1000)

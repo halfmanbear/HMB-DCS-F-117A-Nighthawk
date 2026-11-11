@@ -14,8 +14,8 @@ Presets =
 
             SpawnLocationsFile = "f-117-nighthawk_overwingVapor.owv",
 
-            ParticlesCount = 300,
-            ParticleSize = 2.7,
+            ParticlesCount = 400,
+            ParticleSize = 1.5,
             ScaleOverAgeFactor = 1.8, -- scale = ParticleSize * (1 + (normalized age) * ScaleOverAgeFactor)
             
             VaporLengthMax = 3.0, -- meters
@@ -30,8 +30,8 @@ Presets =
             OpacityOverPower = {
                 {0.0,   0.0},
                 {0.07,  0.0},
-                {0.09,  0.45},
-                {0.115, 1.0},
+                {0.09,  0.25},
+                {0.5,   0.65},
                 {1.0,   1.0},
             },
         }

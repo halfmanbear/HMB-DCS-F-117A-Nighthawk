@@ -173,7 +173,7 @@ class CockpitSystemsTests(unittest.TestCase):
 
     def test_color_action_rejects_selection_from_stale_source_lines(self):
         import sys
-        sys.path.insert(0, str(ROOT / 'tools'))
+        sys.path.insert(0, str(ROOT / 'tools/cockpit'))
         from layout_editor import Editor, Model, PAGES
         source = PAGES['Right MFD'].read_text(encoding='utf-8-sig')
         model = Model('Right MFD', source)
@@ -208,7 +208,7 @@ class CockpitSystemsTests(unittest.TestCase):
             self.assertIn('down = f117_commands.NWS_AUTHORITY_ON, up = f117_commands.NWS_AUTHORITY_OFF',profile)
 
     def test_legacy_preview_renders_the_current_hud_without_a_gui(self):
-        spec = importlib.util.spec_from_file_location('hud_preview', ROOT / 'tools/hud_preview.py')
+        spec = importlib.util.spec_from_file_location('hud_preview', ROOT / 'tools/cockpit/hud_preview.py')
         preview = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(preview)
         image, model, hits = preview.render_preview(roll=30, pitch=-5, size=300)

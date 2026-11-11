@@ -8,7 +8,7 @@ from unittest.mock import patch
 from lupa import LuaRuntime
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT/'tools'))
+sys.path.insert(0,str(ROOT/'tools/cockpit'))
 from layout_editor import Model,PAGES,DEFAULTS,POWER_OFF,move_source
 
 # The HUD scale line DCS logs when the F-117 spawns.

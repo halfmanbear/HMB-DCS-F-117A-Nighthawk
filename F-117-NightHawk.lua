@@ -31,7 +31,7 @@
 -- a flat sheet of hot gas instead of one round plume. Slot centreline taken from the model.
 local PLATYPUS_SLOT = {inboard = {-5.29, -0.155, 0.66}, outboard = {-3.19, -0.155, 2.48}}
 local PLATYPUS_SEGMENTS = 4 -- nozzles per slot
-local PLATYPUS_SPLAY = math.rad(8) -- exhaust flow turns this far outboard of straight aft
+local PLATYPUS_SPLAY = math.rad(12) -- exhaust flow turns this far outboard of straight aft
 
 -- Point on a slot centreline: t = 0 inboard end, 1 outboard end; side -1 left, +1 right;
 -- aft moves the point behind the slot face, in metres.
@@ -49,9 +49,9 @@ local function platypus_nozzles()
                 pos = platypus_point((i - 0.5) / PLATYPUS_SEGMENTS, side, 0.05),
                 -- Points back up the exhaust flow, so x is positive for flow going aft.
                 orientation = {math.cos(PLATYPUS_SPLAY), 0, -side * math.sin(PLATYPUS_SPLAY)},
-                diameter = 0.30, -- m: same area as a quarter of the 2.85 x 0.10 m slot
-                exhaust_length_ab = 0.76, -- m: afterburner flame length; none fitted
-                exhaust_length_ab_K = 0.76, -- Afterburner flame animation factor
+                diameter = 0.05, -- m: same area as a quarter of the 2.85 x 0.10 m slot
+                exhaust_length_ab = 5.00, -- m: afterburner flame length; none fitted
+                exhaust_length_ab_K = 5.00, -- Afterburner flame animation factor
                 smokiness_level = 0.005, -- Engine smoke, up to 1.0; 0.02 per engine in total
             }
         end
@@ -183,8 +183,8 @@ F_117_NightHawk = {
     -- surfaces, and the whole-wing debris models don't suit them.
     DamageParts = {},
     -- Model draw arguments sent over the network, so other players see them move.
-    -- Limit is 32, per the earlier note here (stock F-5E's comment says 16). 30 are in use;
-    -- enabling the 12 commented entries as well would put the list 10 over.
+    -- Limit is 32, per the earlier note here (stock F-5E's comment says 16). 32 are in use;
+    -- the list is full, so enabling any of the 12 commented entries needs another dropped.
     net_animation =
     {
         0,  -- Nose gear
@@ -203,11 +203,11 @@ F_117_NightHawk = {
         18, -- Rudder
         22, -- Refuel bay
         --25, -- Hook; the main .edm doesn't have this integrated yet
-        26, -- Bomb bay
+        26, -- Bomb bay: either bay open; DCS draws the stores only while it is
+        27, -- Left bay door and trapeze
+        28, -- Right bay door and trapeze
         35, -- Drag chute
-        36, -- Drag chute wind
         38, -- Canopy
-        39, -- Pilot head move
         --50, -- Pilot remove
         101,-- Nose wheel rotate
         102,-- Left wheel rotate
@@ -222,6 +222,8 @@ F_117_NightHawk = {
         --248,-- Right rudder damage
         --903,-- IRADS rotate
         --1000,-- Meme light
+        324, -- Left inlet fan rotate
+        325, -- Right inlet fan rotate
         1001,-- Beacon rotate
         1002,-- Left platypus heat glow
         1003,-- Right platypus heat glow
