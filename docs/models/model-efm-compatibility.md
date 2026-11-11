@@ -12,7 +12,7 @@ change those interfaces or independently re-audit the EFM build.
 
 | Part | Location | Identity |
 |---|---|---|
-| Exterior model | `Shapes/f-117-nighthawk.edm`, USAF default livery source, corrected glass and opaque non-emissive HUD glyph material, left bay on arg 27 and right bay on arg 28 (2026-11-08) | `c616aeb0e7b14b04eb3a00c8e9eb6951536bd449def81a4f33b457cb4593ab0d` |
+| Exterior model | `Shapes/f-117-nighthawk.edm`, original materials and livery names, left bay on arg 27 and right bay on arg 28 (2026-11-11) | `edf87311c1ad8f47ca15f693422268be7c9e13c19cd2bf99fec03ec21efdc4b7` |
 | Cockpit model | `Cockpit/Shape/Cockpit_F-117.edm`, corrected glass and 18 restored emissive objects | `340590d438e433b667c24cb54802078ee40a98cfcf0360726946ea1598c84f36` |
 | Damage table | `F-117-NightHawk.lua` | 25 cells, `00a6e68c8947` |
 | EFM source | `EFM Source Code/F_117_NightHawk.cpp` in the EFM repository | `d241a56` plus uncommitted changes, `b09f58c2f0cf` |
