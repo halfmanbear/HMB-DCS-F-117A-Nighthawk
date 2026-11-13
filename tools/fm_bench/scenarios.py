@@ -3,6 +3,8 @@ import math
 
 from sim import DT, FT_TO_M, G, LB_TO_KG, RAD, Pilot, isa, mach_from_cas
 
+CMD_TRIM_DOWN = 96  # iCommandPlaneTrimDown, repeated by DCS while held
+CMD_TRIM_STOP = 215  # iCommandPlaneTrimStop, on release
 SPIN_UP_S = 8.0  # Engine and flight controls settle at a fixed speed before a timed run starts.
 
 
@@ -342,3 +344,27 @@ def reach_limit_mach(sim, weight_lb, alt_ft, mach):
 
 def thrust_limited(sim, weight_lb, alt_ft, kcas):
     return excess_power(sim, weight_lb, alt_ft, mach_from_cas(kcas, alt_ft * FT_TO_M))
+
+
+def hands_off(sim, weight_lb, kcas, alt_ft, bank, nose_down_trim):
+    """Roll to `bank` with the pitch stick centred, then let go of both sticks: how far the nose falls in the first
+    3 seconds, and the load factor the pitch law holds over the 3 seconds after that, once its integrator has
+    taken up the airframe's pitch damping at the new pitch rate."""
+    h = alt_ft * FT_TO_M
+    pilot = _level(sim, weight_lb, alt_ft, mach_from_cas(kcas, h), seconds=6.0, throttle=0.8)
+    if nose_down_trim:
+        sim.efm.command(CMD_TRIM_DOWN, 1.0)
+        pilot.fly(12.0)  # Neutral to full nose-down takes about 8.5 s.
+        sim.efm.command(CMD_TRIM_STOP, 1.0)
+    pilot.pitch_axis = 0.0
+    pilot.roll_axis = 1.0  # Full stick, then the bank hold takes the last 30 deg.
+    pilot.fly(10.0, lambda s: s.roll > bank - 30.0 or s.roll < -170.0)
+    pilot.roll_axis = None
+    pilot.bank = bank
+    pilot.fly(2.0)
+    pitch_start = sim.pitch
+    pilot.roll_axis = 0.0
+    pilot.fly(3.0)
+    pitch_change = sim.pitch - pitch_start
+    nz, = _average(pilot, 3.0, 'nz')
+    return {'nz': nz, 'pitch_change': pitch_change, 'roll': sim.roll}

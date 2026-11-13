@@ -11,6 +11,11 @@ matching EFM build.
   last compositor run showed the chart but faint or missing labels; repeat it at
   `resolution=1024` (`docs/displays/compositor-diagnostics.md`).
 
+- **EFM** 1 g auto pitch trim (TO 1F-117A-1 pages 1-45, 1-46, 6-1) is bench-tested only. Check in DCS:
+  rolled inverted hands off the g-meter reads about +1 and the nose falls through; a level turn needs aft
+  stick; holding trim takes about 23 s end to end gear up and 7.5 s gear down; autopilot holds still work.
+  Gear-down trim authority (10 deg of elevon) is a guess, as the manual gives no figure.
+
 - Designate Select, the HUD cursor, INS drift, MARK points and sensor updates are unit-tested only
   (`docs/systems/designate-select-ins.md`). Check in DCS: the HUD cursor movement and ground point, the map
   cursor and UPDT, the MARK and SNSR legends on the HSD and MAP (positions are unchecked on glass), the VSD

@@ -252,16 +252,17 @@ class Pilot:
         if self.pitch_axis is not None:
             efm.command(CMD_PITCH_AXIS, self.pitch_axis)
         else:
-            desired, attitude = self._desired_nz()
+            desired, _ = self._desired_nz()
             desired = max(-1.5, min(6.5, desired))
             self.nz_filtered += (sim.nz - self.nz_filtered) * min(1.0, 8.0 * 0.006)
             self.trim = max(-3.0, min(3.0, self.trim + 0.5 * (desired - self.nz_filtered) * 0.006))
-            efm.command(CMD_PITCH_AXIS, pitch_axis_for_nz_delta(desired - attitude + self.trim))
+            # Hands off, the pitch law holds 1 g whatever the attitude (1 g auto pitch trim).
+            efm.command(CMD_PITCH_AXIS, pitch_axis_for_nz_delta(desired - 1.0 + self.trim))
         if self.roll_axis is not None:
             efm.command(CMD_ROLL_AXIS, self.roll_axis)
         else:
             # The roll law droops at low commanded rates, so the bank hold needs its own integrator.
-            error = self.bank - sim.roll
+            error = (self.bank - sim.roll + 180.0) % 360.0 - 180.0
             self.bank_integral = max(-30.0, min(30.0, self.bank_integral + 0.6 * error * 0.006))
             rate = max(-40.0, min(40.0, 2.5 * error + self.bank_integral))
             efm.command(CMD_ROLL_AXIS, roll_axis_for_rate(rate))

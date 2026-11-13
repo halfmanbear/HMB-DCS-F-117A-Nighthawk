@@ -123,6 +123,12 @@ def build_jobs(targets, groups):
         for row in block['rows']:
             jobs.append((('limit', row['mach'], row['gear_down']), 'aoa_limit', dict(
                 weight_lb=block['weight_lb'], mach=row['mach'], alt_ft=row['alt_ft'], gear_down=row['gear_down'])))
+    if 'handsoff' in groups:
+        block = targets['hands_off']
+        for row in block['rows']:
+            jobs.append((('handsoff', row['kcas'], row['bank'], row['nose_down_trim']), 'hands_off', dict(
+                weight_lb=block['weight_lb'], kcas=row['kcas'], alt_ft=block['alt_ft'], bank=row['bank'],
+                nose_down_trim=row['nose_down_trim'])))
     return jobs
 
 
@@ -228,6 +234,16 @@ def score(targets, results, groups):
             # The manual says the limit is reached with little or no overshoot.
             rows.append(_row('Overshoot past the AOA limit', f"Mach {row['mach']}, {gear}", 'deg', 0.0, max(0.0, got['peak'] - row['aoa']), 1.5))
             rows.append(_row('Load factor swing at the AOA limit', f"Mach {row['mach']}, {gear}", 'g', 0.0, got['nz_swing'], 0.4))
+    if 'handsoff' in groups:
+        for row in targets['hands_off']['rows']:
+            got = results[('handsoff', row['kcas'], row['bank'], row['nose_down_trim'])]
+            trim = ', full nose-down trim' if row['nose_down_trim'] else ''
+            condition = f"{row['kcas']} KCAS, {row['bank']} deg bank{trim}"
+            rows.append(_row('Hands-off load factor', condition, 'g', row['nz'], got['nz'], 0.15))
+            # Page 6-1: aft stick is needed to stay level in a bank, so hands off the nose must fall.
+            item = _row('Hands-off nose drop in 3 s', condition, 'deg', 0.0, got['pitch_change'], 0.0)
+            item['ok'] = got['pitch_change'] < -1.0
+            rows.append(item)
     return rows
 
 
@@ -265,7 +281,7 @@ def write_outputs(rows, meta):
 
 
 def main():
-    all_groups = ['accel', 'decel', 'climb', 'ceiling', 'turn', 'vmax', 'aoa', 'fuelflow', 'roll', 'sideslip', 'g', 'limit']
+    all_groups = ['accel', 'decel', 'climb', 'ceiling', 'turn', 'vmax', 'aoa', 'fuelflow', 'roll', 'sideslip', 'g', 'limit', 'handsoff']
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--dll', type=Path, help='EFM DLL to test (default: the build the mod uses)')
     parser.add_argument('--only', default=','.join(all_groups), help=f"tests to run, from: {','.join(all_groups)}")
