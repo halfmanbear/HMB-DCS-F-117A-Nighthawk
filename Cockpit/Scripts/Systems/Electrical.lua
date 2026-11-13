@@ -38,6 +38,9 @@ local CART_CONNECT_SPEED=1     -- m/s: the crew only connect a cart to a stopped
 local CART_PULL_OFF_SPEED=2    -- m/s: taxiing away pulls the leads and hoses off
 local align={pitch=get_param_handle("F117_ALIGN_PITCH_ERR"),roll=get_param_handle("F117_ALIGN_ROLL_ERR"),
     hdg=get_param_handle("F117_ALIGN_HDG_ERR"),adc=get_param_handle("F117_ADC_BLEND")}
+-- The INS (Systems/INS.lua) starts its drift once this is 1: aligned from spawn on a hot start, otherwise
+-- when the heading alignment has settled (5 time constants).
+local ins_done=get_param_handle("F117_ALIGN_INS_DONE")
 local displays={}
 for _,name in ipairs(DisplayBoot.DISPLAYS) do
     -- F117_PWR_<D>: boot state 0-3. F117_ON_<D>: 1 when operational, for format gates.
@@ -47,7 +50,8 @@ for _,name in ipairs(DisplayBoot.DISPLAYS) do
 end
 
 dev:listen_command(Keys.PowerOnOff)
-dev:listen_command(Keys.APUToggle)
+dev:listen_command(native_commands.APU_START)
+dev:listen_command(native_commands.APU_OFF)
 dev:listen_command(Keys.GroundPowerToggle)
 dev:listen_command(Keys.GroundAirToggle)
 
@@ -125,6 +129,8 @@ local function publish()
     end
     local e=alignment.evaluate((not aligned) and (powered_time or 0) or nil)
     align.pitch:set(e.pitch);align.roll:set(e.roll);align.hdg:set(e.hdg);align.adc:set(e.adc)
+    local settled=Alignment.SETTLED*Alignment.AXES.hdg.tau
+    ins_done:set((powered and (aligned or (powered_time or 0)>=settled)) and 1 or 0)
 end
 
 function post_initialize()
@@ -147,7 +153,9 @@ function SetCommand(command,value)
     if command==Keys.PowerOnOff then
         bus.toggle_battery()
         message(bus.battery and "BATTERY ON" or "BATTERY OFF")
-    elseif command==Keys.APUToggle then
+    elseif command==native_commands.APU_START or command==native_commands.APU_OFF then
+        -- Stock discrete commands: act only when they change the APU state.
+        if (command==native_commands.APU_START)==(bus.apu~=PowerBus.APU_OFF) then return end
         local before=bus.apu
         bus.toggle_apu()
         if bus.apu==PowerBus.APU_STARTING then message("APU START")

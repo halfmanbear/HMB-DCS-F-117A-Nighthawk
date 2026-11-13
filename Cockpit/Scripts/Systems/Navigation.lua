@@ -8,6 +8,8 @@ local KNOTS=1.94384449
 local CAPTURE_NM=1   -- auto-sequence radius: a mod choice, not a verified OCIP value
 local RETRY_UPDATES=100
 local MAX_ATTEMPTS=10
+-- MARK points (TO 1F-117A-1A): destination points 94-98, assigned in order; DP 99 holds the sensor-update bias.
+local MARK_FIRST,MARK_TOTAL=94,5
 local logger=log
 if not logger then
     local ok,value=pcall(require,"log")
@@ -63,6 +65,9 @@ function M.new(sensor,source)
     sensor=sensor or get_base_data()
     source=source or default_source
     local route={}
+    local marks={}          -- stored MARK points, in the INS frame: {x,z,elev,number,label,kind="mark"}
+    local ground_marks=0    -- MARK activations used up on the ground after power-up
+    local bias_dp={n=0,e=0,alt=0} -- DP 99
     local active,attempts,countdown,armed=1,0,0,false
     local handles={}
     local function set(name,value)
@@ -92,7 +97,12 @@ function M.new(sensor,source)
         set("COURSE",0);set("REL_COURSE",0)
         set("D_TEXT","D  --");set("TTG_TEXT","TTG --:--");set("RNG_TEXT","RNG ---.-");set("CRS_TEXT","CRS ---")
     end
+    -- The TO point sequence is the mission route followed by any stored marks.
+    local function total() return #route+#marks end
+    local function point_at(i) return route[i] or marks[i-#route] end
+    local function remaining() return math.max(0,MARK_TOTAL-#marks-ground_marks) end
     local function update()
+        set("MARK_REMAINING",remaining())
         if #route==0 and attempts<MAX_ATTEMPTS then
             countdown=countdown-1
             if countdown<=0 then countdown=RETRY_UPDATES;load() end
@@ -100,7 +110,7 @@ function M.new(sensor,source)
         local x,z
         if sensor.getSelfCoordinates then local _;x,_,z=sensor.getSelfCoordinates() end
         local heading=sensor.getHeading and sensor.getHeading()
-        local point=route[active]
+        local point=point_at(active)
         if not (point and finite(x) and finite(z) and finite(heading)) then dashes();return end
         heading=-heading -- clockwise true heading, radians
         local function bearing(ax,az,bx,bz)return (math.atan2 or math.atan)(bz-az,bx-ax) end
@@ -109,11 +119,12 @@ function M.new(sensor,source)
         -- back to a point already inside it does not sequence straight past it.
         if range>=CAPTURE_NM*NM then armed=true
         elseif armed and active<#route then
-            active=active+1;armed=false;point=route[active]
+            active=active+1;armed=false;point=point_at(active)
             range=math.sqrt((point.x-x)^2+(point.z-z)^2)
         end
         local direct=bearing(x,z,point.x,point.z)
         local previous=route[active-1]
+        if active>#route then previous=nil end -- a mark is steered to directly
         local course=previous and previous.kind~="takeoff" and bearing(previous.x,previous.z,point.x,point.z) or direct
         local vn,ve
         if sensor.getSelfVelocity then local _;vn,_,ve=sensor.getSelfVelocity() end
@@ -134,20 +145,49 @@ function M.new(sensor,source)
         set("CRS_TEXT",string.format("CRS %03d",display(course)))
     end
     local function step(delta)
-        if #route==0 then return end
-        active=math.max(1,math.min(#route,active+delta));armed=false;update()
+        if total()==0 then return end
+        active=math.max(1,math.min(total(),active+delta));armed=false;update()
     end
+    -- Store a mark (INS-frame coordinates). Returns the destination number, or nil when none are left.
+    local function add_mark(x,z,elev)
+        if remaining()==0 or not (finite(x) and finite(z)) then return nil end
+        local number=MARK_FIRST+#marks
+        marks[#marks+1]={x=x,z=z,elev=finite(elev) and elev or nil,kind="mark",number=number,
+            label=string.format("%02d",number%100)}
+        set("MARK_REMAINING",remaining())
+        return number
+    end
+    -- On the ground after power-up each MARK activation uses one of the five points.
+    local function consume_ground_mark()
+        if remaining()>0 then ground_marks=ground_marks+1;set("MARK_REMAINING",remaining()) end
+    end
+    -- Destination point by number: route points, marks 94-98 and the bias point 99.
+    local function dp(number)
+        for _,p in ipairs(route) do if p.number==number then return p end end
+        if number==99 then return {x=bias_dp.n,z=bias_dp.e,elev=bias_dp.alt,kind="bias",number=99,label="99"} end
+        return marks[number-MARK_FIRST+1]
+    end
+    local function set_bias(n,e,alt) bias_dp.n,bias_dp.e,bias_dp.alt=n,e,alt end
     local function set_command(command,value)
         if not nav_commands then return false end
         if command==nav_commands.WP_NEXT then if value and value>0 then step(1) end return true end
         if command==nav_commands.WP_PREV then if value and value>0 then step(-1) end return true end
+        -- Stock commands are only bound on key down, so every call is a press.
+        if command==native_commands.WP_NEXT then step(1) return true end
+        if command==native_commands.WP_PREV then step(-1) return true end
         return false
     end
     local function initialize()
         route,active,attempts,countdown,armed={},1,0,0,false
+        marks,ground_marks,bias_dp={},0,{n=0,e=0,alt=0}
         dashes()
+        set("MARK_REMAINING",remaining())
     end
     return {initialize=initialize,update=update,set_command=set_command,
-        route=function()return route end,active=function()return active end}
+        route=function()return route end,active=function()return active end,
+        active_point=function()return point_at(active) end,
+        marks=function()return marks end,remaining=remaining,add_mark=add_mark,
+        consume_ground_mark=consume_ground_mark,dp=dp,set_bias=set_bias,
+        bias=function()return bias_dp.n,bias_dp.e,bias_dp.alt end}
 end
 return M

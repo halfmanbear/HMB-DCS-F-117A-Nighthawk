@@ -182,7 +182,7 @@ TTG, course, DME) because nothing supplies it. **Navigation is the main gap.**
 | 15 | Moving map DMAP/PMAP (ranges 10/25/50/100/140 nm, 4 orientations, threat symbols, elevation bands) | PDF 25–29 / 4-12…4-16 | Very large |
 | 16 | EDIT display (flight-plan table) | PDF 29–30 / 4-16…4-17 | Needs #1, #2 |
 | 17 | STATUS display (maintenance / mission / SMS fault formats), Image Data Frame (DFRM) | PDF 32, 37–38 / 4-19, 4-24…4-25 | Mostly cosmetic |
-| 18 | Sensor / visual / IRADS-map updates, MARK points 94–98, altitude calibration | PDF 56–58 / 4-43…4-45 | Only useful if INS drift is modelled |
+| 18 | Sensor / visual / IRADS-map updates, MARK points 94–98, altitude calibration | PDF 56–58 / 4-43…4-45 | **Mostly done** (`docs/systems/designate-select-ins.md`): INS drift, MARK, IRADS / HUD / MAP updates, Designate Select. Left: altitude calibration, visual update and OAP, which need the CDU keypad |
 | 19 | Return-to-Base degraded mode and computer failure matrix | PDF 39, 41 / 4-26, 4-28 | Failure modelling |
 | 20 | VTR recorder (RCRD / STBY), TM/SRCH | PDF 55 / 4-42 | Cosmetic / weapons manual |
 | 21 | Normal procedures: FCS prestart BIT, APU start (battery → BIT → APU → wait 3 s after APU OFF light) | PDF 10–11 / 2-1…2-2 | Display power only is modelled in Lua (`Systems/Electrical.lua`): battery, APU, ground power cart, engine generators, staggered display boot and attitude/heading/air data alignment. The boot screens are illustrative. No FCS BIT, APU OFF light or EPU. The EFM runs each engine start on start air from the APU, the air cart or crossbleed, one starter at a time, with EGT, oil pressure and fuel flow from page 2-7 |

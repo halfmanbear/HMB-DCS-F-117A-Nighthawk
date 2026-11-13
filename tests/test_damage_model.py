@@ -123,7 +123,8 @@ class DamageModelTests(unittest.TestCase):
         source = efm_source()
         if source is None:
             self.skipTest('EFM source not found: set F117_EFM_ROOT or bin/efm.proxy.ini')
-        cells = re.findall(r'constexpr int kDamageElement\w+ = (\d+);', source.read_text(encoding='utf-8-sig'))
+        damage = source.parent / 'Damage/Damage.cpp'
+        cells = re.findall(r'constexpr int damage_element_\w+ = (\d+);', damage.read_text(encoding='utf-8-sig'))
         self.assertEqual({int(cell) for cell in cells}, set(STANDARD_CELLS.values()))
 
     def test_built_efm_is_not_older_than_its_source(self):

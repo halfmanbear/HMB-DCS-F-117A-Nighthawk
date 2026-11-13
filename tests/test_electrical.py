@@ -52,19 +52,42 @@ def run(g, seconds):
         g.update()
 
 
+class InsAlignmentTests(unittest.TestCase):
+    def test_cold_start_ins_is_aligned_once_the_heading_has_settled(self):
+        lua, g = device('GROUND_COLD')
+        v, keys = g['values'], g.Keys
+        run(g, 1)
+        self.assertEqual(v.F117_ALIGN_INS_DONE, 0)
+        g.SetCommand(keys.PowerOnOff, 1)
+        g.SetCommand(g.native_commands.APU_START, 1)
+        run(g, 20)
+        self.assertEqual(v.mainpower, 1)
+        self.assertEqual(v.F117_ALIGN_INS_DONE, 0)  # heading still aligning (5 time constants = 50 s)
+        run(g, 40)
+        self.assertEqual(v.F117_ALIGN_INS_DONE, 1)
+        g.SetCommand(keys.PowerOnOff, 1)  # battery off: alignment is lost
+        run(g, 1)
+        self.assertEqual(v.F117_ALIGN_INS_DONE, 0)
+
+    def test_hot_start_ins_is_aligned_from_spawn(self):
+        lua, g = device('GROUND_HOT')
+        run(g, 1)
+        self.assertEqual((g['values'].mainpower, g['values'].F117_ALIGN_INS_DONE), (1, 1))
+
+
 class PowerTests(unittest.TestCase):
     def test_battery_gates_apu_and_generators(self):
         lua, g = device()
         v, keys = g['values'], g.Keys
         self.assertEqual(v.mainpower, 0)
-        self.assertTrue(g.listened[keys.PowerOnOff] and g.listened[keys.APUToggle])
-        g.SetCommand(keys.APUToggle, 1)  # no battery: nothing happens
+        self.assertTrue(g.listened[keys.PowerOnOff] and g.listened[g.native_commands.APU_START] and g.listened[g.native_commands.APU_OFF])
+        g.SetCommand(g.native_commands.APU_START, 1)  # no battery: nothing happens
         run(g, 10)
         self.assertEqual((v.mainpower, v.F117_APU_STATE), (0, 0))
         g.SetCommand(keys.PowerOnOff, 1)
         run(g, 1)
         self.assertEqual((v.mainpower, v.F117_BATTERY), (0, 1))
-        g.SetCommand(keys.APUToggle, 1)
+        g.SetCommand(g.native_commands.APU_START, 1)
         run(g, 7.5)
         self.assertEqual((v.mainpower, v.F117_APU_STATE), (0, 1))
         run(g, 1)

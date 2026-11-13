@@ -77,13 +77,32 @@ poly({{-.052,-.046},{.052,-.046},{.052,.050},{-.052,.050}},"background")
 
 -- Layout matched to the cockpit video frame in docs/reference/CockpitImages/CMDI_HSD.
 -- Fixed upper switch legends and speed block.
+-- MARK and sensor update state comes from Systems/NavUpdate.lua.
+local function when(param,lo,hi)
+    return group({0,0},nil,{param},{{"parameter_in_range",0,lo or .9,hi or 1.1}})
+end
+local function box_in(x,y,w,h,parent)
+    return line({{x-w/2,y-h/2},{x+w/2,y-h/2},{x+w/2,y+h/2},{x-w/2,y+h/2},{x-w/2,y-h/2}},nil,parent)
+end
 text("MARK",-0.027,0.042,SD)
-text("-",-0.027,0.0385,SM)            -- mark number: no mark store yet
+-- Points left of the five, as a digit under the legend.
+text("",-0.027,0.0385,SM,nil,{"F117_NAV_MARK_REMAINING"},{{"text_using_parameter",0,0}},{"%1.0f"})
 text("SNSR",-0.0135,0.042,SD)
 text("ENTR",0,0.042,SD)
+box_in(-0.027,0.042,.0125,.0050,when("F117_MARK_ACTIVE"))   -- MARK is boxed while selected
+box_in(-0.0135,0.042,.0125,.0050,when("F117_SNSR_BOXED"))   -- SNSR is boxed until its conditions are met
+local no_ground=when("F117_MARK_X")                          -- X over MARK: no ground coordinates
+line({{-0.0335,0.0395},{-0.0205,0.0445}},nil,no_ground)
+line({{-0.0335,0.0445},{-0.0205,0.0395}},nil,no_ground)
 box(-0.039,0.0295,.0175,.0090)
-text("",-0.0465,0.0315,SM,"LeftCenter",{"GS_HUD"},{{"text_using_parameter",0,0}},{"GS  %3.0f"})
-text("",-0.0465,0.0275,SM,"LeftCenter",{"F117_OCIP_TAS"},{{"text_using_parameter",0,0}},{"TAS %3.0f"})
+-- The update bias replaces GS and TAS while a sensor update is waiting for ENTR or CLR.
+local speed=when("F117_SNSR_VALID",-.1,.1)
+local bias=when("F117_SNSR_VALID")
+text("",-0.0465,0.0315,SM,"LeftCenter",{"GS_HUD"},{{"text_using_parameter",0,0}},{"GS  %3.0f"},nil,speed)
+text("",-0.0465,0.0275,SM,"LeftCenter",{"F117_OCIP_TAS"},{{"text_using_parameter",0,0}},{"TAS %3.0f"},nil,speed)
+text("",-0.0465,0.0345,SM,"LeftCenter",{"F117_SNSR_BRG"},{{"text_using_parameter",0,0}},{"BRG %03.0f"},nil,bias)
+text("",-0.0465,0.0305,SM,"LeftCenter",{"F117_SNSR_RNG"},{{"text_using_parameter",0,0}},{"RNG %5.2f"},nil,bias)
+text("",-0.0465,0.0265,SM,"LeftCenter",{"F117_SNSR_ALT"},{{"text_using_parameter",0,0}},{"ALT %+06.0f"},nil,bias)
 box(0.036,0.0305,.0150,.0042)
 text("",0.036,0.0305,SM,nil,{"F117_NAV_CRS_TEXT"},{{"text_using_parameter",0,0}},{"%s"})
 box(0.036,0.023,.0150,.0042)

@@ -221,7 +221,6 @@ F_117_NightHawk = {
         --247,-- Left rudder damage
         --248,-- Right rudder damage
         --903,-- IRADS rotate
-        --1000,-- Meme light
         324, -- Left inlet fan rotate
         325, -- Right inlet fan rotate
         1001,-- Beacon rotate

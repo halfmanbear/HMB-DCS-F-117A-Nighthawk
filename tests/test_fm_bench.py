@@ -25,11 +25,11 @@ class FlightModelBenchTests(unittest.TestCase):
         self.assertAlmostEqual(sim.cas_from_mach(sim.mach_from_cas(300.0, 5000.0), 5000.0), 300.0, places=6)
 
     def test_pilot_stick_shaping_matches_the_flight_controls(self):
-        source = self._efm_source('FlightControls/FlightControls.cpp')
+        source = self._efm_source('FlightControls/Config.h')
         if source is None:
             self.skipTest('EFM source not found')
-        self.assertIn('kNegativeStickForceScale = 180.0', source)
-        self.assertIn('kPositiveStickForceScale = 80.0', source)
+        self.assertIn('negative_stick_force_scale = 180.0', source)
+        self.assertIn('positive_stick_force_scale = 80.0', source)
         self.assertGreater(sim.pitch_axis_for_nz_delta(2.0), 0.0)  # Aft stick asks for more g.
         self.assertLess(sim.pitch_axis_for_nz_delta(-0.5), 0.0)
         self.assertLessEqual(sim.pitch_axis_for_nz_delta(50.0), 1.0)

@@ -25,13 +25,13 @@ At minimum, bind or verify these commands:
 - `(7) Air-To-Ground Mode` - required to employ munitions
 - `IRADS On/Off` (O) - required to enable the targeting MFD in Air-To-Ground mode
 - `IRADS FOV - Narrow` / `IRADS FOV - Wide` (or the `IRADS FOV (Wide / Narrow)` axis)
-- `Master Arm / Safe` - starts SAFE
-- `Weapon Station Next` / `Weapon Station Previous` - select the store
+- `Master Arm` / `Master Safe` - starts SAFE
+- `Weapon Change` (stock) / `Weapon Station Previous` - select the store
 - `Weapon Release (Pickle)` (RAlt+Space) - for automatic bomb bay door opening on release, do not bind `Weapon Fire`
 - `Bomb Bay Door Toggle` - manual bay door override, one binding per door set: `Bomb Bay Doors Toggle (Both)`
   (LShift+T), `Bomb Bay Door Toggle (Selected Store)` (LShift+LCtrl+T), `Bomb Bay Door Toggle (Left)`
   (LShift+LAlt+T) and `Bomb Bay Door Toggle (Right)` (LShift+RAlt+T)
-- `IRADS Laser Arm/Safe` - arms the EFM laser for laser-guided munitions
+- `IRADS Laser Arm` / `IRADS Laser Safe` - arms the EFM laser for laser-guided munitions
 - `Drag Chute` - recommended for shorter-field landings
 - `Refueling Hatch`
 - `Tail Hook` - optional
@@ -40,8 +40,14 @@ At minimum, bind or verify these commands:
 
 Use `Throttle Designator Controller` directions (or the `TDC Slew Horizontal` and
 `TDC Slew Vertical` axes) and `Depress / Slew Stop` to slew and designate, and
-`IRADS Designation Clear` to clear. `DLIR MFD Overlay Toggle` is available for
-keyboard and joystick assignment.
+`IRADS Scan Return / Undesignate` to clear the designation and recentre the sensor. Pressing
+`Depress / Slew Stop` with a designation held also clears it. The sensor symbology is always drawn while IRADS is on.
+
+The `Designate Select - Center / Up / Left` commands (keyboard `RCtrl+RShift+1/2/3`) choose what the throttle
+slew and designate switch drives: IRADS, a free HUD cursor, or the map cursor. LOOK and SCROLL on the map need
+the switch on Left. Bind `MARK Point (94-98)`, `SNSR Sensor Update`, `Map UPDT Sensor Update`, `ENTR (Accept)`
+and `CLR (Reject / Clear Alerts)` to use MARK points and sensor updates against the modelled INS drift. See
+`docs/systems/designate-select-ins.md`.
 
 ## Cold start
 

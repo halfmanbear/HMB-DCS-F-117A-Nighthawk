@@ -12,14 +12,14 @@ green 90 of 255 on top of that control. Symbols and the left EO repeater are una
 
 | Action | Default keyboard binding |
 | --- | --- |
-| Brightness increase/decrease | Left Ctrl + Left Shift + Page Up/Page Down |
-| Contrast increase/decrease | Left Ctrl + Left Alt + Page Up/Page Down |
-| Reset for current mission time | Left Ctrl + Left Shift + Home |
+| IR Level increase/decrease (brightness) | Left Ctrl + Left Shift + Page Up/Page Down |
+| IR Gain increase/decrease (contrast) | Left Ctrl + Left Alt + Page Up/Page Down |
 
-Buttons and brightness/contrast axes are available under **F-117A IRADS** in
-Controls. Brightness steps by 5 percentage points within 8â€“100%; contrast steps
+These use the stock I-251 brightness and contrast commands, listed in Controls under
+Throttle Grip / HOTAS / **F-117A IRADS** as IR Level and IR Gain, with matching axes.
+There is no reset command. Brightness steps by 5 percentage points within 8â€“100%; contrast steps
 by 5 points within 35â€“100%. Axis inputs map their full travel to these ranges.
-Manual settings remain until reset or mission reload; changing sensor power,
+Manual settings remain until mission reload; changing sensor power,
 page or mission clock does not override them.
 
 Video contrast now uses DCS's built-in generic `set_contrast_raw` controller.

@@ -262,6 +262,8 @@ class MovingMapTests(unittest.TestCase):
         seen=0
         for name,fmt in self.text_bindings():
             value=self.p[name];seen+=1
+            # Parameters other systems own (NavUpdate, INS) are unset here; DCS reads an unset parameter as 0.
+            if value is None and not name.startswith('F117_MAP_'):value=0
             if fmt=='%s':
                 self.assertNotIsInstance(value,(int,float),f'{name} is numeric but drawn with %s')
             else:

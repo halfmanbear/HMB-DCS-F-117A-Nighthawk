@@ -6,19 +6,54 @@ Keys = {
     PowerOnOff        = 315,   -- stock iCommandPowerOnOff
     IRADSZoomIn       = 10008, -- the EFM matches these two by number (Inputs.h)
     IRADSZoomOut      = 10009,
-    MFDOverlayToggle  = 10010,
-    APUToggle         = 10011,
     GroundPowerToggle = 10012,
     GroundAirToggle   = 10013,
 
     -- Lighting, handled by Systems/lights_system.lua.
-    PanelLight = 10140,
     FloodLight = 10141,
-    LdgLight   = 10142,
-    NavLight   = 10143,
-    TaxiLgt    = 10144,
-    MemeLgt    = 10145,
-    BcnLgt     = 10146,
+}
+
+-- Stock iCommand IDs the Lua devices also act on. The base input profile binds
+-- keys to these, so no mod binding is needed (docs/reference/iCommands.lua).
+native_commands = {
+    WP_NEXT          = 102,  -- iCommandPlaneChangeTarget
+    WP_PREV          = 1315, -- iCommandPlaneUFC_STEER_DOWN
+    NAV_LIGHTS       = 175,  -- iCommandPlaneLightsOnOff
+    COCKPIT_LIGHT    = 300,  -- iCommandPlaneCockpitIllumination
+    LANDING_LIGHT    = 328,  -- iCommandPlaneHeadLightOnOff
+    BEACON_LIGHT     = 518,  -- iCommandPlaneAntiCollisionLights
+    TAXI_LIGHT       = 1398, -- iCommandPlaneLGPTaxiLight
+    WEAPON_NEXT      = 101,  -- iCommandPlaneChangeWeapon: next loaded station (Weapons.lua)
+    SENSOR_RESET     = 1635, -- iCommandSensorReset: the EFM undesignates and returns the IRADS gimbal to home
+    -- The profiles target these at the DISPLAYS device, which forwards to the
+    -- mod's own IDs, so the EFM never sees the stock number as well.
+    ZOOM_IN          = 103,  -- iCommandPlaneZoomIn: IRADS FOV narrow
+    ZOOM_OUT         = 104,  -- iCommandPlaneZoomOut: IRADS FOV wide
+    I251_BRIGHTNESS_UP   = 842, -- iCommandPlane_I251_Brightness_Up
+    I251_BRIGHTNESS_DOWN = 843,
+    I251_CONTRAST_UP     = 844,
+    I251_CONTRAST_DOWN   = 845,
+    NWS_ON           = 562,  -- iCommandPlane_HOTAS_NoseWheelSteeringButton
+    NWS_OFF          = 606,  -- iCommandPlane_HOTAS_NoseWheelSteeringButtonOff
+    TDC_DEPRESS_ON   = 634,  -- iCommandPlane_HOTAS_TDC_depress_on
+    TDC_DEPRESS_OFF  = 635,  -- iCommandPlane_HOTAS_TDC_depress_off
+    -- Stock commands the EFM (master arm, laser arm) and Electrical.lua (APU) handle themselves.
+    MASTER_ARM       = 1374, -- iCommandPlaneAHCPMasterArm (EFM)
+    MASTER_SAFE      = 1375, -- iCommandPlaneAHCPMasterSafe
+    LASER_ARM        = 1380, -- iCommandPlaneAHCPLaserArm
+    LASER_SAFE       = 1381, -- iCommandPlaneAHCPLaserSafe
+    APU_START        = 1055, -- iCommandPlane_APU_Start (Electrical.lua)
+    APU_OFF          = 1056, -- iCommandPlane_APU_Off (Electrical.lua)
+    SELECTER_LEFT    = 139,  -- iCommandSelecterLeft: TDC slew, forwarded to hotas_commands
+    SELECTER_RIGHT   = 140,
+    SELECTER_UP      = 141,
+    SELECTER_DOWN    = 142,
+    DSS_UP           = 544,  -- iCommandPlane_HOTAS_TargetManagementSwitchUp: Designate Select HUD
+    DSS_DOWN         = 545,  -- ...Down: not used
+    DSS_LEFT         = 546,  -- ...Left: MAP
+    DSS_RIGHT        = 547,  -- ...Right: not used
+    DSS_OFF          = 548,  -- ...Off: CENTER, IRADS
+    SELECTER_STOP    = 230,  -- iCommandSelecterStop: released slew key
 }
 
 -- Global EFM commands (no cockpit_device_id). Member names follow the FA-18C
@@ -48,12 +83,8 @@ f117_commands =
     BOMB_BAY_RIGHT_TOGGLE  = 10132, -- bombayRight: station 2
     WEAPON_RELEASE_ON      = 10103, -- weaponReleaseHoldOn
     WEAPON_RELEASE_OFF     = 10104, -- weaponReleaseHoldOff
-    IRADS_DESIGNATION_CLEAR = 10117,
-    IRADS_LASER_ARM_TOGGLE = 10118,
     IRADS_SLEW_HORIZONTAL = 10119, -- absolute axis: negative left, positive right
     IRADS_SLEW_VERTICAL   = 10120, -- absolute axis: negative down, positive up
-    MASTER_ARM_TOGGLE    = 10122,
-    WEAPON_STATION_NEXT   = 10123,
     WEAPON_STATION_PREV   = 10124,
     IRADS_ZOOM_AXIS       = 10121, -- absolute axis: -1 wide, +1 narrow (cockpit selects endpoints only)
     AUTOTHROTTLE_ENGAGE     = 10125, -- A/T engage switch: CAS hold at current CAS
@@ -93,7 +124,7 @@ irads_axis_commands = { HORIZONTAL = 3001, VERTICAL = 3002, ZOOM = 3003 }
 -- Device-local IRADS image controls, independent of native camera/EFM commands.
 irads_image_commands = {
     BRIGHTNESS_UP=3004, BRIGHTNESS_DOWN=3005,
-    CONTRAST_UP=3006, CONTRAST_DOWN=3007, RESET=3008,
+    CONTRAST_UP=3006, CONTRAST_DOWN=3007,
     BRIGHTNESS_AXIS=3009, CONTRAST_AXIS=3010,
 }
 
@@ -103,6 +134,9 @@ right_cmdi_commands = { MAP_SELECT=3033, HSD_SELECT=3034, VSD_SELECT=3035 }
 irads_fov_commands = { WIDE=3036, NARROW=3037 }
 -- Mission route: step the active waypoint (Systems/Navigation.lua).
 nav_commands = { WP_NEXT=3038, WP_PREV=3039 }
+-- MARK and sensor update (Systems/NavUpdate.lua). The CMDI MARK / SNSR / UPDT switches and the
+-- CDU ENTR / CLR keys have no cockpit model yet, so these are bound in the input profiles.
+update_commands = { MARK=3040, SNSR=3041, ENTR=3042, CLR=3043, UPDT=3044 }
 
 -- Central map outline controls; not a replica of the real bezel switch layout.
 map_commands = { RANGE_UP=3014, RANGE_DOWN=3015, ORIENTATION=3016,

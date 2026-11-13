@@ -228,6 +228,9 @@ box(-.035,-.0345,.022,.009,nil,arsBlank)
 for i,name in ipairs({"D_TEXT","TTG_TEXT","RNG_TEXT"}) do
     text("",-.044,-.0285-.003*i,SM,"LeftCenter",{"F117_NAV_"..name},{{"text_using_parameter",0,0}},{"%s"},nil,arsBlank)
 end
+-- INS mode advisory: ALIGN while aligning, INS UP once aligned (F117_INS_ADVISORY, Systems/INS.lua).
+text("ALIGN",-.0205,-.0235,SM,nil,{"F117_INS_ADVISORY"},{{"parameter_in_range",0,.9,1.1}})
+text("INS UP",-.0205,-.0235,SM,nil,{"F117_INS_ADVISORY"},{{"parameter_in_range",0,1.9,2.1}})
 local dr=when("F117_NAV_DR")
 box(-.0205,-.0235,.0075,.0035,"amber",dr)
 text("DR",-.0205,-.0235,SM,nil,nil,nil,nil,nil,dr)

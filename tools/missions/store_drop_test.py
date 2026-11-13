@@ -3,6 +3,8 @@
     python tools/missions/store_drop_test.py              # every store
     python tools/missions/store_drop_test.py MK-82 GBU-10 # some stores
     python tools/missions/store_drop_test.py --report     # rewrite the report from the last runs
+    python tools/missions/store_drop_test.py GBU-12 --alt 1500 --speed 160 --tag low-slow
+                                                          # one store at another height and speed
 
 For each store the script builds a mission from the Caucasus free flight quick start: one
 F-117 in the air over the flat ground east of Mozdok, carrying the store on both stations,
@@ -16,6 +18,11 @@ the way a pilot would:
  6. Holds the pickle until the cockpit reports a release.
 A mission script logs where the weapon hits. Each store's run is written to
 tools/missions/results/<store>.csv and the summary to tools/missions/results/store_drop.md.
+--alt, --speed and --designate replace the store's start height, speed and designation distance;
+--pickle ballistic holds the pickle only once the aircraft reaches the EFM's ballistic release point
+instead of from the moment the release zone opens. Runs with --tag save their results under
+<store>-<tag> and leave the main report alone. After each drop the script prints the real flight time
+(release to impact) next to the time to impact the EFM counted down.
 Close DCS first. Each store takes about three minutes.
 """
 import argparse
@@ -67,7 +74,7 @@ local handler = {}
 function handler:onEvent(e)
     if e.id == world.event.S_EVENT_SHOT and e.weapon then
         tracked[#tracked + 1] = {w = e.weapon, name = e.weapon:getTypeName(), p = e.weapon:getPoint(), v = e.weapon:getVelocity()}
-        env.info('F117TEST SHOT ' .. e.weapon:getTypeName())
+        env.info(string.format('F117TEST SHOT %s %.3f', e.weapon:getTypeName(), timer.getTime()))
     elseif e.id == world.event.S_EVENT_DEAD and e.initiator and e.initiator.getName then
         local ok, name = pcall(function() return e.initiator:getName() end)
         if ok then env.info('F117TEST DEAD ' .. tostring(name)) end
@@ -83,7 +90,8 @@ local function poll()
             -- Carry the last sample down to the ground along its velocity.
             local ground = land.getHeight({x = t.p.x, y = t.p.z})
             local dt = (t.v.y < -1) and math.min(1, (t.p.y - ground) / -t.v.y) or 0
-            env.info(string.format('F117TEST IMPACT %s %.1f %.1f %.1f', t.name, t.p.x + t.v.x * dt, ground, t.p.z + t.v.z * dt))
+            env.info(string.format('F117TEST IMPACT %s %.1f %.1f %.1f %.3f', t.name, t.p.x + t.v.x * dt, ground,
+                t.p.z + t.v.z * dt, timer.getTime() - 0.02 + dt))
             table.remove(tracked, i)
         end
     end
@@ -94,7 +102,7 @@ env.info('F117TEST READY')
 """
 
 HOOK = r"""-- Temporary hook written by tools/missions/store_drop_test.py. Safe to delete.
-local DESIRED, ALT, SPEED, LASER, WAIT = {DESIRED}, {ALT}, {SPEED}, {LASER}, {WAIT}
+local DESIRED, ALT, SPEED, LASER, WAIT, AT_BALLISTIC = {DESIRED}, {ALT}, {SPEED}, {LASER}, {WAIT}, {AT_BALLISTIC}
 local path = lfs.writedir() .. 'Logs\\F117_store_drop.csv'
 local hook = {{}}
 local handle, startTime, finished, phase, phaseTime, lock, heading, released, releaseTime
@@ -150,7 +158,7 @@ function hook.onSimulationFrame()
         startTime, heading = now, me.Heading
         handle = io.open(path, 'w')
         handle:write('t,phase,x,alt,z,tas,status,profile,lock_valid,lock_x,lock_y,lock_z,zone,min,max,error,sequence\n')
-        command(10122)     -- Master Arm (IRADS is already on at start)
+        command(1374)      -- Master Arm (iCommandPlaneAHCPMasterArm) (IRADS is already on at start)
         phase, phaseTime = 'warm', now
     end
     if not me then return finish('aircraft lost') end
@@ -183,11 +191,10 @@ function hook.onSimulationFrame()
                 in_mission(string.format([[coalition.addGroup(country.id.RUSSIA, Group.Category.GROUND, {{name = 'F117TGT',
                     task = 'Ground Nothing', units = {{{{type = 'Ural-375', name = 'F117TGT1', x = %.1f, y = %.1f, heading = 0, skill = 'Average'}}}}}})
                     env.info('F117TEST LOCK %.1f %.1f %.1f')]], lock.x, lock.z, lock.x, lock.y, lock.z))
-                if LASER then command(10118) end
+                if LASER then command(1380) end
                 phase, phaseTime = 'attack', now
             else
                 -- Too short: look farther (up). Too long: look nearer (down).
-                command(10117)
                 designated = false
                 local up = along < DESIRED
                 Export.LoSetCommand(10120, up and 1 or -1)
@@ -198,7 +205,8 @@ function hook.onSimulationFrame()
     elseif phase == 'attack' then
         local dx, dz = lock.x - me.Position.x, lock.z - me.Position.z
         heading = math.atan2(dz, dx)
-        if not released then command(350) end -- pickle held
+        -- Pickle held; with AT_BALLISTIC only once the cue says the ballistic release point is reached.
+        if not released and (not AT_BALLISTIC or (p.F117_RELEASE_CUE_ERROR or 1) <= 0) then command(350) end
         if (p.F117_RELEASE_SEQUENCE or 0) > 0 and not released then
             released, releaseTime = true, now
             command(351)
@@ -267,7 +275,7 @@ def lua_string(text):
     return '"' + text.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n') + '"'
 
 
-def run_dcs(store, mission):
+def run_dcs(store, mission, name, at_ballistic=False):
     if 'DCS.exe' in subprocess.run(['tasklist', '/FI', 'IMAGENAME eq DCS.exe'], capture_output=True, text=True).stdout:
         raise SystemExit('Close DCS first.')
     output = SAVED_GAMES / 'Logs/F117_store_drop.csv'
@@ -277,7 +285,8 @@ def run_dcs(store, mission):
         old.unlink(missing_ok=True)
     _, _, alt, speed, desired, laser = store
     hook_path.write_text(HOOK.format(DESIRED=desired, ALT=alt, SPEED=speed, LASER='true' if laser else 'false',
-                                     WAIT=160 if store[0].startswith('AGM-154') else 70),
+                                     WAIT=160 if store[0].startswith('AGM-154') else 70,
+                                     AT_BALLISTIC='true' if at_ballistic else 'false'),
                          encoding='utf-8')
     process = subprocess.Popen([str(DCS_EXE), '--mission', str(mission)])
     try:
@@ -289,7 +298,7 @@ def run_dcs(store, mission):
                 log = SAVED_GAMES / 'Logs/dcs.log'
                 if log.exists():  # keep the tail to see why
                     tail = log.read_text(encoding='utf-8', errors='replace').splitlines()[-80:]
-                    (RESULTS / f'{store[0]}.closed.log').write_text('\n'.join(tail) + '\n', encoding='utf-8')
+                    (RESULTS / f'{name}.closed.log').write_text('\n'.join(tail) + '\n', encoding='utf-8')
                 return 'DCS closed early'
             time.sleep(2)
     finally:
@@ -299,7 +308,6 @@ def run_dcs(store, mission):
             process.terminate()
             process.wait(60)
         hook_path.unlink(missing_ok=True)
-    name = store[0]
     (RESULTS / f'{name}.csv').write_bytes(output.read_bytes())
     for folder in LOG_DIRS:
         log = folder / 'dcs.log'
@@ -310,6 +318,28 @@ def run_dcs(store, mission):
             (RESULTS / f'{name}.log').write_text('\n'.join(lines) + '\n', encoding='utf-8')
             break
     return done.read_text()
+
+
+def efm_log():
+    """The EFM's IRADS log, next to the DLL that bin/efm.proxy.ini points at."""
+    ini = MOD / 'bin/efm.proxy.ini'
+    match = re.search(r'target=(.+)', ini.read_text()) if ini.exists() else None
+    return Path(match.group(1).strip()).parent / 'F117_IRADS.log' if match else MOD / 'bin/F117_IRADS.log'
+
+
+def flight_time_line(name, efm_text):
+    """Real flight time from the run's log against the EFM's time to impact (the DELIVERY TOF line)."""
+    log_path = RESULTS / f'{name}.log'
+    log = log_path.read_text(encoding='utf-8') if log_path.exists() else ''
+    shot = re.search(r'F117TEST SHOT \S+ (\S+)', log)
+    impact = re.search(r'F117TEST IMPACT \S+ \S+ \S+ \S+ (\S+)', log)
+    tof = re.findall(r'DELIVERY TOF: drop=(\S+) range=(\S+) .*used=(\S+)', efm_text)
+    if not (shot and impact and tof):
+        return f'{name}: no flight time (shot {bool(shot)}, impact {bool(impact)}, EFM line {bool(tof)})'
+    real = float(impact.group(1)) - float(shot.group(1))
+    drop, rng, used = (float(v) for v in tof[-1])
+    return (f'{name}: drop {drop:.0f} m, range {rng:.0f} m, real flight {real:.2f} s, '
+            f'EFM time to impact {used:.2f} s, error {used - real:+.2f} s')
 
 
 def summarise(name):
@@ -345,6 +375,12 @@ def main():
     parser.add_argument('stores', nargs='*', help='store names (default: all)')
     parser.add_argument('--report', action='store_true', help='only rewrite the report from saved results')
     parser.add_argument('--build-only', action='store_true', help='write the missions without starting DCS')
+    parser.add_argument('--alt', type=float, help='start height, m above sea level')
+    parser.add_argument('--speed', type=float, help='true airspeed, m/s')
+    parser.add_argument('--designate', type=float, help='designation distance ahead, m')
+    parser.add_argument('--pickle', choices=('zone', 'ballistic'), default='zone',
+                        help='hold the pickle from when the release zone opens (default), or from the ballistic point')
+    parser.add_argument('--tag', help='save the results as <store>-<tag> and leave the main report alone')
     args = parser.parse_args()
     RESULTS.mkdir(exist_ok=True)
     if not args.report:
@@ -353,11 +389,20 @@ def main():
         if unknown:
             raise SystemExit(f'Unknown stores: {sorted(unknown)}')
         for store in chosen:
-            mission = RESULTS / f'{store[0]}.miz'
+            store = (store[0], store[1], args.alt or store[2], args.speed or store[3], args.designate or store[4],
+                     store[5])
+            name = f'{store[0]}-{args.tag}' if args.tag else store[0]
+            mission = RESULTS / f'{name}.miz'
             build_mission(store, mission)
             if not args.build_only:
-                print(store[0], run_dcs(store, mission), flush=True)
-    report()
+                log = efm_log()
+                start = log.stat().st_size if log.exists() else 0
+                print(name, run_dcs(store, mission, name, args.pickle == 'ballistic'), flush=True)
+                with open(log, 'rb') as f:
+                    f.seek(start)
+                    print(flight_time_line(name, f.read().decode('utf-8', errors='replace')), flush=True)
+    if not args.tag:
+        report()
 
 
 if __name__ == '__main__':

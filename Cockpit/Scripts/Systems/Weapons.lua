@@ -17,7 +17,7 @@ local last_cue_valid = 0
 local last_release_sequence = 0
 local station = 0
 local last_signature = nil
-dev:listen_command(f117_commands.WEAPON_STATION_NEXT)
+dev:listen_command(native_commands.WEAPON_NEXT)
 dev:listen_command(f117_commands.WEAPON_STATION_PREV)
 
 local function tokens(value, result, seen)
@@ -102,7 +102,7 @@ local function next_station(direction)
 end
 
 function SetCommand(command,value)
-    if command==f117_commands.WEAPON_STATION_NEXT then fired_profile=nil; next_station(1)
+    if command==native_commands.WEAPON_NEXT then fired_profile=nil; next_station(1)
     elseif command==f117_commands.WEAPON_STATION_PREV then fired_profile=nil; next_station(-1) end
 end
 function post_initialize()

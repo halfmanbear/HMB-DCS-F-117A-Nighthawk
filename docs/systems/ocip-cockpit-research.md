@@ -77,7 +77,8 @@ implementation choices.
   These are supplied planning locations, not a live sensor or omniscient feed.
 - LOOK/SCRL hold the map's world centre and expose a central map cursor.
   Pan actions move the centre in screen directions, five percent of map height
-  per press. AUTO resumes aircraft following. LOOK and SCRL currently share
+  per press (throttle slew when the Designate Select switch is on MAP; LOOK and SCRL can only be entered
+  with it on MAP). AUTO resumes aircraft following. LOOK and SCRL currently share
   this basic panning model; their full distinct real-aircraft cursor/slew
   behaviour has not been reconstructed from these figures alone.
 - Tactical declutter cycles all overlays, route only, then neither route nor
@@ -87,9 +88,9 @@ implementation choices.
   Harris elevation shading. PMAP/DMAP select the requested database type; both
   currently share the common DCS chart underlay. `MAP DATA NOT LOADED` stays
   visible until the experimental chart camera becomes ready.
-- MARK, SNSR, ENTR, UPDT, HSD, STAT, SMD and DFRM are reference legends only; their
-  underlying pages/update procedures are not implemented. The mark number shows
-  `-` (no mark store). Legend positions follow the cockpit video frames in
+- MARK, SNSR, ENTR and UPDT work (`docs/systems/designate-select-ins.md`): the mark count shows under
+  the MARK legend, boxes and the X follow the update state, and the bias display replaces GS. HSD, STAT, SMD
+  and DFRM are reference legends only; their pages are not implemented. Legend positions follow the cockpit video frames in
   `docs/reference/CockpitImages/CMDI_Map`. On the normal page the function
   legend is blank; function 1 shows `FNC1` boxed and a static `COR` legend at the
   bottom left, as in the video. No ALERT condition is invented. An unread
@@ -102,8 +103,8 @@ implementation choices.
   New controls are input actions, not a claim that
   the illustrated bezel buttons have been connected to the central EDM.
 - Scale currently spans the full 106 mm map height. Exact Harris range
-  semantics remain unverified. Positions are DCS sensor coordinates, not a
-  newly simulated INS solution. No Harris terrain shading, automatic avoidance or INS map correction is
+  semantics remain unverified. Positions are the DCS sensor coordinates plus the simulated INS drift
+  (`Systems/INS.lua`), corrected by SNSR or map UPDT. No Harris terrain shading or automatic avoidance is
   supplied. The generic DCS chart backend can now request theatre chart imagery;
   see the implementation follow-up below for its experimental status.
 

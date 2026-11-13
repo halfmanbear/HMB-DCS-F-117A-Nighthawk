@@ -34,8 +34,8 @@ join(res.keyCommands,{
 {down = left_cmdi_commands.EO_SELECT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Left CMDI Select EO'), category = _('F-117A Displays')},
 {down = left_cmdi_commands.VSD_SELECT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Left CMDI Select VSD'), category = _('F-117A Displays')},
 
-{down = f117_commands.MASTER_ARM_TOGGLE, name = _('Master Arm / Safe'), category = _('F-117A Essential System Controls')},
-{down = f117_commands.WEAPON_STATION_NEXT, name = _('Weapon Station Next'), category = _('F-117A Essential System Controls')},
+{down = iCommandPlaneAHCPMasterArm, name = _('Master Arm'), category = _('F-117A Essential System Controls')},
+{down = iCommandPlaneAHCPMasterSafe, name = _('Master Safe'), category = _('F-117A Essential System Controls')},
 {down = f117_commands.WEAPON_STATION_PREV, name = _('Weapon Station Previous'), category = _('F-117A Essential System Controls')},
 
 
@@ -49,7 +49,7 @@ join(res.keyCommands,{
 {down = f117_commands.PAARS_TOGGLE, name = _('PAARS Automatic Recovery (ARS Switch)'), category = {_('Autopilot'), _('HOTAS'), _('F-117A Essential System Controls')}},
 {down = f117_commands.AUTOTHROTTLE_ENGAGE, name = _('Autothrottle Engage / Disengage'), category = _('Autopilot')},
 {down = f117_commands.AUTOTHROTTLE_DISCONNECT, name = _('Autothrottle Disengage Button'), category = {_('Autopilot'), _('Throttle Grip'), _('HOTAS')}},
-{down = f117_commands.NWS_AUTHORITY_ON, up = f117_commands.NWS_AUTHORITY_OFF, name = _('Nosewheel Steering Authority (Hold for 45 deg Range)'), category = {_('Systems'), _('HOTAS')}},
+{down = iCommandPlane_HOTAS_NoseWheelSteeringButton, up = iCommandPlane_HOTAS_NoseWheelSteeringButtonOff, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, value_up = 0.0, name = _('Nosewheel Steering Authority (Hold for 45 deg Range)'), category = {_('Systems'), _('HOTAS')}},
 
 -- Systems
 {down = iCommandPlaneAirRefuel, name = _('Refueling Bay'), category = {_('Systems'), _('F-117A Essential System Controls')}},
@@ -60,40 +60,45 @@ join(res.keyCommands,{
 {down = iCommandPlaneTrimCancel, name = _('Trim Reset'), category = _('Flight Control')},
 
 -- Modes
-{down = iCommandPlaneModeFI0, name = _('(6) Longitudinal Missile Aiming Mode'), category = _('Modes')},
 {down = iCommandPlaneModeGround, name = _('(7) Air-To-Ground Mode'), category = {_('Modes'), _('F-117A Essential System Controls')}},
 
 -- Sensors
 {combos = defaultDeviceAssignmentFor("lock_aircraft"), down = iCommandPlaneChangeLock, up = iCommandPlaneChangeLockUp, name = _('Target Lock'), category = _('Sensors')},
-{combos = defaultDeviceAssignmentFor("unlock_target"), down = iCommandSensorReset, name = _('Target Unlock'), category = _('Sensors')},
+{combos = defaultDeviceAssignmentFor("unlock_target"), down = iCommandSensorReset, name = _('IRADS Scan Return / Undesignate'), category = {_('Throttle Grip'), _('HOTAS'), _('Sensors'), _('F-117A IRADS')}},
 {down = iCommandPlaneRadarCenter, name = _('Target Designator To Center'), category = _('Sensors')},
-{down = iCommandPlaneNightTVOnOff, name = _('Night Vision (FLIR or LLTV) On/Off'), category = _('Sensors')},
 
--- RWR
-{down = iCommandChangeRWRMode, name = _('RWR/SPO Mode Select'), category = _('Sensors')},
-{down = iCommandPlaneThreatWarnSoundVolumeDown, name = _('RWR/SPO Sound Signals Volume Down'), category = _('Sensors')},
-{down = iCommandPlaneThreatWarnSoundVolumeUp, name = _('RWR/SPO Sound Signals Volume Up'), category = _('Sensors')},
 
 -- F-117A IRADS
-{down = irads_image_commands.BRIGHTNESS_UP, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Brightness Increase'), category = _('F-117A IRADS')},
-{down = irads_image_commands.BRIGHTNESS_DOWN, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Brightness Decrease'), category = _('F-117A IRADS')},
-{down = irads_image_commands.CONTRAST_UP, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Contrast Increase'), category = _('F-117A IRADS')},
-{down = irads_image_commands.CONTRAST_DOWN, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Contrast Decrease'), category = _('F-117A IRADS')},
-{down = irads_image_commands.RESET, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS Reset Brightness / Contrast for Mission Time'), category = _('F-117A IRADS')},
+{down = iCommandPlane_I251_Brightness_Up, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IR Level Increase'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandPlane_I251_Brightness_Down, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IR Level Decrease'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandPlane_I251_Contrast_Up, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IR Gain Increase'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandPlane_I251_Contrast_Down, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IR Gain Decrease'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {down = iCommandPlaneEOSOnOff, name = _('IRADS On/Off'), category = {_('Sensors'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
-{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Up'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
-{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DOWN, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Down'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
-{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_LEFT, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Left'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
-{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_RIGHT, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_RIGHT, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Right'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
-{down = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS, up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Depress / Slew Stop'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
-{down = irads_fov_commands.NARROW, cockpit_device_id = devices.DISPLAYS, value_down = 1.0,  name = _('IRADS FOV - Narrow'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
-{down = irads_fov_commands.WIDE, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS FOV - Wide'),   category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
-{down = f117_commands.IRADS_DESIGNATION_CLEAR, name = _('IRADS Designation Clear'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
-{down = f117_commands.IRADS_LASER_ARM_TOGGLE, name = _('IRADS Laser Arm/Safe'), category = {_('Weapons'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
+{down = iCommandSelecterUp, up = iCommandSelecterStop, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Up'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandSelecterDown, up = iCommandSelecterStop, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Down'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandSelecterLeft, up = iCommandSelecterStop, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Left'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandSelecterRight, up = iCommandSelecterStop, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Right'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandPlane_HOTAS_TDC_depress_on, up = iCommandPlane_HOTAS_TDC_depress_off, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, value_up = 0.0, name = _('Throttle Designator Controller - Depress / Slew Stop'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+-- Control-stick Designate Select switch: what the throttle X-Y slew/designate switch drives.
+{down = iCommandPlane_HOTAS_TargetManagementSwitchOff, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Designate Select - Center (IRADS)'), category = {_('Control Stick'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandPlane_HOTAS_TargetManagementSwitchUp, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Designate Select - Up (HUD)'), category = {_('Control Stick'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandPlane_HOTAS_TargetManagementSwitchLeft, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Designate Select - Left (MAP)'), category = {_('Control Stick'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandPlane_HOTAS_TargetManagementSwitchDown, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Designate Select - Down (not used)'), category = {_('Control Stick'), _('HOTAS'), _('F-117A IRADS')}},
+{down = iCommandPlane_HOTAS_TargetManagementSwitchRight, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Designate Select - Right (not used)'), category = {_('Control Stick'), _('HOTAS'), _('F-117A IRADS')}},
+-- MARK and sensor update (Systems/NavUpdate.lua): no default keys, assign in Controls.
+{down = update_commands.MARK, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('MARK Point (94-98)'), category = {_('F-117A Displays'), _('F-117A IRADS')}},
+{down = update_commands.SNSR, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('SNSR Sensor Update'), category = {_('F-117A Displays'), _('F-117A IRADS')}},
+{down = update_commands.UPDT, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Map UPDT Sensor Update'), category = {_('F-117A Displays'), _('F-117A IRADS')}},
+{down = update_commands.ENTR, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('ENTR (Accept)'), category = {_('F-117A Displays'), _('F-117A IRADS')}},
+{down = update_commands.CLR, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('CLR (Reject / Clear Alerts)'), category = {_('F-117A Displays'), _('F-117A IRADS')}},
+{down = iCommandPlaneZoomIn, cockpit_device_id = devices.DISPLAYS, value_down = 1.0,  name = _('IRADS FOV - Narrow'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
+{down = iCommandPlaneZoomOut, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('IRADS FOV - Wide'),   category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
+{down = iCommandPlaneAHCPLaserArm, name = _('IRADS Laser Arm'), category = {_('Weapons'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
+{down = iCommandPlaneAHCPLaserSafe, name = _('IRADS Laser Safe'), category = {_('Weapons'), _('F-117A IRADS'), _('F-117A Essential System Controls')}},
 
-{down = Keys.MFDOverlayToggle, name = _('DLIR MFD Overlay Toggle'), category = {_('Sensors'), _('F-117A IRADS')}},
 -- Battery is the stock Electric Power Switch (RShift+L). The APU or an engine then powers the displays.
-{down = Keys.APUToggle, name = _('APU Start / Stop'), category = _('Systems')},
+{down = iCommandPlane_APU_Start, name = _('APU Start'), category = _('Systems')},
+{down = iCommandPlane_APU_Off, name = _('APU Stop'), category = _('Systems')},
 {down = Keys.GroundPowerToggle, name = _('Ground Power Connect / Disconnect'), category = _('Systems')},
 {down = Keys.GroundAirToggle, name = _('Ground Air Connect / Disconnect'), category = _('Systems')},
 
@@ -140,13 +145,9 @@ join(res.keyCommands,{
 {down = iCommandDynamicRadioBalanceRight, value_down = 0.2, value_up = 0.0, name = _('r.2 Balance right'), category = {_('Radio'), _('Radio 2')}},
 
 -- Lights
-{down = Keys.PanelLight, name = _('Panel Light ON/OFF'), category = _('Lighting')},
 {down = Keys.FloodLight, name = _('Flood Light ON/OFF'), category = _('Lighting')},
-{down = Keys.LdgLight, name = _('Landing Lights ON/OFF'), category = _('Lighting')},
-{down = Keys.NavLight, name = _('Navigation Lights ON/OFF'), category = _('Lighting')},
-{down = Keys.TaxiLgt, name = _('Taxi Lights AUTO/ON/OFF'), category = _('Lighting')},
-{down = Keys.MemeLgt, name = _('Meme Light ON/OFF'), category = _('Lighting')},
-{down = Keys.BcnLgt, name = _('Beacon Light ON/OFF'), category = _('Lighting')},
+{down = iCommandPlaneLGPTaxiLight, name = _('Taxi Light ON/OFF'), category = _('Lighting')},
+{down = iCommandPlaneAntiCollisionLights, name = _('Beacon Light ON/OFF'), category = _('Lighting')},
 
 -- Misc
 {down = f117_commands.BOMB_BAY_TOGGLE, name = _('Bomb Bay Doors Toggle (Both)'), category = {_('EFM Misc'), _('F-117A Essential System Controls')}},
@@ -159,8 +160,8 @@ join(res.keyCommands,{
 join(res.axisCommands,{
 {action = irads_axis_commands.HORIZONTAL, cockpit_device_id = devices.DISPLAYS, name = _('TDC Slew Horizontal'), category = _('F-117A Essential System Controls')},
 {action = irads_axis_commands.VERTICAL, cockpit_device_id = devices.DISPLAYS, name = _('TDC Slew Vertical'), category = _('F-117A Essential System Controls')},
-{action = irads_image_commands.BRIGHTNESS_AXIS, cockpit_device_id = devices.DISPLAYS, name = _('IRADS Brightness'), category = _('F-117A IRADS')},
-{action = irads_image_commands.CONTRAST_AXIS, cockpit_device_id = devices.DISPLAYS, name = _('IRADS Contrast'), category = _('F-117A IRADS')},
+{action = irads_image_commands.BRIGHTNESS_AXIS, cockpit_device_id = devices.DISPLAYS, name = _('IR Level'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
+{action = irads_image_commands.CONTRAST_AXIS, cockpit_device_id = devices.DISPLAYS, name = _('IR Gain'), category = {_('Throttle Grip'), _('HOTAS'), _('F-117A IRADS')}},
 {action = irads_axis_commands.ZOOM, cockpit_device_id = devices.DISPLAYS, name = _('IRADS FOV (Wide / Narrow)'), category = _('F-117A Essential System Controls')},
 })
 

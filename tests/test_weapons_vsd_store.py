@@ -37,7 +37,7 @@ class WeaponsVsdStoreTests(unittest.TestCase):
         self.assertEqual(self.state(),(4,1))
         self.g.update()
         self.assertEqual(self.state(),(4,1))
-        self.g.SetCommand(self.g.f117_commands.WEAPON_STATION_NEXT,1)
+        self.g.SetCommand(self.g.native_commands.WEAPON_NEXT,1)
         self.assertEqual(self.state(),(4,0))
 
     def test_new_release_cue_clears_crossed_out_store(self):

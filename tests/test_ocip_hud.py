@@ -354,6 +354,23 @@ class OcipHudTests(unittest.TestCase):
         self.assertEqual(out('IRADS_VALID'),0)
         self.assertEqual(out('IRADS_LOCK_VALID'),0)
 
+    def test_hud_cursor_replaces_the_irads_cursor_when_designate_select_is_hud(self):
+        lua,update=self.motion_runtime({'vv_filter_time':0})
+        g=lua.globals();inputs=g.inputs
+        lua.execute('sensor.getSelfCoordinates=function() return 1000,2000,3000 end')
+        def out(name):return g.output['F117_OCIP_'+name]
+        inputs.F117_IRADS_POWER=1;inputs.F117_IRADS_LOS_VALID=1
+        inputs.F117_IRADS_LOS_X=1;inputs.F117_IRADS_LOS_Y=-.1;inputs.F117_IRADS_LOS_Z=.1
+        update(.05)
+        self.assertAlmostEqual(out('IRADS_AZ'),.1);self.assertAlmostEqual(out('IRADS_LOOK_AZ'),.1)
+        inputs.F117_DSS=1;inputs.F117_HUDCUR_VALID=1;inputs.F117_HUDCUR_AZ=-.03;inputs.F117_HUDCUR_EL=.02
+        update(.05)
+        self.assertEqual(out('IRADS_VALID'),1)
+        self.assertAlmostEqual(out('IRADS_AZ'),-.03);self.assertAlmostEqual(out('IRADS_EL'),.02)
+        self.assertAlmostEqual(out('IRADS_LOOK_AZ'),.1)  # the HUD cursor slaves to this
+        inputs.F117_DSS=2;update(.05)  # MAP selected: the symbol goes back to the IRADS look angle
+        self.assertAlmostEqual(out('IRADS_AZ'),.1)
+
     def test_irads_cursor_stays_on_the_drawn_area(self):
         lua,_=self.motion_runtime()
         g=lua.globals()

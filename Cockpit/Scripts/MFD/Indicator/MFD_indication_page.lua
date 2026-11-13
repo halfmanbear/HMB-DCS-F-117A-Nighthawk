@@ -11,8 +11,8 @@ local strokes=dofile(LockOn_Options.script_path.."display_strokes.lua")
 local ROOT=CreateElement "ceSimple"
 ROOT.name=options.root_name or "F117_IRADS_SOURCE"
 ROOT.parent_element=options.parent
-ROOT.element_params={"F117_ON_SD","MFD_OVERLAY","F117_IRADS_POWER"}
-ROOT.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1},{"parameter_in_range",2,.9,1.1}}
+ROOT.element_params={"F117_ON_SD","F117_IRADS_POWER"}
+ROOT.controllers={{"parameter_in_range",0,.9,1.1},{"parameter_in_range",1,.9,1.1}}
 ROOT.h_clip_relation=h_clip_relations.COMPARE
 ROOT.level=options.level or MFD_LEVEL
 Add(ROOT)

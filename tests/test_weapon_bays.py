@@ -66,13 +66,13 @@ class WeaponBayTests(unittest.TestCase):
     @unittest.skipUnless(EFM_ROOT.is_dir(), 'EFM source not checked out')
     def test_efm_has_the_same_commands_and_draw_arguments(self):
         inputs = (EFM_ROOT / 'Inputs.h').read_text(encoding='utf-8-sig')
-        for name, efm_name in (('BOMB_BAY_TOGGLE', 'bombay'), ('BOMB_BAY_SELECTED_TOGGLE', 'bombaySelected'),
-                               ('BOMB_BAY_LEFT_TOGGLE', 'bombayLeft'), ('BOMB_BAY_RIGHT_TOGGLE', 'bombayRight')):
+        for name, efm_name in (('BOMB_BAY_TOGGLE', 'bombay'), ('BOMB_BAY_SELECTED_TOGGLE', 'bombay_selected'),
+                               ('BOMB_BAY_LEFT_TOGGLE', 'bombay_left'), ('BOMB_BAY_RIGHT_TOGGLE', 'bombay_right')):
             self.assertRegex(inputs, rf'constexpr int {efm_name} = {COMMANDS[name]};')
         source = (EFM_ROOT / 'F_117_NightHawk.cpp').read_text(encoding='utf-8-sig')
-        self.assertIn('kWeaponBayArgs[kWeaponBayCount] = {27, 28}', source)
-        self.assertIn('kWeaponBayAnyArg = 26', source)
-        self.assertIn('"F117_BAY_L","F117_BAY_R"', source)
+        self.assertIn('weapon_bay_args[F117::weapon_bay_count] = {27, 28}', source)
+        self.assertIn('weapon_bay_any_arg = 26', source)
+        self.assertIn('"F117_BAY_L", "F117_BAY_R"', (EFM_ROOT / 'Weapons/ReleaseSequence.cpp').read_text(encoding='utf-8-sig'))
 
 
 if __name__ == '__main__':
