@@ -107,7 +107,7 @@ in-DCS verification; host tests cannot establish raster coverage or refresh.
 ## Common DCS chart backend (31 October 2026)
 
 The F-15E backup's `Scripts/DMS_init.lua` uses the common chart-page schema
-(scale, chart, rotation, x, z). Its native avTSD_Map is aircraft-specific, but
+(scale, chart, rotation, x, z). Its map device is specific to that aircraft, but
 `Scripts/Aircrafts/_Common/Cockpit/KNEEBOARD/declare_kneeboard_device.lua` in DCS
 registers the generic avKneeboard/ccKneeboard pair. The common indicator creates
 its map page with `GetSelf():Add_Map_Page`. The adapter relies on this layout:
