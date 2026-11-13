@@ -16,7 +16,33 @@ KT_TO_MPS = 0.514444
 SEA_LEVEL_PRESSURE = 101325.0
 SEA_LEVEL_SOUND = 340.294
 RAD = math.pi / 180.0
-FUEL_KG = 5000.0  # Enough for every test. The tests set the gross weight, so this doesn't change it.
+# The test weight is the empty aircraft plus fuel in the EFM's tanks; any weight above full fuel is stores at
+# the bay pylons, where DCS puts them (measured with two GBU-27s).
+EMPTY_KG = 13381.0               # M_empty
+EMPTY_CG = (0.0, 0.1, 0.0)       # FM.center_of_mass
+FUEL_CAPACITY_KG = 18200 * LB_TO_KG
+STORES_CG = (0.763, -0.067, 0.0)
+
+
+class MassProperties:
+    """Mass, CG and inertia about the CG (roll, yaw, pitch), assembled the way DCS does it.
+
+    Measured in DCS: each piece adds its own inertia, and the parallel-axis terms are taken about the new
+    combined CG. A negative piece takes mass away by the same rule.
+    """
+
+    def __init__(self, mass, cg, inertia):
+        self.mass, self.cg, self.inertia = mass, list(cg), list(inertia)
+
+    def add(self, mass, pos, own=(0.0, 0.0, 0.0)):
+        total = self.mass + mass
+        new = [(self.mass * c + mass * q) / total for c, q in zip(self.cg, pos)]
+        old_d = [c - n for c, n in zip(self.cg, new)]
+        add_d = [q - n for q, n in zip(pos, new)]
+        for axis, (a, b) in enumerate(((1, 2), (0, 2), (0, 1))):  # roll about x, yaw about y, pitch about z
+            self.inertia[axis] += (own[axis] + self.mass * (old_d[a] ** 2 + old_d[b] ** 2) +
+                                   mass * (add_d[a] ** 2 + add_d[b] ** 2))
+        self.mass, self.cg = total, new
 
 # Stick shaping in the EFM's FlightControls.cpp. The pilot inverts it to ask for a load factor or roll rate.
 PULL_FORCE_SCALE = 180.0
@@ -77,13 +103,19 @@ class Sim:
               freeze_speed=False):
         efm = self.efm
         efm.restart()
-        # As in DCS, the aircraft starts without its fuel and the EFM reports the fuel mass.
-        self.mass = weight_lb * LB_TO_KG - FUEL_KG
+        # As in DCS, the aircraft starts empty, DCS adds the stores, and the EFM reports the fuel tank by tank.
+        weight_kg = weight_lb * LB_TO_KG
+        fuel_kg = min(max(weight_kg - EMPTY_KG, 0.0), FUEL_CAPACITY_KG)
+        self.props = MassProperties(min(weight_kg, EMPTY_KG), EMPTY_CG, (self.ix, self.iy, self.iz))
+        if weight_kg - EMPTY_KG - fuel_kg > 0.0:
+            self.props.add(weight_kg - EMPTY_KG - fuel_kg, STORES_CG)
         self.fuel_used = 0.0
         self.freeze_speed = freeze_speed
-        efm.set_fuel(FUEL_KG)
+        efm.set_fuel(fuel_kg)
         efm.unlimited_fuel(not burn_fuel)
-        self.mass += efm.mass_change()
+        for piece in efm.mass_pieces():
+            self.props.add(*piece)
+        self.mass = self.props.mass
         self.h = h_m
         self.px = self.pz = 0.0
         _, _, rho, sound = isa(h_m)
@@ -143,7 +175,7 @@ class Sim:
 
         t, pr, rho, sound = isa(self.h)
         efm.set_atmosphere(self.h, t, sound, rho, pr, 0.0, 0.0, 0.0)
-        efm.set_mass_state(self.mass, 0.0, 0.0, 0.0, self.ix, self.iy, self.iz)
+        efm.set_mass_state(self.props.mass, *self.props.cg, *self.props.inertia)
         efm.set_state(xx * self.ax + yx * self.ay + zx * self.az,
                       xy * self.ax + yy * self.ay + zy * self.az,
                       xz * self.ax + yz * self.ay + zz * self.az,
@@ -156,9 +188,10 @@ class Sim:
         efm.simulate(DT)
         fx, fy, fz = efm.forces()
         mx, my, mz = efm.moments()
-        change = efm.mass_change()
-        self.mass += change
-        self.fuel_used -= change
+        for mass, pos, own in efm.mass_pieces():
+            self.props.add(mass, pos, own)
+            self.fuel_used -= mass
+        self.mass = self.props.mass
         m = self.mass
 
         # Inertial acceleration in body axes without gravity felt, which is what DCS reports to the EFM.

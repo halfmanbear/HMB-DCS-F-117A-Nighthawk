@@ -121,12 +121,17 @@ class Efm:
         self._add_moment(*self._mrefs)
         return self._mx.value, self._my.value, self._mz.value
 
-    def mass_change(self):
-        """Mass to add to the aircraft since the last call (kg), collected as DCS collects it."""
-        change = 0.0
+    def mass_pieces(self):
+        """Fuel pieces reported since the last call, collected as DCS collects them: (kg, position, own inertia)."""
+        pieces = []
         while self.dll.ed_fm_change_mass(*self._mass_ptrs):
-            change += self._mass_refs[0].value
-        return change
+            m, x, y, z, ix, iy, iz = (v.value for v in self._mass_refs)
+            pieces.append((m, (x, y, z), (ix, iy, iz)))
+        return pieces
+
+    def mass_change(self):
+        """Mass to add to the aircraft since the last call (kg)."""
+        return sum(piece[0] for piece in self.mass_pieces())
 
     def wheel_contact(self, on_ground):
         """Report all three wheels on the ground or clear of it, as DCS does each frame. There's no gear model here."""
