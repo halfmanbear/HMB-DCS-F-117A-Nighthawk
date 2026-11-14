@@ -396,6 +396,11 @@ F_117_NightHawk = {
     -- pylon(station, type, x, y, z, settings, launchers)
     -- type: stock notes 0 rail and 1 ejector. Stock doesn't document 2; it was noted here as invisible.
     -- x, y, z: unused here, because use_full_connector_position reads the position from the model.
+    -- attach_point_position: where the store's model origin sits relative to the pylon connector
+    -- (x forward, y up, z right). Without it DCS hangs the store by its AttachPoint connector.
+    -- Each was found by sweeping the store's carried shape through the whole door and trapeze cycle;
+    -- the right bay mirrors z. DCS still puts the store's mass at the connector. Fit per store is in
+    -- docs/systems/weapon-bays.md ("Bay size and store fit").
     Pylons = {
         pylon(
             1, -- Station number
@@ -411,26 +416,26 @@ F_117_NightHawk = {
             {
                 {CLSID = "<CLEAN>"}, --,attach_point_position = {0.02, 0.00, 0.00}
                 -- Laser Paveway III (primary historical)
-                {CLSID = "{EF0A9419-01D6-473B-99A3-BEBDB923B14D}"}, --GBU-27
+                {CLSID = "{EF0A9419-01D6-473B-99A3-BEBDB923B14D}", attach_point_position = {0.421, -0.100, -0.040}}, --GBU-27
                 -- Other LGBs (secondary/hypothetical)
-                {CLSID = "{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}"}, --GBU-10
-                {CLSID = "{DB769D48-67D7-42ED-A2BE-108D566C8B1E}"}, --GBU-12
+                {CLSID = "{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}", attach_point_position = {0.508, -0.270, -0.080}}, --GBU-10
+                {CLSID = "{DB769D48-67D7-42ED-A2BE-108D566C8B1E}", attach_point_position = {0.297, -0.188, -0.020}}, --GBU-12
                 -- JDAMs (late-career / plausible)
-                {CLSID = "{GBU-31}"},                               --GBU-31(V)1/B
-                {CLSID = "{GBU-31V3B}"},                            --GBU-31(V)3/B
-                {CLSID = "{GBU_32_V_2B}"},                          --GBU-32(V)2/B
+                {CLSID = "{GBU-31}", attach_point_position = {0.419, -0.290, -0.060}},                               --GBU-31(V)1/B
+                {CLSID = "{GBU-31V3B}", attach_point_position = {0.296, -0.297, -0.060}},                            --GBU-31(V)3/B
+                {CLSID = "{GBU_32_V_2B}", attach_point_position = {-0.004, -0.216, -0.020}},                          --GBU-32(V)2/B
                 -- Maverick (hypothetical)
-                {CLSID = "{444BA8AE-82A7-4345-842E-76154EFCCA47}"}, --AGM-65D Maverick (IIR)
-                {CLSID = "{F16A4DE0-116C-4A71-97F0-2CF85B0313EF}"}, --AGM-65E Maverick (laser)
+                {CLSID = "{444BA8AE-82A7-4345-842E-76154EFCCA47}", attach_point_position = {0.200, -0.226, -0.080}}, --AGM-65D Maverick (IIR)
+                {CLSID = "{F16A4DE0-116C-4A71-97F0-2CF85B0313EF}", attach_point_position = {0.200, -0.226, -0.080}}, --AGM-65E Maverick (laser)
                 -- JSOW (hypothetical)
-                {CLSID = "{AGM-154A}"},                             --JSOW AGM_154_A
-                {CLSID = "{AGM-154B}"},                             --JSOW AGM_154_B
-                {CLSID = "{9BCC2A2B-5708-4860-B1F1-053A18442067}"}, --JSOW AGM_154_C_JSOW
+                {CLSID = "{AGM-154A}", attach_point_position = {0.431, -0.283, -0.060}},                             --JSOW AGM_154_A
+                {CLSID = "{AGM-154B}", attach_point_position = {0.431, -0.283, -0.060}},                             --JSOW AGM_154_B
+                {CLSID = "{9BCC2A2B-5708-4860-B1F1-053A18442067}", attach_point_position = {0.431, -0.283, -0.060}}, --JSOW AGM_154_C_JSOW
                 -- CBU (hypothetical)
-                {CLSID = "{CBU_105}" },                             --CBU-105
+                {CLSID = "{CBU_105}", attach_point_position = {-0.136, -0.248, -0.040}},                             --CBU-105
                 -- Dumb bombs
-                {CLSID = "{BCE4E030-38E9-423E-98ED-24BE3DA87C32}"}, --Mk 82
-                {CLSID = "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}"}, --Mk 84
+                {CLSID = "{BCE4E030-38E9-423E-98ED-24BE3DA87C32}", attach_point_position = {-0.132, -0.188, 0.000}}, --Mk 82
+                {CLSID = "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}", attach_point_position = {0.331, -0.270, -0.060}}, --Mk 84
             }
         ),
         pylon(
@@ -447,26 +452,26 @@ F_117_NightHawk = {
             {
                 {CLSID = "<CLEAN>"}, --,attach_point_position = {0.02, 0.00, 0.00}
                 -- Laser Paveway III (primary historical)
-                {CLSID = "{EF0A9419-01D6-473B-99A3-BEBDB923B14D}"}, --GBU-27
+                {CLSID = "{EF0A9419-01D6-473B-99A3-BEBDB923B14D}", attach_point_position = {0.421, -0.100, 0.040}}, --GBU-27
                 -- Other LGBs (secondary/hypothetical)
-                {CLSID = "{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}"}, --GBU-10
-                {CLSID = "{DB769D48-67D7-42ED-A2BE-108D566C8B1E}"}, --GBU-12
+                {CLSID = "{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}", attach_point_position = {0.508, -0.270, 0.080}}, --GBU-10
+                {CLSID = "{DB769D48-67D7-42ED-A2BE-108D566C8B1E}", attach_point_position = {0.297, -0.188, 0.020}}, --GBU-12
                 -- JDAMs (late-career / plausible)
-                {CLSID = "{GBU-31}"},                               --GBU-31(V)1/B
-                {CLSID = "{GBU-31V3B}"},                            --GBU-31(V)3/B
-                {CLSID = "{GBU_32_V_2B}"},                          --GBU-32(V)2/B
+                {CLSID = "{GBU-31}", attach_point_position = {0.419, -0.290, 0.060}},                               --GBU-31(V)1/B
+                {CLSID = "{GBU-31V3B}", attach_point_position = {0.296, -0.297, 0.060}},                            --GBU-31(V)3/B
+                {CLSID = "{GBU_32_V_2B}", attach_point_position = {-0.004, -0.216, 0.020}},                          --GBU-32(V)2/B
                 -- Maverick (hypothetical)
-                {CLSID = "{444BA8AE-82A7-4345-842E-76154EFCCA47}"}, --AGM-65D Maverick (IIR)
-                {CLSID = "{F16A4DE0-116C-4A71-97F0-2CF85B0313EF}"}, --AGM-65E Maverick (laser)
+                {CLSID = "{444BA8AE-82A7-4345-842E-76154EFCCA47}", attach_point_position = {0.200, -0.226, 0.080}}, --AGM-65D Maverick (IIR)
+                {CLSID = "{F16A4DE0-116C-4A71-97F0-2CF85B0313EF}", attach_point_position = {0.200, -0.226, 0.080}}, --AGM-65E Maverick (laser)
                 -- JSOW (hypothetical)
-                {CLSID = "{AGM-154A}"},                             --JSOW AGM_154_A
-                {CLSID = "{AGM-154B}"},                             --JSOW AGM_154_B
-                {CLSID = "{9BCC2A2B-5708-4860-B1F1-053A18442067}"}, --JSOW AGM_154_C_JSOW
+                {CLSID = "{AGM-154A}", attach_point_position = {0.431, -0.283, 0.060}},                             --JSOW AGM_154_A
+                {CLSID = "{AGM-154B}", attach_point_position = {0.431, -0.283, 0.060}},                             --JSOW AGM_154_B
+                {CLSID = "{9BCC2A2B-5708-4860-B1F1-053A18442067}", attach_point_position = {0.431, -0.283, 0.060}}, --JSOW AGM_154_C_JSOW
                 -- CBU (hypothetical)
-                {CLSID = "{CBU_105}" },                             --CBU-105
+                {CLSID = "{CBU_105}", attach_point_position = {-0.136, -0.248, 0.040}},                             --CBU-105
                 -- Dumb bombs
-                {CLSID = "{BCE4E030-38E9-423E-98ED-24BE3DA87C32}"}, --Mk 82
-                {CLSID = "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}"}, --Mk 84
+                {CLSID = "{BCE4E030-38E9-423E-98ED-24BE3DA87C32}", attach_point_position = {-0.132, -0.188, 0.000}}, --Mk 82
+                {CLSID = "{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}", attach_point_position = {0.331, -0.270, 0.060}}, --Mk 84
             }
         ),
     },

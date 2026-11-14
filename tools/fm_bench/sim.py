@@ -17,11 +17,12 @@ SEA_LEVEL_PRESSURE = 101325.0
 SEA_LEVEL_SOUND = 340.294
 RAD = math.pi / 180.0
 # The test weight is the empty aircraft plus fuel in the EFM's tanks; any weight above full fuel is stores at
-# the bay pylons, where DCS puts them (measured with two GBU-27s).
+# the bay pylons, where DCS puts them. DCS puts a store's mass at its attach_point_position, so this is the
+# pylon connector (x 0.760, y 0.117, trapeze up) plus the GBU-27 offset; measured in DCS with two GBU-27s.
 EMPTY_KG = 13381.0               # M_empty
 EMPTY_CG = (0.0, 0.1, 0.0)       # FM.center_of_mass
 FUEL_CAPACITY_KG = 18200 * LB_TO_KG
-STORES_CG = (0.763, -0.067, 0.0)
+STORES_CG = (1.181, 0.009, 0.0)
 
 
 class MassProperties:

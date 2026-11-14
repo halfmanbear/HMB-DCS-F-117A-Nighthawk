@@ -29,7 +29,9 @@ EFM_NAMES = ['GBU-31(V)1/B', 'GBU-31(V)3/B', 'GBU-32(V)2/B', 'GBU-12', 'GBU-27',
 
 def pylon_clsids():
     text = (ROOT / 'F-117-NightHawk.lua').read_text(encoding='utf-8')
-    return [c for c in re.findall(r'\{CLSID\s*=\s*"([^"]+)"\s*\}', text) if c != '<CLEAN>']
+    # A pylon entry is the CLSID, optionally with its attach_point_position.
+    entry = r'\{CLSID\s*=\s*"([^"]+)"\s*(?:,\s*attach_point_position\s*=\s*\{[^}]*\}\s*)?\}'
+    return [c for c in re.findall(entry, text) if c != '<CLEAN>']
 
 
 class StoreProfileTests(unittest.TestCase):

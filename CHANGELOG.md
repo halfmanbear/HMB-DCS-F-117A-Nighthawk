@@ -16,6 +16,11 @@ matching EFM build.
   stick; holding trim takes about 23 s end to end gear up and 7.5 s gear down; autopilot holds still work.
   Gear-down trim authority (10 deg of elevon) is a guess, as the manual gives no figure.
 
+- **EFM** Fuel tanks follow the TO 00-105E-9 diagram (nine centreline fuselage tanks split at their baffles,
+  wing tanks outboard along the leading edge) and are bench-tested only. Check in DCS: `F117_Mass_State.log`
+  shows pieces `tank_0` to `tank_19` at mission start, and the reported roll inertia drops by about
+  36,000 kg m2 as the wing tanks empty.
+
 - Designate Select, the HUD cursor, INS drift, MARK points and sensor updates are unit-tested only
   (`docs/systems/designate-select-ins.md`). Check in DCS: the HUD cursor movement and ground point, the map
   cursor and UPDT, the MARK and SNSR legends on the HSD and MAP (positions are unchecked on glass), the VSD
