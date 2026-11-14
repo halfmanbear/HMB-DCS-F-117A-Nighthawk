@@ -2,7 +2,9 @@
 
     python tools/missions/vortex_shots.py            # fly and capture
     python tools/missions/vortex_shots.py --build-only
-    python tools/missions/vortex_shots.py --power-map  # AoA sweep at three speeds, top view only
+    python tools/missions/vortex_shots.py --power-map  # AoA sweep at three speeds, top and side views
+    python tools/missions/vortex_shots.py --speed-check  # 6 deg at 250 and 400 KCAS, top and side views
+    python tools/missions/vortex_shots.py --owv-probe 0.25 0.4  # cloud onset AoA for each power step
 
 Builds a mission from the Caucasus free flight quick start: a clean F-117 at 600 m over
 the Black Sea at noon with no wind. A temporary hook in Saved Games/DCS/Scripts/Hooks:
@@ -16,6 +18,7 @@ three minutes.
 """
 import argparse
 import math
+import re
 import subprocess
 import sys
 import time
@@ -37,10 +40,22 @@ SHOTS = """{
     {'side',  {3, 9, -17},   {-1.5, 0, 0}}, -- above the left wing, like the airshow photo
     {'rear',  {-20, 7, 6},   {0, 0, 0}},    -- behind and above the right wing
 }"""
-# Power map: one top shot per AoA step at each entry speed.
+# Power map: top and side shots per AoA step at each entry speed (true airspeed at 600 m:
+# 132, 170 and 200 m/s are about 250, 320 and 380 KCAS). Fastest first, so each block
+# starts slower than the last; 250 m/s took too long to regain after each pull.
 MAP_STEPS = '{' + ', '.join(
-    f"{{'v{v}_a{aoa:02d}', {aoa}, {v}}}" for v in (150, 200, 250) for aoa in (4, 5, 6, 7, 8, 9, 10, 99)) + '}'
-MAP_SHOTS = "{{'top', {-4, 22, -3}, {-1, 0, 0}}}"
+    f"{{'v{v}_a{aoa:02d}', {aoa}, {v}}}" for v in (200, 170, 132) for aoa in (4, 6, 8, 9, 10, 11, 12, 99)) + '}'
+MAP_SHOTS = "{{'top', {-4, 22, -3}, {-1, 0, 0}}, {'side', {3, 9, -17}, {-1.5, 0, 0}}}"
+# Speed check: does the overwing cloud depend on speed at a fixed AoA? Entry speeds are true
+# airspeed at the 600 m start height: 250 KCAS is 132 m/s and 400 KCAS is 212 m/s.
+SPEED_CHECK_STEPS = "{{'k250_a06', 6, 132}, {'k400_a06', 6, 212}}"
+SPEED_CHECK_SHOTS = "{{'top', {-4, 22, -3}, {-1, 0, 0}}, {'side', {3, 9, -17}, {-1.5, 0, 0}}}"
+# Overwing cloud probe: DCS computes the cloud's power itself and nothing reports it, so
+# step the opacity curve at a trial power and see at which AoA the cloud appears.
+PROBE_STEPS = '{' + ', '.join(
+    f"{{'v{v}_a{aoa:03.0f}', {aoa / 10}, {v}}}" for v in (200, 132) for aoa in (90, 100, 110, 115, 120, 990)) + '}'
+PROBE_SHOTS = "{{'side', {3, 9, -17}, {-1.5, 0, 0}}}"
+OWV_LUA = MOD / 'Effects/f-117-nighthawk_overwingVapor.lua'
 DCS_EXE = Path(r'E:\Eagle Dynamics\DCS World\bin-mt\DCS.exe')
 SAVED_GAMES = MOD.parents[2]
 LOGS = SAVED_GAMES / 'Logs'
@@ -213,9 +228,10 @@ function hook.onSimulationFrame()
     local rollCmd = clamp(1.5 * (bankWanted - me.Bank), -0.6, 0.6)
     Export.LoSetCommand(2002, rollCmd)
     Export.LoSetCommand(2003, 0)
-    -- Settle on the entry speed (or hold it in the 1 g step); full power in the turns.
+    -- Settle on the entry speed and hold it through the turn (or SPEED in the 1 g step);
+    -- full power only for full aft stick.
     local throttle = -1
-    if phase == 'accelerate' then throttle = clamp(0.08 * (tas - entry), -1, 1)
+    if phase == 'accelerate' or (target ~= nil and target < 90) then throttle = clamp(0.08 * (tas - entry), -1, 1)
     elseif target == nil then throttle = clamp(0.08 * (tas - SPEED), -1, 1) end
     Export.LoSetCommand(2004, throttle)
     if math.floor(t * 4) ~= math.floor((t - 0.02) * 4) then
@@ -346,20 +362,58 @@ def run(mission, steps=STEPS, shots=SHOTS):
     return taken
 
 
+def probe_owv(power_steps):
+    """Fly PROBE_STEPS once per trial power with the cloud's opacity stepped at that power."""
+    original = OWV_LUA.read_text(encoding='utf-8')
+    curve = re.compile(r'OpacityOverPower = \{.*?\n            \},', re.S)
+    assert curve.search(original), 'OpacityOverPower block not found'
+    try:
+        for power in power_steps:
+            step = (f'OpacityOverPower = {{{{0.0, 0.0}}, {{{power:.3f}, 0.0}}, {{{power + 0.01:.3f}, 1.0}}, '
+                    '{1.0, 1.0}},')
+            OWV_LUA.write_text(curve.sub(lambda _: step, original), encoding='utf-8')
+            folder = RESULTS / 'owv_probe' / f'p{power:.3f}'
+            folder.mkdir(parents=True, exist_ok=True)
+            global_results = globals()
+            saved, global_results['RESULTS'] = global_results['RESULTS'], folder
+            try:
+                mission = folder / 'vortex_shots.miz'
+                build_mission(mission)
+                run(mission, PROBE_STEPS, PROBE_SHOTS)
+            finally:
+                global_results['RESULTS'] = saved
+    finally:
+        OWV_LUA.write_text(original, encoding='utf-8')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--build-only', action='store_true', help='write the mission without starting DCS')
     parser.add_argument('--power-map', action='store_true',
-                        help='sweep AoA at 150, 200 and 250 m/s with top shots only, into results/vortex/power_map')
+                        help='sweep AoA at 200, 170 and 132 m/s with top and side shots, into results/vortex/power_map')
+    parser.add_argument('--speed-check', action='store_true',
+                        help='hold 6 deg AoA at 250 and 400 KCAS, top and side shots, into results/vortex/speed_check')
+    parser.add_argument('--owv-probe', type=float, nargs='+', metavar='POWER',
+                        help='for each trial power, step the overwing cloud opacity there and fly 9-12.6 deg '
+                             'at 200 and 132 m/s, into results/vortex/owv_probe; the lua is restored afterwards')
     args = parser.parse_args()
     global RESULTS
+    if args.owv_probe:
+        return probe_owv(args.owv_probe)
     if args.power_map:
         RESULTS = RESULTS / 'power_map'
+    elif args.speed_check:
+        RESULTS = RESULTS / 'speed_check'
     RESULTS.mkdir(parents=True, exist_ok=True)
     mission = RESULTS / 'vortex_shots.miz'
     build_mission(mission)
     if not args.build_only:
-        run(mission, MAP_STEPS, MAP_SHOTS) if args.power_map else run(mission)
+        if args.power_map:
+            run(mission, MAP_STEPS, MAP_SHOTS)
+        elif args.speed_check:
+            run(mission, SPEED_CHECK_STEPS, SPEED_CHECK_SHOTS)
+        else:
+            run(mission)
 
 
 if __name__ == '__main__':
