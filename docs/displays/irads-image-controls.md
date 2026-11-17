@@ -118,5 +118,7 @@ the gray scale with no target) on black bands outside the picture.
   designated but not firing.
 - The jet's IR level and gain aren't modelled separately, so the `L` and `G` bars
   show the brightness and contrast settings above.
-- Release faults such as `NO SOLUTION` appear at the lower right. `RDY` appears at
-  the upper left when release is ready.
+- The lower-right area is reserved for I BIT/P BIT sensor failure messages
+  (Figure 4-17, item 17); weapon release-fault captions are not drawn there.
+  `RDY` remains at the upper left when release is ready. EFM release gates and
+  status publication are unchanged.
