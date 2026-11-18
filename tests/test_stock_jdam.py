@@ -14,7 +14,8 @@ class StockJdamTests(unittest.TestCase):
     def test_both_pylons_offer_each_stock_jdam(self):
         text = (ROOT / 'F-117-NightHawk.lua').read_text(encoding='utf-8')
         for clsid in STOCK_IDS:
-            self.assertEqual(text.count(f'{{CLSID = "{clsid}"}}'), 2, clsid)
+            entries = re.findall(r'\{CLSID = "' + re.escape(clsid) + r'"(?:, attach_point_position = \{[^}]*\})?\}', text)
+            self.assertEqual(len(entries), 2, clsid)
 
     def test_old_ids_and_definitions_are_gone(self):
         for name in ('F-117-NightHawk.lua', 'UnitPayloads/F-117-NightHawk.lua', 'entry.lua'):

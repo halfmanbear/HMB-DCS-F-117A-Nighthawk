@@ -29,7 +29,7 @@ class LeftEOTests(unittest.TestCase):
         ''')
         def modules(path):
             if '/Systems/' in str(path):
-                if str(path).endswith(('Displays.lua','AlignedSensor.lua')):return load(path)
+                if str(path).endswith(('Displays.lua','AlignedSensor.lua','DesignateSelect.lua','HudCursor.lua','INS.lua','NavUpdate.lua')):return load(path)
                 if str(path).endswith('IRADS_Diagnostics.lua'):return lua.eval('function()end')
                 return lua.eval('{new=function()return {initialize=function()end,update=function()end,set_command=function()return false end}end,initialize=function()end,update=function()end,set_command=function()return false end,default_side_brightness=function()return 1 end,default_dep_brightness=function()return 1 end}')
             return load(path)
@@ -71,7 +71,7 @@ class LeftEOTests(unittest.TestCase):
         model=composite()
         def visible(mode,power=1):
             return [e for e,state in model.scene(dict(DEFAULTS,F117_LEFT_EO=mode,
-                F117_IRADS_POWER=power,F117_IRADS_CONTRAST_BAND=61,mainpower=1,MFD_OVERLAY=1,ONE=1)) if state[3]]
+                F117_IRADS_POWER=power,F117_IRADS_CONTRAST_BAND=61,mainpower=1,ONE=1)) if state[3]]
         def video(elements):
             return [e for e in elements if e.get('_etype')=='ceTexPoly']
         vsd=visible(0);eo=visible(1)

@@ -9,7 +9,7 @@ sys.path.insert(0, str(ROOT / 'tools/cockpit'))
 from check_display_calibration import runtime  # noqa: E402
 
 SCRIPTS = ROOT / 'Cockpit/Scripts'
-EFM = Path(r'C:\Users\Fraser\Git\HMB-DCS-F-117A-EFM\EFM Source Code\F_117_NightHawk.cpp')
+EFM = Path(r'C:\Users\Fraser\Git\HMB-DCS-F-117A-EFM\EFM Source Code\Weapons\Ccrp.h')
 EXPECTED = {
     '{GBU-31}': 0, '{GBU-31V3B}': 1, '{GBU_32_V_2B}': 2,
     '{DB769D48-67D7-42ED-A2BE-108D566C8B1E}': 3,  # GBU-12
@@ -29,7 +29,9 @@ EFM_NAMES = ['GBU-31(V)1/B', 'GBU-31(V)3/B', 'GBU-32(V)2/B', 'GBU-12', 'GBU-27',
 
 def pylon_clsids():
     text = (ROOT / 'F-117-NightHawk.lua').read_text(encoding='utf-8')
-    return [c for c in re.findall(r'\{CLSID\s*=\s*"([^"]+)"\s*\}', text) if c != '<CLEAN>']
+    # A pylon entry is the CLSID, optionally with its attach_point_position.
+    entry = r'\{CLSID\s*=\s*"([^"]+)"\s*(?:,\s*attach_point_position\s*=\s*\{[^}]*\}\s*)?\}'
+    return [c for c in re.findall(entry, text) if c != '<CLEAN>']
 
 
 class StoreProfileTests(unittest.TestCase):
@@ -77,7 +79,7 @@ class StoreProfileTests(unittest.TestCase):
     @unittest.skipUnless(EFM.exists(), 'EFM source not checked out')
     def test_efm_store_table_matches_profile_order(self):
         text = EFM.read_text(encoding='utf-8-sig')
-        table = text[text.index('kCcrpStoreModels[] ='):text.index('kCcrpStoreCount')]
+        table = text[text.index('ccrp_store_models[] ='):text.index('ccrp_store_count')]
         self.assertEqual(re.findall(r'\{\s*"([^"]+)"', table), EFM_NAMES)
 
 

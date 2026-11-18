@@ -141,6 +141,15 @@ return function(sensor,options)
         if not cx and powered and get("F117_IRADS_LOS_VALID")>.5 then
             cx,cy=project(get("F117_IRADS_LOS_X"),get("F117_IRADS_LOS_Y"),get("F117_IRADS_LOS_Z"),heading,pitch,roll)
         end
+        -- The IRADS look angle, always; the free HUD cursor slaves to it (Systems/HudCursor.lua).
+        set("IRADS_LOOK_VALID",cx and 1 or 0)
+        set("IRADS_LOOK_AZ",cx or 0)
+        set("IRADS_LOOK_EL",cy or 0)
+        -- Designate Select on HUD: the free HUD cursor replaces the IRADS look cue. The two share one
+        -- symbol (TO 1F-117A-1 4-5), so the symbol follows whichever the switch selects.
+        if get("F117_DSS")==1 and get("F117_HUDCUR_VALID")>.5 then
+            cx,cy=get("F117_HUDCUR_AZ"),get("F117_HUDCUR_EL")
+        end
         set("IRADS_VALID",cx and 1 or 0)
         set("IRADS_AZ",cx or 0)
         set("IRADS_EL",cy or 0)

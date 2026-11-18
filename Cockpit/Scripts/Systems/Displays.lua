@@ -11,8 +11,52 @@ local display_compositor = dofile(LockOn_Options.script_path.."Systems/DisplayCo
 -- Local variables ==================
 -- Map and HSD heading align after power-up with the HUD (Systems/AlignedSensor.lua).
 local aligned_sensor = dofile(LockOn_Options.script_path.."Systems/AlignedSensor.lua")(get_base_data())
-local navigation = dofile(LockOn_Options.script_path.."Systems/Navigation.lua").new(aligned_sensor)
-local map_outline = dofile(LockOn_Options.script_path.."Systems/MovingMap.lua").new(aligned_sensor,nil,navigation)
+-- Navigation and the map see the INS position (true + drifting bias); IRADS and weapons stay on true data.
+local ins = dofile(LockOn_Options.script_path.."Systems/INS.lua").new()
+local ins_sensor = ins.wrap(aligned_sensor)
+local navigation = dofile(LockOn_Options.script_path.."Systems/Navigation.lua").new(ins_sensor)
+local DesignateSelect = dofile(LockOn_Options.script_path.."Systems/DesignateSelect.lua")
+local dss          -- Designate Select switch (Systems/DesignateSelect.lua), created below
+local nav_update   -- MARK and sensor update (Systems/NavUpdate.lua), created below
+-- Terrain height for the destination elevation the manual gives the HUD cursor, and for IRADS updates.
+local terrain_api
+local function terrain_height(x, z)
+    if type(x) ~= "number" or type(z) ~= "number" then return nil end
+    if terrain_api == nil then
+        local ok, api = pcall(require, "terrain")
+        terrain_api = (ok and type(api) == "table" and type(api.GetHeight) == "function") and api or false
+    end
+    if not terrain_api then return nil end
+    local ok, height = pcall(terrain_api.GetHeight, x, z)
+    if ok and type(height) == "number" and height == height then return height end
+end
+local reference_cache = {}
+local function reference_elevation()
+    local point = navigation.active_point()
+    if type(point) ~= "table" or type(point.x) ~= "number" or type(point.z) ~= "number" then return nil end
+    if point.elev then return point.elev end -- a stored mark carries its own elevation
+    if reference_cache.x ~= point.x or reference_cache.z ~= point.z then
+        reference_cache.x, reference_cache.z, reference_cache.h = point.x, point.z, terrain_height(point.x, point.z)
+    end
+    return reference_cache.h
+end
+-- The HUD cursor's ray starts at the INS position (the cursor is placed on a true landmark, and the
+-- INS reads the ground point from where it believes the aircraft is).
+local hud_cursor = dofile(LockOn_Options.script_path.."Systems/HudCursor.lua").new{
+    attitude = get_base_data(), reference_elevation = reference_elevation,
+    position = function() return ins_sensor.getSelfCoordinates() end}
+local map_outline = dofile(LockOn_Options.script_path.."Systems/MovingMap.lua").new(ins_sensor,nil,navigation,
+    {manual_allowed = function() return dss ~= nil and dss.state() == DesignateSelect.MAP end})
+dss = DesignateSelect.new{dispatch = function(...) return dispatch_action(...) end, map = map_outline, hud = hud_cursor,
+    on_change = function(state)
+        hud_cursor.set_active(state == DesignateSelect.HUD)
+        if nav_update then nav_update.on_dss_change(state) end
+    end,
+    on_designate = function(state) if nav_update then nav_update.designate(state) end end}
+nav_update = dofile(LockOn_Options.script_path.."Systems/NavUpdate.lua").new{
+    navigation = navigation, ins = ins, dss = dss, hud = hud_cursor, map = map_outline, states = DesignateSelect,
+    position = function() return get_base_data().getSelfCoordinates() end, elevation = terrain_height,
+    message = function(text) if print_message_to_user then print_message_to_user(text) end end}
 local Page_changed = 0
 local left_eo = get_param_handle("F117_LEFT_EO")
 local fov_axis=-1
@@ -44,7 +88,6 @@ local BOST_TOGGLE = get_param_handle("BOST_TOGGLE")
 local WHOT_TOGGLE = get_param_handle("WHOT_TOGGLE")
 local IFB_TOGGLE = get_param_handle("IFB_TOGGLE")
 local IRADS_ZOOM = get_param_handle("IRADS_ZOOM")  -- 1=WIDE, 3=NARROW (installed EFM endpoint IDs)
-local MFD_OVERLAY = get_param_handle("MFD_OVERLAY") -- 1 = overlay on, 0 = off
 -- EMGY specific
 local LD_TEMP_TOGGLE = get_param_handle("LD_TEMP_TOGGLE")
 local LD_ENG_TOGGLE = get_param_handle("LD_ENG_TOGGLE")
@@ -238,7 +281,6 @@ dev:listen_command(110)
 dev:listen_command(111)
 
 dev:listen_command(keys.CannonMode) -- Cannon
-dev:listen_command(Keys.MFDOverlayToggle)
 
 local masterMode = get_param_handle("masterMode")
 masterMode:set(1)
@@ -282,7 +324,6 @@ function post_initialize()	-- modes / toggle default settings
 	WHOT_TOGGLE:set(0)			-- 1 = on , 0 = off
 	IFB_TOGGLE:set(0) 			-- 1 = on , 0 = off
 	IRADS_ZOOM:set(1)			-- 1=WIDE, 3=NARROW (installed EFM endpoint IDs)
-	MFD_OVERLAY:set(1)			-- 1 = on, 0 = off
 -- EMGY specific
 	LD_TEMP_TOGGLE:set(0)			-- 1 = on , 0 = off
 	LD_ENG_TOGGLE:set(0)			-- 1 = on , 0 = off
@@ -342,6 +383,10 @@ for _,command in pairs(map_commands) do dev:listen_command(command) end
 for _,command in pairs(right_cmdi_commands) do dev:listen_command(command) end
 for _,command in pairs(irads_fov_commands) do dev:listen_command(command) end
 for _,command in pairs(nav_commands) do dev:listen_command(command) end
+for _,command in pairs(update_commands) do dev:listen_command(command) end
+dev:listen_command(native_commands.WP_NEXT)
+dev:listen_command(native_commands.WP_PREV)
+dev:listen_command(native_commands.SENSOR_RESET) -- global: SCAN RETURN also recentres the HUD / map cursor
 
 function SetCommand(command,value)
     if command==right_cmdi_commands.MAP_SELECT or command==right_cmdi_commands.HSD_SELECT or command==right_cmdi_commands.VSD_SELECT then
@@ -355,6 +400,14 @@ function SetCommand(command,value)
         end
         return -- display selection must not clear designation or dispatch sensor commands
     end
+    if command==native_commands.ZOOM_IN then command=irads_fov_commands.NARROW
+    elseif command==native_commands.ZOOM_OUT then command=irads_fov_commands.WIDE end
+    -- The Designate Select switch decides who gets the throttle slew / designate input: IRADS (forwarded
+    -- to the EFM), the HUD cursor or the map cursor.
+    if dss.set_command(command,value) then return end
+    -- Stock HOTAS buttons forward to the EFM commands this mod already uses.
+    if command==native_commands.NWS_ON then dispatch_action(nil,f117_commands.NWS_AUTHORITY_ON,1.0) return end
+    if command==native_commands.NWS_OFF then dispatch_action(nil,f117_commands.NWS_AUTHORITY_OFF,1.0) return end
     if command==irads_fov_commands.WIDE or command==irads_fov_commands.NARROW then
         if value and value>0 then
             fov_axis=command==irads_fov_commands.NARROW and 1 or -1
@@ -362,14 +415,13 @@ function SetCommand(command,value)
         end
         return
     end
+    if nav_update.set_command(command,value) then return end
     if navigation.set_command(command,value) then return end
     if map_outline.set_command(command,value) then return end
     if irads_image.set_command(command,value) then return end
     -- Forward exactly once. The EFM owns deadzone, rate, power and motion.
     local efm_axis = nil
-    if command == irads_axis_commands.HORIZONTAL then efm_axis = f117_commands.IRADS_SLEW_HORIZONTAL
-    elseif command == irads_axis_commands.VERTICAL then efm_axis = f117_commands.IRADS_SLEW_VERTICAL
-    elseif command == irads_axis_commands.ZOOM then
+    if command == irads_axis_commands.ZOOM then
         if type(value)~="number" or value~=value or math.abs(value)==math.huge then return end
         -- Two detents with hysteresis; send only endpoints to the installed EFM.
         if value<-.1 then fov_axis=-1 elseif value>.1 then fov_axis=1 end
@@ -551,7 +603,7 @@ if get_param_handle("mainpower"):get() == 1 then
 				--MLAS_TOGGLE:set(0) 			-- 1 = on , 0 = off
 				SYMB_TOGGLE:set(0) 			-- 1 = on , 0 = off
 				SRCH_TRCK_MODE:set(1) 		-- 1 = SEARCH , 2 = TRACK
-				dispatch_action(nil,10117) 	-- clear IRADS designation when leaving the pod page
+				dispatch_action(nil,native_commands.SENSOR_RESET) 	-- clear IRADS designation when leaving the pod page
 				BOST_TOGGLE:set(0) 			-- 1 = on , 0 = off
 				WHOT_TOGGLE:set(0)			-- 1 = on , 0 = off
 				IFB_TOGGLE:set(0) 			-- 1 = on , 0 = off
@@ -694,7 +746,7 @@ if get_param_handle("mainpower"):get() == 1 then
 -- Laser Designator Pod Page
 		elseif LD_UPPER:get() == 4 then
 			if (command == keys.LDSK_2) or (command == deviceCommands.LDSK_2) then			-- toggle laser
-				dispatch_action(nil, f117_commands.IRADS_LASER_ARM_TOGGLE) -- EFM owns laser arm state
+				dispatch_action(nil, get_param_handle("F117_LASER_ARMED"):get() > 0.5 and native_commands.LASER_SAFE or native_commands.LASER_ARM) -- EFM owns laser arm state
 			
 			elseif (command == keys.LDSK_3) or (command == deviceCommands.LDSK_3) then		-- toggle crosshair (?)
 				if SYMB_TOGGLE:get() == 1 then
@@ -706,7 +758,7 @@ if get_param_handle("mainpower"):get() == 1 then
 			elseif (command == keys.LDSK_4) or (command == deviceCommands.LDSK_4) then	-- toggle Search
 				if SRCH_TRCK_MODE:get() == 2 then
 					SRCH_TRCK_MODE:set(1)  
-					dispatch_action(nil,10117) 	-- clear lock when exiting track
+					dispatch_action(nil,native_commands.SENSOR_RESET) 	-- clear lock when exiting track
 					dispatch_action(nil,f117_commands.IRADS_ZOOM_AXIS,-1) -- wide FOV
 				end
 				
@@ -727,7 +779,7 @@ if get_param_handle("mainpower"):get() == 1 then
 				if WHOT_TOGGLE:get() == 1 then										-- toggle IR picute ldp
 					WHOT_TOGGLE:set(0) 
 					dispatch_action(nil,393)	-- toggle IR imaging ldp
-					dispatch_action(nil,10117) 	-- clear designation when changing sensor mode
+					dispatch_action(nil,native_commands.SENSOR_RESET) 	-- clear designation when changing sensor mode
 					SRCH_TRCK_MODE:set(1)
 
 				else
@@ -751,7 +803,7 @@ if get_param_handle("mainpower"):get() == 1 then
 				--BOST_TOGGLE:set(0) 			-- 1 = on , 0 = off
 				WHOT_TOGGLE:set(0)			-- 1 = on , 0 = off
 				IFB_TOGGLE:set(0) 			-- 1 = on , 0 = off
-				dispatch_action(nil,10117) 	-- clear designation when pod power state changes
+				dispatch_action(nil,native_commands.SENSOR_RESET) 	-- clear designation when pod power state changes
 				if (WHOT_TOGGLE:get() == 1) then
 					MLAS_TOGGLE:set(0) 			-- 1 = on , 0 = off
 				end
@@ -1023,14 +1075,6 @@ if get_param_handle("mainpower"):get() == 1 then
 		end
     end
 
--- MFD Overlay Toggle ===================
-	if command == Keys.MFDOverlayToggle then
-		if MFD_OVERLAY:get() == 1 then
-			MFD_OVERLAY:set(0)
-		else
-			MFD_OVERLAY:set(1)
-		end
-	end
 
 -- IRADS motion, designation and zoom are handled directly by the EFM.
 -- Do not redispatch them here: each input event must reach the sensor once.
@@ -1156,9 +1200,13 @@ function update()
     display_compositor.update()
     native_brightness.update()
     irads_terrain.update()
+    ins.update(update_time_step, get_param_handle("mainpower"):get() > 0.5, get_param_handle("F117_ALIGN_INS_DONE"):get() > 0.5)
     -- Navigation first: the IRADS readouts show its range and TTG.
     navigation.update()
     irads_readouts.update()
+    dss.update(update_time_step) -- HUD / map cursor slew, before the map recomputes its view
+    hud_cursor.update()
+    nav_update.update()
     map_outline.update()
     check_irads_terrain()
 

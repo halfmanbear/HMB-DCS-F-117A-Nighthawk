@@ -402,7 +402,10 @@ class NativeDisplayTests(unittest.TestCase):
     def test_calibrated_hud_optics_unchanged(self):
         baseline=json.loads((ROOT/'tools/data/hud_optics_baseline.json').read_text())
         for file,digest in baseline.items():
-            self.assertEqual(digest,hashlib.sha256((SCRIPTS/'HUD/Indicator'/file).read_bytes()).hexdigest())
+            # Line endings differ by checkout (autocrlf); the optics themselves must not.
+            data=(SCRIPTS/'HUD/Indicator'/file).read_bytes()
+            digests={hashlib.sha256(data).hexdigest(),hashlib.sha256(data.replace(b'\r\n',b'\n')).hexdigest()}
+            self.assertIn(digest,digests,file)
         lua,load=runtime();load(SCRIPTS/'HUD/Indicator/HUD_init.lua')
         self.assertEqual(lua.globals().indicator_type,1)
         self.assertFalse(lua.globals().shaderLineUseSpecularPass)

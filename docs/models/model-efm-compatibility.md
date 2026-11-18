@@ -3,6 +3,8 @@
 The exterior model, the Lua `Damage` table and the EFM have to agree on damage names and cell
 numbers. This page records which versions belong together, and which Blender file holds each model.
 Model hashes are SHA256, shortened to 12 characters except in the current state.
+Where the model's shape differs from the published dimensions is in
+[Dimensions against the references](dimensions-vs-reference.md).
 
 ## Current state
 
@@ -12,13 +14,14 @@ change those interfaces or independently re-audit the EFM build.
 
 | Part | Location | Identity |
 |---|---|---|
-| Exterior model | `Shapes/f-117-nighthawk.edm`, original materials and livery names, left bay on arg 27 and right bay on arg 28 (2026-11-11) | `edf87311c1ad8f47ca15f693422268be7c9e13c19cd2bf99fec03ec21efdc4b7` |
+| Exterior model | `Shapes/f-117-nighthawk.edm`, original materials and livery names, left bay on arg 27 and right bay on arg 28 (2026-11-11), bays lengthened and deepened 0.18 m with the pylons (2026-11-13), six sawtooth teeth at each end of each door, end walls at FS 348 and FS 531 so the interior is 4.65 m (2026-11-14; previous model `edf87311`) | `6ee51b021e8e1f812d71fa1a5cf5fe26867556bbd8d46bbddca12d8ae2f2a102` |
 | Cockpit model | `Cockpit/Shape/Cockpit_F-117.edm`, corrected glass and 18 restored emissive objects | `340590d438e433b667c24cb54802078ee40a98cfcf0360726946ea1598c84f36` |
 | Damage table | `F-117-NightHawk.lua` | 25 cells, `00a6e68c8947` |
 | EFM source | `EFM Source Code/F_117_NightHawk.cpp` in the EFM repository | `d241a56` plus uncommitted changes, `b09f58c2f0cf` |
 | EFM binary | Build output, loaded through the local proxy | `32d64e264d8a`, built 2026-11-03 16:10 |
 | Store profiles | `Cockpit/Scripts/Systems/Weapons.lua` `classify()` and the EFM `kCcrpStoreModels` | 14 profiles in the same order; `tests/test_store_profiles.py` checks both |
-| Exterior Blender source | `blender_files/uv_work/f117-exterior-painted-candidate.blend`, with the bay split in `f117-exterior-painted-candidate.baysplit.blend` | Packed new atlases on retained geometry; refreshed after the clear-glass DDS change. The installed model was exported from the split copy. Run `tools/models/split_weapon_bays.py` on the painted candidate before its next export |
+| Exterior Blender source | `blender_files/f-117-nighthawk-exterior.blend`, put through `tools/models/split_weapon_bays.py`, the exporter's material update and the bay enlargement script, which is kept outside the repository (see [Building the installed exterior](#building-the-installed-exterior)) | The installed model has the original materials, so it comes from this blend, not the painted candidate. Rebuilt with split and material update only, it reproduces `edf87311` exactly |
+| Painted exterior candidate | `blender_files/uv_work/f117-exterior-painted-candidate.blend`, with the bay split in `f117-exterior-painted-candidate.baysplit.blend` | Packed new atlases on retained geometry; refreshed after the clear-glass DDS change. Exports the `f117paint_*` materials; not installed. Run the split and the bay enlargement on it before exporting it |
 | Cockpit Blender source | `blender_files/uv_work/f117-cockpit-painted-candidate.blend` | Packed new atlases, corrected glass and object-specific emission on retained geometry |
 
 The user accepted basic HUD/gauge glass visibility in DCS on 2026-11-06 at 12:30.
@@ -126,6 +129,28 @@ The package workflow builds whatever EFM commit is on the matching branch when t
 **push the EFM before the mod** for any change to damage cells.
 
 ## Exporting from Blender
+
+### Building the installed exterior
+
+The tracked `blender_files/f-117-nighthawk-exterior.blend` still has both bays on argument 26 and
+materials one version behind the exporter. The installed model is built by running the bay
+enlargement script on it in background Blender 5.2, with the EDM exporter and iEDM_10 enabled,
+exporting to `Shapes/f-117-nighthawk.edm`. The script is kept outside the repository. It:
+
+1. Puts the left bay on 27 and the right on 28 with `split_weapon_bays.py`.
+2. Lengthens and deepens the bays (see [../systems/weapon-bays.md](../systems/weapon-bays.md)) and
+   checks the result.
+3. Runs the exporter's material update ("Update EDM materials"). Without it the export is cancelled
+   with "Material ... has old version".
+4. Exports.
+
+Then run `tools/models/check_edm_export.py`. It compares against git HEAD, so until the new model is
+committed it lists the bay changes as failures: the `FUSELAGE_BOTTOM` door cells' vertex counts and
+poses (moved up to 0.83 m), and the bay, door and trapeze visuals. Connectors, lights, boxes and
+everything else must still pass. The split and the material update alone reproduce the model installed
+before the bay change, `edf87311`, exactly.
+
+### Painted candidate
 
 For the installed painted development configuration, export the exterior from
 `F-117 Exterior` in `blender_files/uv_work/f117-exterior-painted-candidate.blend`

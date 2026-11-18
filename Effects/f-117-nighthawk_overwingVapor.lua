@@ -15,23 +15,31 @@ Presets =
             SpawnLocationsFile = "f-117-nighthawk_overwingVapor.owv",
 
             ParticlesCount = 300,
-            ParticleSize = 3.7,
+            ParticleSize = 4.5,
             ScaleOverAgeFactor = 1.8, -- scale = ParticleSize * (1 + (normalized age) * ScaleOverAgeFactor)
-            
-            VaporLengthMax = 3.25, -- meters
-            
+
+            VaporLengthMax = 6.0, -- meters; photos show the cloud from the canopy back over the aft body
+
             AlbedoSRGB = 0.80,
-            
+
             OpacityMax = 0.55,
-            -- Vapour power -> opacity. For this aircraft the power stays near 0.05 below
-            -- about 7 deg AoA and rises to about 0.12 at 12 deg, so the cloud starts near
-            -- 8 deg and is full by 11.5 deg. The EFM fades the leading-edge vortices out
-            -- over the same range, as the cloud replaces them.
+            -- Vapour power -> opacity. Photos show this cloud only near the AoA limit
+            -- (12.6 deg below M0.53, TO 1F-117A-1 Figure 5-7), never together with the
+            -- leading-edge vortex pair, which the EFM fades out between 10 and 11 deg.
+            -- DCS computes the power from both AoA and speed. Measured in steady turns at
+            -- 600 m (tools/missions/vortex_shots.py --owv-probe), power first passes:
+            --   0.15  at  8 deg at 170-200 m/s, 10 deg at 132 m/s
+            --   0.25  by  9 deg at 200 m/s,     11 deg at 132 m/s
+            --   0.40  at 10 deg at 200 m/s,     12.6 deg at 132 m/s
+            --   0.60  at 11.5 deg at 200 m/s,   not reached at 132 m/s
+            --   0.80  only at full aft stick (12.2 deg, 6.2 g) at 200 m/s
+            -- So at about 380 KCAS the cloud starts at 11.5 deg and is full near the limit;
+            -- slower passes (about 250 KCAS) show the vortices only.
             OpacityOverPower = {
                 {0.0,   0.0},
-                {0.05,  0.0},
-                {0.15,  0.10},
-                {0.5,   0.65},
+                {0.6,   0.0},
+                {0.63,  0.6},
+                {0.75,  1.0},
                 {1.0,   1.0},
             },
         }

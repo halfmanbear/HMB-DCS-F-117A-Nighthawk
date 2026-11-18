@@ -17,9 +17,15 @@ FM = {
     -- Mass properties
     ---------------------------------------------------------------------------
     center_of_mass = {0.0, 0.1, 0.0}, -- Centre of mass for empty weight (earlier value {0.35, -0.10, 0.0})
-    -- kg m2: roll, yaw, pitch, Ixy. DCS has Y up and Z right, so Iy is yaw and Iz is pitch.
-    -- An estimate, about +/-30%: the manuals give no inertia, so these follow the F-15C, which has almost the same mass and size.
-    moment_of_inertia = {40000, 260000, 225000, 0.0},
+    -- kg m2 about the empty CG: roll, yaw, pitch, Ixy. DCS has Y up and Z right, so Iy is yaw and Iz is pitch.
+    -- Empty aircraft only. DCS uses these unchanged at every weight and adds what it is given on top: the EFM's
+    -- fuel, tank by tank at each tank's position with its own inertia, and the stores at their pylons.
+    -- An estimate, about +/-30%: the manuals give no inertia. Roll follows the F-15C (38,912), which has almost the
+    -- same mass and size; its pitch and yaw (223,845 and 254,758) are cut 20%, since they suit a fuelled aircraft.
+    -- The roll and yaw laws scale with the inertia DCS reports, so tools/fm_bench passes across +/-30% of these.
+    -- Radii of gyration empty: roll 1.73 m, yaw 3.94 m, pitch 3.67 m. Full internal fuel adds about 26,100,
+    -- 43,500 and 22,400, giving 66,070 / 251,464 / 202,395 at 21,636 kg.
+    moment_of_inertia = {40000, 208000, 180000, 0.0},
 
     ---------------------------------------------------------------------------
     -- Systems

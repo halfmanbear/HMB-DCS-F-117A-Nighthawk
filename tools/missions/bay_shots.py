@@ -1,14 +1,17 @@
 """Fly the F-117 level with a store on each pylon and photograph the weapon bays as they open and close.
 
     python tools/missions/bay_shots.py              # fly and capture
+    python tools/missions/bay_shots.py --store gbu-10
+    python tools/missions/bay_shots.py --store mk-84 --right gbu-31   # a different store on each pylon
     python tools/missions/bay_shots.py --build-only
 
-Builds a mission from the Caucasus free flight quick start (a GBU-27 on each pylon, noon, no wind,
+Builds a mission from the Caucasus free flight quick start (a GBU-27 on each pylon, or the --store, noon, no wind,
 600 m over the Black Sea). A temporary hook in Saved Games/DCS/Scripts/Hooks unpauses, holds level
 flight, switches to the free camera and steps through the bay states with the bay commands:
 both open, left closed, both open, right closed, both closed. Each state is photographed from
 below-left, below-right, below and in front. Shots, the draw argument values at each shot and the
-DCS log lines go to tools/missions/results/bays/. Close DCS first. About two minutes.
+DCS log lines go to tools/missions/results/bays/ (bays_<store>/ for another store). Close DCS first. About
+two minutes.
 """
 import argparse
 import math
@@ -27,6 +30,12 @@ RESULTS = HERE / 'results/bays'
 HOOK_PATH = base.SAVED_GAMES / 'Scripts/Hooks/zz_f117_bay_shots.lua'
 LOGS = base.LOGS
 GBU_27 = '{EF0A9419-01D6-473B-99A3-BEBDB923B14D}'
+STORES = {'gbu-27': GBU_27, 'gbu-10': '{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}',
+          'gbu-12': '{DB769D48-67D7-42ED-A2BE-108D566C8B1E}', 'gbu-31': '{GBU-31}', 'gbu-31v3': '{GBU-31V3B}',
+          'gbu-32': '{GBU_32_V_2B}', 'agm-65d': '{444BA8AE-82A7-4345-842E-76154EFCCA47}',
+          'agm-65e': '{F16A4DE0-116C-4A71-97F0-2CF85B0313EF}', 'agm-154a': '{AGM-154A}', 'agm-154b': '{AGM-154B}',
+          'agm-154c': '{9BCC2A2B-5708-4860-B1F1-053A18442067}', 'cbu-105': '{CBU_105}',
+          'mk-82': '{BCE4E030-38E9-423E-98ED-24BE3DA87C32}', 'mk-84': '{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}'}
 
 # State name and the bay commands issued on entering it: 10101 open both, 10102 close both,
 # 10131 toggle left, 10132 toggle right.
@@ -175,7 +184,7 @@ DCS.setUserCallbacks(hook)
 """
 
 
-def build_mission(target):
+def build_mission(target, clsid=GBU_27, right=None):
     miz = Miz.load(base.TEMPLATE)
     found = False
 
@@ -185,7 +194,7 @@ def build_mission(target):
         if unit['skill'] != 'Player' or found:
             return False
         found = True
-        unit['payload']['pylons'] = miz.table({1: {'CLSID': GBU_27}, 2: {'CLSID': GBU_27}})
+        unit['payload']['pylons'] = miz.table({1: {'CLSID': clsid}, 2: {'CLSID': right or clsid}})
         unit['payload']['fuel'] = 3000
         unit['x'], unit['y'], unit['alt'], unit['alt_type'] = base.START_X, base.START_Z, base.ALT, 'BARO'
         unit['heading'], unit['psi'], unit['speed'] = base.HEADING, -base.HEADING, base.SPEED
@@ -265,10 +274,15 @@ def run(mission):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--build-only', action='store_true', help='write the mission without starting DCS')
+    parser.add_argument('--store', choices=sorted(STORES), default='gbu-27', help='store on both pylons')
+    parser.add_argument('--right', choices=sorted(STORES), help='a different store on the right pylon')
     args = parser.parse_args()
+    global RESULTS
+    if args.store != 'gbu-27' or args.right:
+        RESULTS = HERE / ('results/bays_' + args.store + (f'_{args.right}' if args.right else ''))
     RESULTS.mkdir(parents=True, exist_ok=True)
     mission = RESULTS / 'bay_shots.miz'
-    build_mission(mission)
+    build_mission(mission, STORES[args.store], STORES[args.right] if args.right else None)
     if not args.build_only:
         run(mission)
 

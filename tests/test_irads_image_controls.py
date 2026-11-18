@@ -66,7 +66,7 @@ class IRADSImageTests(unittest.TestCase):
             self.module.set_command(self.cmd.CONTRAST_UP,1)
         self.assertEqual(self.v.F117_IRADS_BRIGHTNESS,1)
         self.assertEqual(self.v.F117_IRADS_CONTRAST,1)
-        self.module.set_command(self.cmd.RESET,1)
+        self.module.initialize()  # a fresh sortie starts from the mission-time default
         self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.06)
         self.assertAlmostEqual(self.v.F117_IRADS_CONTRAST,.96)
         self.assertFalse(self.module.set_command(87,1))

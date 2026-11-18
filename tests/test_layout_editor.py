@@ -183,7 +183,7 @@ class LayoutEditorTests(unittest.TestCase):
         def visible(**values):
             return {s[5] for e,s in model.scene(dict(DEFAULTS,**values)) if s[3]}
         normal=visible(F117_MAP_FUNCTION=0,F117_MAP_FUNCTION_TEXT='FUNC')
-        self.assertTrue({'MARK','-','SNSR','ENTR','UPDT'}<=normal)
+        self.assertTrue({'MARK','SNSR','ENTR','UPDT'}<=normal)  # the mark number is a live digit now
         # The normal page has no function legend; function 1 shows FNC1 and COR.
         self.assertNotIn('FUNC',normal);self.assertNotIn('COR',normal)
         function=visible(F117_MAP_FUNCTION=1,F117_MAP_FUNCTION_TEXT='FNC1')

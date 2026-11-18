@@ -57,7 +57,7 @@ The flight-path marker uses `getSelfVelocity()` world ground velocity, transform
 by true heading, pitch and roll into body forward/right/up components. Projection
 uses right/forward and up/forward, including wind drift. Missing, nonfinite,
 near-stationary or rearward velocity hides the marker and selects the fixed W
-reference. This availability flag does not implement an INS failure/DR system. ILS/attack steering,
+reference. This availability flag is separate from the INS model (`Systems/INS.lua`), which drifts the navigation position only. ILS/attack steering,
 TACAN/DME, destination projection, IRADS look-angle integration, boundary clamping
 for future navigation cues, and all specialised mode logic remain unimplemented.
 Old unsupported BVR/BORE/VS/HMD labels and unrelated graphics are removed from the
@@ -169,6 +169,8 @@ cross at the IRADS look angle. Outside the 20-degree total field of view
   device also passes `layout_profile.lua`, so the centre never leaves the
   drawn area (its top edge is about 4.6 degrees above the optical axis).
 - When locked, the cursor uses the lock point rather than the camera ray.
+- With the Designate Select switch on HUD (`F117_DSS`=1) the same symbol is the free HUD cursor from
+  `Systems/HudCursor.lua`; the IRADS look angle is still published. See `docs/systems/designate-select-ins.md`.
 - Symbols: the cross has 2 mrad gaps and 5 mrad arms (14 mrad across), smaller
   than the manual's "large" cross by request. The 10 mrad lock box is not a
   manual symbol and was added on request. Both are occluded by readout boxes

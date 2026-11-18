@@ -87,15 +87,35 @@ local function param_label(parameter,x,y,parent,format,align)
 end
 -- Positions follow the cockpit video frames in docs/reference/CockpitImages/CMDI_Map.
 local normal=group("F117_MAP_NORMAL",{"F117_MAP_FUNCTION"},{{"parameter_in_range",0,-.1,.1}})
-label("MARK",-.044,.065,normal);label("-",-.044,.059,normal) -- mark number: no mark store yet
+label("MARK",-.044,.065,normal)
+-- Points left of the five, as a digit under the legend (Systems/NavUpdate.lua owns the state).
+text("",-.044,.059,MAP_SMALL,"CenterCenter",{"F117_NAV_MARK_REMAINING","F117_MAP_FUNCTION"},
+    {{"text_using_parameter",0,0},{"parameter_in_range",1,-.1,.1}},{"%1.0f"})
 label("SNSR",-.021,.065,normal);label("ENTR",.004,.065,normal);label("UPDT",.026,.065,normal)
+local function when(name,param,parent)
+    return group(name,{param},{{"parameter_in_range",0,.9,1.1}},parent)
+end
+box(-.044,.065,.018,.007,when("F117_MAP_MARK_SELECTED","F117_MARK_ACTIVE",normal))
+box(-.021,.065,.018,.007,when("F117_MAP_SNSR_BOXED","F117_SNSR_BOXED",normal))
+box(.026,.065,.018,.007,when("F117_MAP_UPDT_SELECTED","F117_UPDT_ACTIVE",normal))
+local no_ground=when("F117_MAP_MARK_X","F117_MARK_X",normal) -- X over MARK: no ground coordinates
+sline({{-.051,.062},{-.037,.068}},"symbol",no_ground);sline({{-.051,.068},{-.037,.062}},"symbol",no_ground)
 local function1=group("F117_MAP_FUNCTION1",{"F117_MAP_FUNCTION"},{{"parameter_in_range",0,.9,1.1}})
 param_label("BGD_TEXT",-.057,.065,function1);param_label("REFEL_TEXT",-.025,.065,function1)
 param_label("ELEVATION_FT",.010,.065,function1,"%.0f")
 sline({{-.011,.063},{-.008,.067},{-.005,.063},{-.011,.063}},"symbol",function1)
 sline({{.025,.067},{.028,.063},{.031,.067},{.025,.067}},"symbol",function1)
 param_label("DATABASE_TEXT",.050,.065);box(.050,.065,.023,.007)
-readout("GS_TEXT",-.076,.054);box(-.065,.054,.026,.007)
+-- The update bias (bearing, range, altitude) replaces the speed readout while a sensor update waits.
+text("",-.076,.054,MAP_SD,nil,{"F117_MAP_GS_TEXT","F117_SNSR_VALID"},
+    {{"text_using_parameter",0,0},{"parameter_in_range",1,-.1,.1}},{"%s"})
+text("",-.076,.054,MAP_SD,nil,{"F117_SNSR_BRG","F117_SNSR_VALID"},
+    {{"text_using_parameter",0,0},{"parameter_in_range",1,.9,1.1}},{"BRG %03.0f"})
+text("",-.076,.047,MAP_SD,nil,{"F117_SNSR_RNG","F117_SNSR_VALID"},
+    {{"text_using_parameter",0,0},{"parameter_in_range",1,.9,1.1}},{"RNG %5.2f"})
+text("",-.076,.040,MAP_SD,nil,{"F117_SNSR_ALT","F117_SNSR_VALID"},
+    {{"text_using_parameter",0,0},{"parameter_in_range",1,.9,1.1}},{"ALT %+06.0f"})
+box(-.065,.054,.026,.007)
 readout("CRS_TEXT",.076,.054,"RightCenter");box(.062,.054,.030,.007)
 -- The function legend is blank on the normal page; FNC1 appears boxed on function 1.
 param_label("FUNCTION_TEXT",-.069,.043,function1);box(-.069,.043,.018,.007,function1)
@@ -122,7 +142,9 @@ local looking=group("F117_MAP_LOOK_SELECTED",{"F117_MAP_LOOK"},{{"parameter_in_r
 box(-.071,.023,.018,.007,looking)
 local scrolling=group("F117_MAP_SCROLL_SELECTED",{"F117_MAP_SCROLL"},{{"parameter_in_range",0,.9,1.1}},manual)
 box(-.071,-.011,.018,.007,scrolling)
-local cursor=group("F117_MAP_CURSOR",{"F117_MAP_MANUAL"},{{"parameter_in_range",0,.9,2.1}})
+-- Manual-mode cursor at the screen centre, or the free UPDT cursor in auto mode (Systems/MovingMap.lua).
+local cursor=group("F117_MAP_CURSOR",{"F117_MAP_CURSOR_VISIBLE","F117_MAP_CURSOR_X","F117_MAP_CURSOR_Y"},
+    {{"parameter_in_range",0,.9,1.1},{"move_left_right_using_parameter",1,1},{"move_up_down_using_parameter",2,1}})
 line({{-.005,0},{-.0015,0}},"symbol",cursor);line({{.0015,0},{.005,0}},"symbol",cursor)
 line({{0,-.005},{0,-.0015}},"symbol",cursor);line({{0,.0015},{0,.005}},"symbol",cursor)
 local function ellipse(rx,ry)
@@ -160,6 +182,14 @@ for i=1,64 do
         line(points,"symbol",symbol)
     end
     param_label("WP_"..i.."_LABEL",.0035,-.001,parent,"%s","LeftCenter")
+end
+-- Stored MARK points (destination points 94-98): a diamond and the point number.
+for i=1,5 do
+    local prefix="F117_MAP_MARK_"..i.."_"
+    local parent=group(prefix.."ROOT",{prefix.."VISIBLE",prefix.."X",prefix.."Y"},
+        {{"parameter_in_range",0,.9,1.1},{"move_left_right_using_parameter",1,1},{"move_up_down_using_parameter",2,1}})
+    line(shapes[3],"symbol",parent)
+    param_label("MARK_"..i.."_LABEL",.0035,-.001,parent,"%s","LeftCenter")
 end
 for i=1,32 do
     local prefix="F117_MAP_THREAT_"..i.."_"

@@ -12,13 +12,12 @@ local flood_level = get_param_handle("FLOOD_LGT") -- cockpit flood light, mainpa
 
 -- name = {toggle command, exterior draw argument}
 local LIGHTS = {
-    landing = {Keys.LdgLight, 190},
-    nav     = {Keys.NavLight, 191},
-    taxi    = {Keys.TaxiLgt, 192},
-    beacon  = {Keys.BcnLgt, 193},
+    landing = {native_commands.LANDING_LIGHT, 190},
+    nav     = {native_commands.NAV_LIGHTS, 191},
+    taxi    = {native_commands.TAXI_LIGHT, 192},
+    beacon  = {native_commands.BEACON_LIGHT, 193},
     flood   = {Keys.FloodLight, 194},
-    panel   = {Keys.PanelLight, 195},
-    meme    = {Keys.MemeLgt, 1000},
+    panel   = {native_commands.COCKPIT_LIGHT, 195},
 }
 
 -- Lights that are on at spawn. Any light not listed starts off. An unknown spawn

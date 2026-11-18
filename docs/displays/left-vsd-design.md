@@ -47,10 +47,12 @@ Layout and symbol shapes follow the cockpit video frames in
   30 s before the ballistic release point (`F117_RELEASE_CUE_TTG`) and descends
   0.5 mm/s toward the pitch reference symbol. While the EFM reports the store in its
   release zone (`F117_RELEASE_CUE_IN_ZONE`) it sits on the symbol: release gate open.
-  The cockpit video shows this with the DR box (INS inoperative or DR mode). The mod
-  does not model INS modes yet, so the staple shows whenever a release cue is valid.
+  The cockpit video shows this with the DR box (INS inoperative or DR mode). The staple
+  shows whenever a release cue is valid; DR now appears after an INS alert
+  (`docs/systems/designate-select-ins.md`).
 - `MEA` (boxed, above heading) and amber `DR` are gated on `F117_VSD_MEA` and
-  `F117_NAV_DR`. Nothing sets those yet, so they stay blank in game.
+  `F117_NAV_DR`. `Systems/INS.lua` sets `F117_NAV_DR` after an INS alert (POSUNR); nothing sets
+  `F117_VSD_MEA` yet. `ALIGN` / `INS UP` show at the lower centre (`F117_INS_ADVISORY`).
 
 - Destination (`D`), `TTG` and `RNG` in the boxed readout come from the mission route
   (`Systems/Navigation.lua`) and show dashes without one. `DME` is a bare legend:

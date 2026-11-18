@@ -46,7 +46,13 @@ local function initialize()
     b=default_brightness(seconds);c=default_contrast(seconds)
     publish()
 end
+-- Stock I-251 commands act like the mod's own buttons.
+local STOCK={[native_commands.I251_BRIGHTNESS_UP]=commands.BRIGHTNESS_UP,
+             [native_commands.I251_BRIGHTNESS_DOWN]=commands.BRIGHTNESS_DOWN,
+             [native_commands.I251_CONTRAST_UP]=commands.CONTRAST_UP,
+             [native_commands.I251_CONTRAST_DOWN]=commands.CONTRAST_DOWN}
 local function set_command(command,value)
+    command=STOCK[command] or command
     if command==commands.BRIGHTNESS_AXIS or command==commands.CONTRAST_AXIS then
         if finite(value) then
             local unit=(clamp(value,-1,1)+1)/2
@@ -56,7 +62,6 @@ local function set_command(command,value)
     elseif command==commands.BRIGHTNESS_DOWN then b=clamp(b-.05,LOW,1)
     elseif command==commands.CONTRAST_UP then c=clamp(c+.05,.35,1)
     elseif command==commands.CONTRAST_DOWN then c=clamp(c-.05,.35,1)
-    elseif command==commands.RESET then initialize();return true
     else return false end
     publish()
     return true

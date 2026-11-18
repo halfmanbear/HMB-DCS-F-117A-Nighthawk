@@ -242,8 +242,8 @@ int start(lua_State* state) {
         const auto& channel=owner->channels[2];
         char message[320];
         std::snprintf(message,sizeof(message),
-            "centre native bake test active: marker=%s context=%p index=%d texture=%s resolution=%d; pixels unverified",
-            channel.marker,channel.source.context,channel.source.index,channel.texture,resolution);
+            "centre native bake test active: marker=%s context=%s index=%d texture=%s resolution=%d; pixels unverified",
+            channel.marker,channel.source.context?"ok":"missing",channel.source.index,channel.texture,resolution);
         return result(state,true,message);
     }
     return result(state,true,"native MFD compositor active (VSD/HSD/IRADS)");

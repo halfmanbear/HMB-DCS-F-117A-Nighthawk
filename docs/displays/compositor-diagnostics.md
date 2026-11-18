@@ -114,7 +114,7 @@ pattern does not sample its texture.
 ### Observed result: 2026-11-01 17:58
 
 The log confirms centre native bake activation at 17:57:59.459 with marker
-`F117_BAKE_TEST_SOURCE`, context `00007FFF8C41B5F0`, zero-based source index 1,
+`F117_BAKE_TEST_SOURCE`, a valid cockpit context, zero-based source index 1,
 texture `F117_LCD_CENTRE` and resolution 256. The screenshot shows the
 four-colour mesh pattern, black cross and upper-left white marker. Its colours
 look darker than the static-texture test; colour accuracy is not established.

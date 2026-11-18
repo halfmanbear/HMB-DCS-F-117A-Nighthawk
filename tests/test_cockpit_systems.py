@@ -55,7 +55,7 @@ class CockpitSystemsTests(unittest.TestCase):
         hud_update = g['update']
 
         def modules(path):
-            if '/Systems/' in str(path) and not str(path).endswith(('/Displays.lua','/AlignedSensor.lua')):
+            if '/Systems/' in str(path) and not str(path).endswith(('/Displays.lua','/AlignedSensor.lua','/DesignateSelect.lua','/HudCursor.lua','/INS.lua','/NavUpdate.lua')):
                 if str(path).endswith('IRADS_Diagnostics.lua'):
                     return lua.eval('function()end')
                 return lua.eval("""{new=function()return {
@@ -108,7 +108,7 @@ class CockpitSystemsTests(unittest.TestCase):
             self.assertLess(phase, 1)
             self.assertAlmostEqual((phase - previous) % 1, .05 * 85 / 60)
             previous = phase
-        g.SetCommand(g.Keys.BcnLgt, 1)
+        g.SetCommand(g.native_commands.BEACON_LIGHT, 1)
         g['update']()
         self.assertEqual(g.args[1001], 0)
 
@@ -205,7 +205,7 @@ class CockpitSystemsTests(unittest.TestCase):
         self.assertIn('NWS_AUTHORITY_OFF       = 10129',defs)
         for device in ('keyboard','joystick'):
             profile=(ROOT/'Input/F-117-NightHawk'/device/'default.lua').read_text(encoding='utf-8')
-            self.assertIn('down = f117_commands.NWS_AUTHORITY_ON, up = f117_commands.NWS_AUTHORITY_OFF',profile)
+            self.assertIn('down = iCommandPlane_HOTAS_NoseWheelSteeringButton, up = iCommandPlane_HOTAS_NoseWheelSteeringButtonOff',profile)
 
     def test_legacy_preview_renders_the_current_hud_without_a_gui(self):
         spec = importlib.util.spec_from_file_location('hud_preview', ROOT / 'tools/cockpit/hud_preview.py')

@@ -157,5 +157,16 @@
     "rows": [
       {"kcas": 550, "g": 7.0}
     ]
+  },
+  "hands_off": {
+    "note": "Pages 1-45, 1-46 and 6-1: gear up, the pitch law is a 1 g auto pitch trim. Hands off it holds 1 g on the accelerometer whatever the attitude, so it doesn't hold level in a bank and pulls toward the ground inverted. Full nose-down trim takes 0.4 g off. The roll is flown with the pitch stick centred, then both sticks are released.",
+    "alt_ft": 10000,
+    "weight_lb": 40000,
+    "rows": [
+      {"kcas": 300, "bank": 180, "nose_down_trim": false, "nz": 1.0},
+      {"kcas": 300, "bank": 180, "nose_down_trim": true, "nz": 0.6},
+      {"kcas": 300, "bank": 60, "nose_down_trim": false, "nz": 1.0},
+      {"kcas": 200, "bank": 180, "nose_down_trim": false, "nz": 1.0}
+    ]
   }
 }

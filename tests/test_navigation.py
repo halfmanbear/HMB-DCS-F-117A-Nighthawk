@@ -34,6 +34,73 @@ class NavigationTests(unittest.TestCase):
     def logged(self):
         return [self.g._logged[i] for i in range(1,len(self.g._logged)+1)]
 
+    def load_route(self):
+        for _ in range(200):self.nav.update()  # the route loads on the first retry tick
+
+    def test_marks_take_destination_numbers_94_to_98_in_order_then_run_out(self):
+        self.load_route()
+        self.assertEqual(self.nav.remaining(),5)
+        self.assertEqual(self.p.F117_NAV_MARK_REMAINING,5)
+        numbers=[self.nav.add_mark(1000+i,2000+i,50) for i in range(5)]
+        self.assertEqual(numbers,[94,95,96,97,98])
+        self.assertEqual((self.nav.remaining(),self.p.F117_NAV_MARK_REMAINING),(0,0))
+        self.assertIsNone(self.nav.add_mark(1,2,3))   # five used: the function is inoperative
+        self.assertEqual(len(self.nav.marks()),5)
+        self.assertIsNone(self.nav.add_mark(float('nan'),0,0))
+
+    def test_ground_activations_use_up_marks(self):
+        self.load_route()
+        self.nav.consume_ground_mark();self.nav.consume_ground_mark()
+        self.assertEqual(self.nav.remaining(),3)
+        self.assertEqual([self.nav.add_mark(i,i,0) for i in range(4)],[94,95,96,None])
+        for _ in range(10):self.nav.consume_ground_mark()
+        self.assertEqual(self.nav.remaining(),0)
+
+    def test_dp_lookup_covers_route_marks_and_the_bias_point(self):
+        self.load_route()
+        self.nav.add_mark(1234,5678,90)
+        mark=self.nav.dp(94)
+        self.assertEqual((mark.x,mark.z,mark.elev,mark.kind,mark.label),(1234,5678,90,'mark','94'))
+        self.assertEqual(self.nav.dp(1).number,1)
+        self.assertIsNone(self.nav.dp(97))
+        self.nav.set_bias(100,-200,30)
+        bias=self.nav.dp(99)
+        self.assertEqual((bias.x,bias.z,bias.elev,bias.kind),(100,-200,30,'bias'))
+        self.assertEqual(tuple(self.nav.bias()),(100,-200,30))
+
+    def test_waypoint_stepping_continues_into_the_marks_without_changing_the_route(self):
+        self.load_route()
+        self.nav.add_mark(5000,6000,0);self.nav.add_mark(7000,8000,0)
+        route_length=len(self.nav.route())
+        self.assertEqual(route_length,4)
+        for _ in range(10):self.nav.set_command(self.g.nav_commands.WP_NEXT,1)
+        self.assertEqual(self.nav.active(),route_length+2)
+        self.assertEqual(self.nav.active_point().number,95)
+        self.assertEqual(self.p.F117_NAV_DEST,95)
+        self.assertEqual(self.p.F117_NAV_D_TEXT,'D  95')
+        self.assertEqual(len(self.nav.route()),route_length)      # marks never join route[]
+        self.nav.set_command(self.g.nav_commands.WP_PREV,1)
+        self.assertEqual(self.nav.active_point().number,94)
+        self.nav.set_command(self.g.nav_commands.WP_PREV,1)
+        self.assertEqual(self.nav.active_point().number,self.nav.route()[route_length].number)  # back on the last route point
+
+    def test_a_mark_is_never_auto_sequenced_past(self):
+        self.load_route()
+        self.nav.add_mark(5000,6000,0)
+        for _ in range(10):self.nav.set_command(self.g.nav_commands.WP_NEXT,1)
+        self.g.x,self.g.z=5000-3*NM,6000          # approach from outside the capture radius
+        self.nav.update()
+        self.g.x,self.g.z=5000,6000                # over the mark
+        for _ in range(5):self.nav.update()
+        self.assertEqual(self.nav.active_point().number,94)
+
+    def test_initialize_clears_marks_and_the_bias_point(self):
+        self.load_route()
+        self.nav.add_mark(1,2,3);self.nav.consume_ground_mark();self.nav.set_bias(1,2,3)
+        self.nav.initialize()
+        self.assertEqual((self.nav.remaining(),len(self.nav.marks())),(5,0))
+        self.assertEqual(tuple(self.nav.bias()),(0,0,0))
+
     def test_no_route_shows_dashes_and_logs_once(self):
         self.g.get_mission_route=None
         for _ in range(1000):self.nav.update()

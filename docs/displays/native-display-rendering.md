@@ -16,7 +16,7 @@ renderer with this mod's own artwork and Lua layouts. No F-16 artwork is copied.
 
 ## Implementation history
 
-**Bitmap font (retired).** The broken `ceUITTF` experiment was replaced with a `ceTexPolyFont`-compatible DDS atlas.
+**Bitmap font (retired).** An early TrueType font experiment did not render and was replaced with a DDS bitmap font atlas.
 
 **Stroke port (2026-10-30).** Operational bitmap fonts were replaced with mod-owned `ceSLineFont` SVG glyphs, and procedural ribbon quads with `ceSMultiLine` primitives. HUD optics were unchanged. See display-readability.md for configuration, routing and validation limits.
 
