@@ -2,6 +2,7 @@
 // No DCS context or renderer is started by these tests.
 #include "F117Displays.cpp"
 #include <cstdlib>
+#include <set>
 
 namespace {
 int constructed=0,destroyed=0,initialized=0,switched=0,failAt=0;
@@ -9,13 +10,16 @@ int expectedChannels=3;
 int indices[3]={},dimensions[3]={};
 double readiness=-1;
 unsigned char contextMemory[0x148]={};
-struct Indicator {const char* marker;};
-Indicator indicators[]={{"F117_HSD_SOURCE"},{"HUD"},{"F117_VSD_SOURCE"},{"F117_IRADS_SOURCE"}};
+const int indicatorIdentity=0,otherIdentity=0;
+struct Indicator {const void* vtable;const char* marker;};
+Indicator indicators[]={{&indicatorIdentity,"F117_HSD_SOURCE"},{&otherIdentity,"F117_IRADS_SOURCE"},
+    {&indicatorIdentity,"F117_VSD_SOURCE"},{&indicatorIdentity,"F117_IRADS_SOURCE"}};
 void* pointers[]={&indicators[0],&indicators[1],&indicators[2],&indicators[3]};
 void check(bool ok,const char* message) {
     if (!ok) {std::fprintf(stderr,"FAIL: %s\n",message);std::exit(1);}
 }
 void* fakeContext(){return contextMemory;}
+void* noChild(void*,unsigned){return nullptr;}
 void* fakeConstruct(void* object){++constructed;return object;}
 void fakeDestroy(void*){++destroyed;}
 void fakeSource(void*,int index,int width,int height) {
@@ -30,16 +34,22 @@ bool fakeInit(void*,void* context,const char* texture,const char* effect,int eff
 void* fakeElement(void* indicator,const char* name) {
     return std::strcmp(static_cast<Indicator*>(indicator)->marker,name)==0 ? indicator : nullptr;
 }
+// Each page declares {GENERAL,HUD_ONLY_VIEW} = {0,1}; BAKE is 100.
+std::set<int> assigned[4];
+bool ignoreRemove=false;
+int slot(const void* indicator){return static_cast<int>(static_cast<const Indicator*>(indicator)-indicators);}
 void fakePush(void* indicator,int purpose){
-    check(initialized==expectedChannels && purpose==100,"commit follows all init calls");
+    check(initialized==expectedChannels,"commit follows all init calls");
     if (expectedChannels==1) check(indicator==&indicators[3],"diagnostic switches centre only");
-    ++switched;
+    assigned[slot(indicator)].insert(purpose);++switched;
 }
 void fakeRemove(void* indicator,int purpose){
-    check(initialized==expectedChannels && (purpose==0 || purpose==1),"remove direct purposes after init");
+    check(initialized==expectedChannels,"remove direct purposes after init");
     if (expectedChannels==1) check(indicator==&indicators[3],"diagnostic preserves side purposes");
+    if (!ignoreRemove || purpose==100) assigned[slot(indicator)].erase(purpose);
     ++switched;
 }
+bool fakeHas(const void* indicator,int purpose){return assigned[slot(indicator)].count(purpose)!=0;}
 void fakeNumber(void*,double value){readiness=value;}
 }
 
@@ -54,13 +64,17 @@ int main(int argc,char** argv) {
         symbol(runtime,"lua_getfield",getfield) && symbol(runtime,"lua_pushnumber",pushnumber) &&
         symbol(runtime,"lua_pcall",pcall) && symbol(runtime,"lua_toboolean",toboolean) &&
         symbol(runtime,"lua_settop",settop),"host Lua exports");
-    for (int scenario=0;scenario<7;++scenario) {
+    for (int scenario=0;scenario<9;++scenario) {
         constructed=destroyed=initialized=switched=0;readiness=-1;failAt=scenario==1?2:0;
-        expectedChannels=scenario>=4?1:3;
+        const bool diagnostic=scenario>=4 && scenario<=6;
+        expectedChannels=diagnostic?1:3;
+        for (auto& purposes:assigned) purposes={0,1};
+        ignoreRemove=scenario==8;
+        const double general=scenario==7?5:0;
         if (scenario==5) failAt=1;
-        indicators[0].marker=scenario>=4?"side not present":"F117_HSD_SOURCE";
-        indicators[2].marker=scenario>=4?"side not present":"F117_VSD_SOURCE";
-        indicators[3].marker=scenario==6?"wrong diagnostic page":scenario>=4?"F117_BAKE_TEST_SOURCE":"F117_IRADS_SOURCE";
+        indicators[0].marker=diagnostic?"side not present":"F117_HSD_SOURCE";
+        indicators[2].marker=diagnostic?"side not present":"F117_VSD_SOURCE";
+        indicators[3].marker=scenario==6?"wrong diagnostic page":diagnostic?"F117_BAKE_TEST_SOURCE":"F117_IRADS_SOURCE";
         std::memset(contextMemory,0,sizeof(contextMemory));
         Vector view{pointers,pointers+4,pointers+4};
         std::memcpy(contextMemory+0xb0,&view,sizeof(view));
@@ -71,19 +85,25 @@ int main(int argc,char** argv) {
             owner->api.context=fakeContext;owner->api.construct=fakeConstruct;owner->api.destroy=fakeDestroy;
             owner->api.addSource=fakeSource;owner->api.init=fakeInit;owner->api.element=fakeElement;
             owner->api.pushPurpose=fakePush;owner->api.removePurpose=fakeRemove;owner->api.setNumber=fakeNumber;
+            owner->api.hasPurpose=fakeHas;
+            owner->api.indicatorVtable=&indicatorIdentity;
+            contextLayout.indicators=0xb0;contextLayout.child=noChild;
         }
         lua.newmetatable(state,"test.owner");lua.pushcclosure(state,collect,0);lua.setfield(state,-2,"__gc");
         lua.setmetatable(state,-2);
         lua.pushcclosure(state,start,1);lua.setfield(state,-10002,"run");
         if (scenario==2) indicators[2].marker="not ready";
         auto run=[&](double resolution) {
-            getfield(state,-10002,"run");pushnumber(state,resolution);pushnumber(state,scenario>=4?1:0);
-            check(pcall(state,2,2,0)==0,"native start returns normally");
+            getfield(state,-10002,"run");pushnumber(state,resolution);pushnumber(state,diagnostic?1:0);
+            pushnumber(state,general);pushnumber(state,1);pushnumber(state,100);
+            check(pcall(state,5,2,0)==0,"native start returns normally");
             bool ok=toboolean(state,-2)!=0;settop(state,0);return ok;
         };
         bool ok=run(scenario==2?2048:1024);
         if (scenario==0) {
             check(ok && constructed==3 && initialized==3 && switched==9 && readiness==1,"successful commit");
+            for (int i:{0,2,3}) check(assigned[i]==std::set<int>{100},"sources hold only the bake purpose");
+            check(assigned[1]==std::set<int>({0,1}),"unrelated indicator untouched");
             check(indices[0]==2 && indices[1]==0 && indices[2]==3,"markers select reordered sources");
             check(run(1024) && constructed==3,"start is idempotent");
         } else if (scenario==1) {
@@ -100,12 +120,20 @@ int main(int argc,char** argv) {
             check(indices[0]==3,"diagnostic selects dedicated marker without side sources");
             check(run(1024) && constructed==1,"diagnostic start is idempotent");
             getfield(state,-10002,"run");pushnumber(state,1024);pushnumber(state,0);
-            check(pcall(state,2,2,0)==0 && !toboolean(state,-2),"active diagnostic cannot switch to normal mode");
+            pushnumber(state,0);pushnumber(state,1);pushnumber(state,100);
+            check(pcall(state,5,2,0)==0 && !toboolean(state,-2),"active diagnostic cannot switch to normal mode");
             settop(state,0);
         } else if (scenario==5) {
             check(!ok && constructed==1 && destroyed==1 && switched==0 && readiness==0,"diagnostic init failure rolls back");
-        } else {
+        } else if (scenario==6) {
             check(!ok && constructed==0 && switched==0,"diagnostic waits for dedicated marker");
+        } else if (scenario==7) {
+            check(!ok && constructed==0 && switched==0,"purpose numbers that pages do not hold are refused");
+            check(!run(1024) && constructed==0,"purpose mismatch is not retried");
+        } else {
+            check(!ok && constructed==3 && destroyed==3 && readiness==0,"unconfirmed bake purpose rolls back");
+            for (int i:{0,2,3}) check(assigned[i]==std::set<int>({0,1}),"rollback restores declared purposes");
+            check(!run(1024) && constructed==3,"unconfirmed purpose is not retried");
         }
         closeState(state);
         check(destroyed==constructed,"Lua GC destroys every constructed baker exactly once");
@@ -120,6 +148,15 @@ int main(int argc,char** argv) {
     getfield(state,-1,"start");pushnumber(state,1024);
     check(pcall(state,1,2,0)==0 && !toboolean(state,-2),"actual module fails gracefully without CockpitBase");
     closeState(state);FreeLibrary(adapter);
-    std::puts("PASS: commit, source selection, resolution, idempotence, rollback, retry, missing module, Lua GC, actual DLL load/export");
+    // Missing purpose numbers are refused before anything is touched.
+    {
+        auto* plain=newState();
+        auto* owner=new(lua.newuserdata(plain,sizeof(Owner))) Owner();
+        owner->bound=true;owner->api.context=fakeContext;
+        lua.pushcclosure(plain,start,1);pushnumber(plain,1024);
+        check(pcall(plain,1,2,0)==0 && !toboolean(plain,-2),"start without DCS purposes refused");
+        closeState(plain);
+    }
+    std::puts("PASS: commit, source selection, resolution, idempotence, rollback, retry, purposes, missing module, Lua GC, actual DLL load/export");
     return 0;
 }

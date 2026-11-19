@@ -88,8 +88,11 @@ class IRADSImageTests(unittest.TestCase):
             self.assertEqual(e['controllers'][-2],['parameter_in_range',2,band-.1,band+.1])
             self.assertEqual(e['controllers'][-1][0],'set_contrast_raw')
             self.assertAlmostEqual(e['controllers'][-1][1],(.35+band*.01)/.8)
-        dim=elements[-1]
-        self.assertEqual(dim['name'],'F117_IRADS_DIM_LAYER')
+        # The dim layer draws over every video band; a non-drawing marker may follow it.
+        at=next(i for i,e in enumerate(elements) if e['name']=='F117_IRADS_DIM_LAYER')
+        self.assertGreater(at,max(i for i,e in enumerate(elements) if e['_etype']=='ceTexPoly'))
+        self.assertTrue(all(e['_etype']=='ceSimple' for e in elements[at+1:]))
+        dim=elements[at]
         self.assertFalse(dim['additive_alpha'])
         self.assertEqual(dim['controllers'][-1][0],'opacity_using_parameter')
         self.assertIn('F117_IRADS_POWER',dim['element_params'])

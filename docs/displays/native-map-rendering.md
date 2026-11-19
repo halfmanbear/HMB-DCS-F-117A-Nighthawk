@@ -122,9 +122,8 @@ its map page with `GetSelf():Add_Map_Page`. The adapter relies on this layout:
 - Chart camera horizontal half-span is the map record's scale. This is a
   native camera convention, separate from the mod's selectable range semantics.
 
-These layouts are specific to the pinned CockpitBase build, SHA-256
-`fb0a09be70627c7790dea1527cedffee43082bb8b112484d5c85be1d99d33de95`.
-They are not an official SDK.
+These layouts are not an official SDK. The adapter is not pinned to one
+CockpitBase build: it checks them at run time (see below).
 
 ### Installed implementation
 
@@ -133,8 +132,12 @@ They are not an official SDK.
   kneeboard images, clipboard border, route, threat or text overlay is included
   in the producer image. F-117 overlays are drawn by the existing central page.
 - The source indicator is appended after existing indicators. It requests
-  render target 5 with purpose 100 only; the version-checked adapter removes
-  direct/UI purposes from this source if a generic kneeboard toggle adds them.
+  render target 5 with the BAKE purpose only; the adapter removes the
+  GENERAL, HUD_ONLY_VIEW and SCREENSPACE_INSIDE_COCKPIT purposes from this source if a
+  generic kneeboard toggle adds them. Purpose numbers come from DCS's own
+  `render_purpose` table in `devices_defs.lua`, passed in by `Systems/RenderPurpose.lua`.
+  The source must hold the BAKE purpose and each removal must be confirmed through the
+  exported purpose query before the page is written.
   The normal kneeboard and the IRADS source are not selected by the adapter.
 - `Systems/ChartLevels.lua` follows common kneeboard level selection:
   Caucasus uses 2 below 20 NM, 3 through 40 NM, then 6; other theatres use
@@ -142,8 +145,15 @@ They are not an official SDK.
   fixed 2/3/6 choices to the installed common DCS script's theatre distinction.
 - `Systems/ChartBackend.lua` passes the shared view centre, clockwise map-up,
   world coverage and chart level to `luaopen_f117_charts` in F117Displays.dll.
-- `native/displays/NativeCharts.h` accepts only the pinned CockpitBase hash and
-  exported generic-class identities. It discovers the unique source marker
+- `native/displays/NativeCharts.h` checks exported generic-class identities and
+  reads page state through exported kneeboard functions (page count, number and
+  id, render mode, map record, camera point, render target). Fields without an
+  accessor are located in the exported kneeboard functions that use them, and
+  each must be confirmed by a second function. The map record's scale, chart level
+  and centre must sit where the exported coverage check reads and stores them, and its
+  once-only coverage flag must lie past the 40 bytes the adapter writes. After writing the map record the
+  adapter reads it back through the map view's rotation and centre functions; a
+  mismatch restores the previous record and writes nothing else. It discovers the unique source marker
   through the cockpit context, checks its owning avKneeboard type, single map
   record and single page-index layout, and updates only that private record.
   It also sets the owned source aspect and enables its chart requests when the
@@ -154,7 +164,7 @@ They are not an official SDK.
   position and orthographic bounds. Zoom/orientation changes or substantial
   pans clear readiness until the camera catches up. This is camera evidence,
   not proof of a rendered frame or correct texture pixels.
-- Unsupported native versions, missing modules, missing source markers,
+- Unconfirmed native layouts, missing modules, missing source markers,
   invalid navigation and mismatched object layouts leave the fallback active.
   External explicitly configured texture producers keep ownership of their
   readiness flag; the generic producer does not overwrite that flag.

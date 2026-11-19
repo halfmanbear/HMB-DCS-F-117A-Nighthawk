@@ -2,7 +2,7 @@
 // Lua owns the session through userdata; DllMain performs no renderer work.
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <bcrypt.h>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -54,34 +54,96 @@ bool bindLua() {
     return true;
 }
 
-// The opaque allocation and context vector offsets are pinned to this build.
-// Export lookup alone does not establish C++ object-layout compatibility.
-bool knownCockpitBuild(HMODULE dll) {
-    const unsigned char expected[32] = {
-        0xfb,0x0a,0x09,0xbe,0x70,0x62,0x7c,0x77,0x90,0xde,0xa1,0x52,0x7c,0xed,0xfe,0xe4,
-        0x30,0x82,0xbb,0x8b,0x11,0x24,0x84,0xd5,0xc8,0x5b,0xe1,0xd9,0x9d,0x33,0xde,0x95};
-    wchar_t path[32768];
-    DWORD length = GetModuleFileNameW(dll,path,32768);
-    if (!length || length >= 32768) return false;
-    HANDLE file = CreateFileW(path,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
-        nullptr,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,nullptr);
-    if (file == INVALID_HANDLE_VALUE) return false;
-    BCRYPT_ALG_HANDLE algorithm = nullptr;
-    BCRYPT_HASH_HANDLE hash = nullptr;
-    unsigned char digest[32], buffer[16384];
-    bool ok = BCryptOpenAlgorithmProvider(&algorithm,BCRYPT_SHA256_ALGORITHM,nullptr,0) >= 0;
-    if (ok) ok = BCryptCreateHash(algorithm,&hash,nullptr,0,nullptr,0,0) >= 0;
-    DWORD count = 0;
-    while (ok) {
-        if (!ReadFile(file,buffer,sizeof(buffer),&count,nullptr)) {ok=false;break;}
-        if (!count) break;
-        ok = BCryptHashData(hash,buffer,count,0) >= 0;
+struct Vector {void** begin;void** end;void** capacity;};
+bool vectorCount(const Vector& vector,size_t& count) {
+    auto begin=reinterpret_cast<uintptr_t>(vector.begin);
+    auto end=reinterpret_cast<uintptr_t>(vector.end);
+    if ((!begin && end) || end<begin || (end-begin)%sizeof(void*)) return false;
+    count=(end-begin)/sizeof(void*);
+    return count<=256;
+}
+
+// Cockpit contexts are walked through DCS's exported context functions. DCS exports no
+// accessor for a context's indicator list, so its position is read from three exported
+// context functions that use it and accepted only when all three agree. Child contexts
+// come from the exported, bounds-checked get_plugin_by_index.
+struct ContextLayout {
+    size_t indicators=0;
+    void* (*child)(void*,unsigned)=nullptr;
+    HMODULE module=nullptr;
+};
+ContextLayout contextLayout;
+
+const unsigned char* functionCode(const void* function) {
+    auto* code=static_cast<const unsigned char*>(function);
+    if (code && code[0]==0xE9) {
+        std::int32_t jump;std::memcpy(&jump,code+1,4);
+        code+=5+jump;
     }
-    if (ok) ok = BCryptFinishHash(hash,digest,sizeof(digest),0) >= 0;
-    if (hash) BCryptDestroyHash(hash);
-    if (algorithm) BCryptCloseAlgorithmProvider(algorithm,0);
-    CloseHandle(file);
-    return ok && std::memcmp(digest,expected,sizeof(digest)) == 0;
+    return code;
+}
+bool plausibleOffset(std::uint32_t value) {return value>0 && value<0x1000 && value%8==0;}
+bool isWideLoad(const unsigned char* c) { // mov r64,[base+disp32]
+    return (c[0]&0xF8)==0x48 && c[1]==0x8B && (c[2]&0xC0)==0x80 && (c[2]&7)!=4;
+}
+// A vector's first and last pointers loaded from the same base, the second 8 bytes on.
+std::uint32_t vectorLoadOffset(const void* function,size_t length) {
+    const unsigned char* c=functionCode(function);
+    if (!c) return 0;
+    for (size_t i=0;i+7<=length;++i) {
+        if (!isWideLoad(c+i)) continue;
+        const int base=((c[i]&1)<<3)|(c[i+2]&7);
+        std::uint32_t first;std::memcpy(&first,c+i+3,4);
+        for (size_t j=i+7;j<i+23 && j+7<=length;++j) {
+            if (!isWideLoad(c+j) || (((c[j]&1)<<3)|(c[j+2]&7))!=base) continue;
+            std::uint32_t last;std::memcpy(&last,c+j+3,4);
+            if (last==first+8) return plausibleOffset(first) ? first : 0;
+        }
+    }
+    return 0;
+}
+// The first "lea rcx,[base+disp32]": the list passed as the first argument.
+std::uint32_t firstArgumentOffset(const void* function,size_t length) {
+    const unsigned char* c=functionCode(function);
+    if (!c) return 0;
+    for (size_t i=0;i+7<=length;++i)
+        if ((c[i]==0x48 || c[i]==0x49) && c[i+1]==0x8D && (c[i+2]&0xF8)==0x88 && (c[i+2]&7)!=4) {
+            std::uint32_t offset;std::memcpy(&offset,c+i+3,4);
+            return plausibleOffset(offset) ? offset : 0;
+        }
+    return 0;
+}
+bool bindContextLayout(HMODULE dll) {
+    if (!dll) return false;
+    if (contextLayout.module==dll && contextLayout.indicators) return true;
+    ContextLayout layout;layout.module=dll;
+    const void* draw=GetProcAddress(dll,"?draw@ccCockpitContext@cockpit@@QEAAXXZ");
+    const void* drawScreen=GetProcAddress(dll,"?draw_screenspace@ccCockpitContext@cockpit@@QEAAXXZ");
+    const void* reinit=GetProcAddress(dll,"?reinit_indicator@ccCockpitContext@cockpit@@QEAAXAEAVConfig@Lua@@H@Z");
+    if (!draw || !drawScreen || !reinit ||
+        !symbol(dll,"?get_plugin_by_index@ccCockpitContext@cockpit@@QEAAPEAV12@I@Z",layout.child)) return false;
+    const std::uint32_t a=vectorLoadOffset(draw,0x80),b=vectorLoadOffset(drawScreen,0x80);
+    const std::uint32_t c=firstArgumentOffset(reinit,0x40);
+    if (!a || a!=b || a!=c) return false;
+    layout.indicators=a;
+    contextLayout=layout;
+    return true;
+}
+// Visits every indicator with its owning context and zero-based index, then the child
+// contexts. Stops and returns false if the visitor does or a list is malformed.
+template<class Visit> bool walkContexts(void* context,Visit& visit,int depth=0) {
+    if (!context || depth>8 || !contextLayout.indicators || !contextLayout.child) return false;
+    const auto& list=*reinterpret_cast<const Vector*>(static_cast<unsigned char*>(context)+contextLayout.indicators);
+    size_t count=0;
+    if (!vectorCount(list,count)) return false;
+    for (size_t i=0;i<count;++i)
+        if (list.begin[i] && !visit(context,list.begin[i],static_cast<int>(i))) return false;
+    for (unsigned i=0;i<256;++i) {
+        void* child=contextLayout.child(context,i);
+        if (!child) break;
+        if (!walkContexts(child,visit,depth+1)) return false;
+    }
+    return true;
 }
 
 struct NativeAPI {
@@ -93,13 +155,16 @@ struct NativeAPI {
     void* (*element)(void*,const char*);
     void (*pushPurpose)(void*,int);
     void (*removePurpose)(void*,int);
+    bool (*hasPurpose)(const void*,int);
     void* (*parameter)(const char*);
     void (*setNumber)(void*,double);
+    const void* indicatorVtable; // source pages are plain ccIndicator objects
 };
 bool bindNative(NativeAPI& api) {
     HMODULE dll=GetModuleHandleW(L"CockpitBase.dll");
-    if (!dll || !knownCockpitBuild(dll)) return false;
+    if (!dll || !bindContextLayout(dll)) return false;
 #define NATIVE(field,name) if (!symbol(dll,name,api.field)) return false
+    NATIVE(indicatorVtable,"??_7ccIndicator@cockpit@@6BccContextRelatedObject@1@@");
     NATIVE(context,"?binding_context@cockpit@@YAPEAVccCockpitContext@1@XZ");
     NATIVE(construct,"??0ccIndicatorBake@cockpit@@QEAA@XZ");
     NATIVE(destroy,"??1ccIndicatorBake@cockpit@@UEAA@XZ");
@@ -108,13 +173,13 @@ bool bindNative(NativeAPI& api) {
     NATIVE(element,"?get_element_on_current_page@ccIndicator@cockpit@@UEAAPEAVElement@2@PEBD@Z");
     NATIVE(pushPurpose,"?push_purpose@ccIndicator@cockpit@@UEAAXH@Z");
     NATIVE(removePurpose,"?remove_purpose@ccIndicator@cockpit@@UEAAXH@Z");
+    NATIVE(hasPurpose,"?has_a_purpose_assigned@ccIndicator@cockpit@@QEBA_NH@Z");
     NATIVE(parameter,"ed_cockpit_get_parameter_handle");
     NATIVE(setNumber,"ed_cockpit_update_parameter_with_number");
 #undef NATIVE
     return true;
 }
 
-struct Vector {void** begin;void** end;void** capacity;};
 struct Source {void* context=nullptr;void* indicator=nullptr;int index=-1;};
 struct Channel {
     const char* marker;
@@ -132,37 +197,29 @@ struct Owner {
     bool bound=false, active=false, failed=false;
     bool modeSet=false, diagnostic=false;
 };
-// The native destructor expects this array element size.
-static constexpr size_t BakerSize=0x1d0;
-static constexpr int General=0, HudOnly=1, Bake=100;
+// DCS exports no size for ccIndicatorBake, so each baker gets a generous block, about nine
+// times the current class. After construction the adapter finds the last byte the
+// constructor set and refuses the baker if it reaches past half the block.
+static constexpr size_t BakerBlock=0x1000, BakerLimit=BakerBlock/2;
 
-bool vectorCount(const Vector& vector,size_t& count) {
-    auto begin=reinterpret_cast<uintptr_t>(vector.begin);
-    auto end=reinterpret_cast<uintptr_t>(vector.end);
-    if ((!begin && end) || end<begin || (end-begin)%sizeof(void*)) return false;
-    count=(end-begin)/sizeof(void*);
-    return count<=256;
+size_t constructedExtent(const void* block) {
+    auto* bytes=static_cast<const unsigned char*>(block);
+    size_t end=BakerBlock;
+    while (end>0 && !bytes[end-1]) --end;
+    return end;
 }
-bool findSources(Owner& owner,void* context,int depth=0) {
-    if (!context || depth>8) return false;
-    auto bytes=static_cast<unsigned char*>(context);
-    const auto& indicators=*reinterpret_cast<Vector*>(bytes+0xb0);
-    size_t count=0;
-    if (!vectorCount(indicators,count)) return false;
-    for (size_t i=0;i<count;++i) {
-        void* indicator=indicators.begin[i];
-        if (!indicator) continue;
+bool findSources(Owner& owner,void* root) {
+    auto visit=[&owner](void* context,void* indicator,int index) {
+        // Only plain ccIndicator pages carry source markers; skip anything else unread.
+        if (*static_cast<void* const*>(indicator)!=owner.api.indicatorVtable) return true;
         for (auto& channel:owner.channels)
             if (owner.api.element(indicator,channel.marker)) {
                 if (channel.source.indicator && channel.source.indicator!=indicator) return false;
-                channel.source={context,indicator,static_cast<int>(i)};
+                channel.source={context,indicator,index};
             }
-    }
-    const auto& children=*reinterpret_cast<Vector*>(bytes+0x130);
-    if (!vectorCount(children,count)) return false;
-    for (size_t i=0;i<count;++i)
-        if (children.begin[i] && !findSources(owner,children.begin[i],depth+1)) return false;
-    return true;
+        return true;
+    };
+    return walkContexts(root,visit);
 }
 void destroyBakers(Owner& owner) {
     if (owner.ready) owner.api.setNumber(owner.ready,0);
@@ -181,6 +238,17 @@ void destroyBakers(Owner& owner) {
 int result(lua_State* state,bool ok,const char* message) {
     lua.pushboolean(state,ok);lua.pushstring(state,message);return 2;
 }
+// Render purpose numbers are DCS's own render_purpose table, passed in by Lua from the
+// first argument on: whole, distinct and in range, or refused.
+bool readPurposes(lua_State* state,int first,int* out,int count) {
+    for (int i=0;i<count;++i) {
+        const double value=lua.tonumber(state,first+i);
+        if (!std::isfinite(value) || value!=std::floor(value) || value<0 || value>1000) return false;
+        out[i]=static_cast<int>(value);
+        for (int j=0;j<i;++j) if (out[j]==out[i]) return false;
+    }
+    return true;
+}
 Owner* upvalue(lua_State* state) {
     return static_cast<Owner*>(lua.touserdata(state,-10003)); // Lua 5.1 upvalue 1
 }
@@ -194,10 +262,14 @@ int start(lua_State* state) {
     if (diagnostic) owner->channels[2].marker="F117_BAKE_TEST_SOURCE";
     if (owner->active) return result(state,true,"native MFD compositor already active");
     if (owner->failed) return result(state,false,"compositor unavailable; direct drawing retained");
+    int purposes[3]; // general, HUD-only view, bake
+    if (!readPurposes(state,3,purposes,3))
+        return result(state,false,"DCS render purposes not supplied; direct drawing retained");
+    const int general=purposes[0],hudOnly=purposes[1],bake=purposes[2];
     if (!owner->bound) {
         if (!bindNative(owner->api)) {
             owner->failed=true;
-            return result(state,false,"CockpitBase build/export mismatch; direct drawing retained");
+            return result(state,false,"CockpitBase exports or context layout not confirmed; direct drawing retained");
         }
         owner->ready=owner->api.parameter(diagnostic?"F117_LCD_TEST_READY":"F117_LCD_READY");
         owner->api.setNumber(owner->ready,0);
@@ -209,17 +281,32 @@ int start(lua_State* state) {
     const int first=diagnostic?2:0;
     for (int i=first;i<3;++i)
         if (!owner->channels[i].source.indicator) return result(state,false,"waiting for MFD source pages");
+    // Each source page declares its purposes from the same DCS table, so it must already
+    // hold the general purpose under the number supplied.
+    bool hadHudOnly[3]={};
+    for (int i=first;i<3;++i) {
+        const void* indicator=owner->channels[i].source.indicator;
+        if (!owner->api.hasPurpose(indicator,general) || owner->api.hasPurpose(indicator,bake)) {
+            owner->failed=true;
+            return result(state,false,"source page purposes do not match DCS render purposes; direct drawing retained");
+        }
+        hadHudOnly[i]=owner->api.hasPurpose(indicator,hudOnly);
+    }
     double requested=lua.tonumber(state,1);
     if (!(requested>=128 && requested<=4096)) requested=1024;
     int resolution=static_cast<int>(requested);
     for (int i=first;i<3;++i) {
         auto& channel=owner->channels[i];
-        channel.baker=HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,BakerSize);
+        channel.baker=HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,BakerBlock);
         if (!channel.baker) {
             destroyBakers(*owner);owner->failed=true;
             return result(state,false,"baker allocation failed; direct drawing retained");
         }
         owner->api.construct(channel.baker);
+        if (constructedExtent(channel.baker)>BakerLimit) {
+            destroyBakers(*owner);owner->failed=true;
+            return result(state,false,"native baker larger than expected; direct drawing retained");
+        }
         // addSource arguments are source index, pixel WIDTH, pixel HEIGHT.
         // The native function lays out source rectangles; they are not offsets.
         owner->api.addSource(channel.baker,channel.source.index,resolution,resolution);
@@ -232,9 +319,25 @@ int start(lua_State* state) {
     // original pages still draw normally and every texture holder is hidden.
     for (int i=first;i<3;++i) {
         auto& channel=owner->channels[i];
-        owner->api.pushPurpose(channel.source.indicator,Bake);
-        owner->api.removePurpose(channel.source.indicator,General);
-        owner->api.removePurpose(channel.source.indicator,HudOnly);
+        owner->api.pushPurpose(channel.source.indicator,bake);
+        owner->api.removePurpose(channel.source.indicator,general);
+        owner->api.removePurpose(channel.source.indicator,hudOnly);
+    }
+    bool switched=true;
+    for (int i=first;i<3;++i) {
+        const void* indicator=owner->channels[i].source.indicator;
+        switched=switched && owner->api.hasPurpose(indicator,bake) &&
+            !owner->api.hasPurpose(indicator,general) && !owner->api.hasPurpose(indicator,hudOnly);
+    }
+    if (!switched) {
+        for (int i=first;i<3;++i) {
+            void* indicator=owner->channels[i].source.indicator;
+            owner->api.removePurpose(indicator,bake);
+            if (!owner->api.hasPurpose(indicator,general)) owner->api.pushPurpose(indicator,general);
+            if (hadHudOnly[i] && !owner->api.hasPurpose(indicator,hudOnly)) owner->api.pushPurpose(indicator,hudOnly);
+        }
+        destroyBakers(*owner);owner->failed=true;
+        return result(state,false,"bake purpose not confirmed; direct drawing restored");
     }
     owner->active=true;
     owner->api.setNumber(owner->ready,1);

@@ -50,8 +50,7 @@ names, because DCS closes a page's Lua state straight after loading it. The disp
 device locates all five current indicators by unique
 markers on each update: HUD, VSD, HSD, IRADS symbology and IRADS video.
 
-For the verified CockpitBase SHA-256 recorded in `native/displays/README.md`,
-the bridge registers each page's materials using the native renderer's
+Once the checks in `native/displays/README.md` pass, the bridge registers each page's materials using the native renderer's
 `read_from_state` / `brightness_sensitive_materials` facility. It checks that
 all materials resolved before activation, then calls native `change_brightness`
 for RGB gain. Camera video also calls native `set_mfd_shader_brightness`:

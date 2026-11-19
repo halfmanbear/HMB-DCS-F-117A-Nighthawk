@@ -9,6 +9,7 @@ function M.new(source_config)
     local config=dofile(LockOn_Options.script_path.."MFD/Indicator/Map/Charts/config.lua")
     local owns_source=not source_config or (source_config.enabled and source_config.material=="mfd"..tostring(config.render_target))
     local levels=dofile(LockOn_Options.script_path.."Systems/ChartLevels.lua")
+    local purpose=dofile(LockOn_Options.script_path.."Systems/RenderPurpose.lua")
     local native,attempted,last_message,waiting_updates
     local handles={}
     local function h(n)
@@ -46,8 +47,12 @@ function M.new(source_config)
         -- it as a verified digital elevation-shaded Harris DMAP implementation.
         local theatre=get_terrain_related_data and get_terrain_related_data("name") or ""
         local level=levels.level(theatre,h("RANGE"):get())
+        if not purpose then
+            native=nil;report("DCS render purposes unavailable; map fallback retained");return
+        end
         local ok,ready,message=pcall(native.update,h("VIEW_CENTER_X"):get(),h("VIEW_CENTER_Z"):get(),
-            h("VIEW_UP_RAD"):get(),h("VIEW_WIDTH_M"):get(),h("VIEW_HEIGHT_M"):get(),level)
+            h("VIEW_UP_RAD"):get(),h("VIEW_WIDTH_M"):get(),h("VIEW_HEIGHT_M"):get(),level,
+            purpose.GENERAL,purpose.HUD_ONLY_VIEW,purpose.SCREENSPACE_INSIDE_COCKPIT,purpose.BAKE)
         if not ok then report(ready);h("CHART_CAMERA_READY"):set(0);return end
         h("CHART_LEVEL"):set(level);h("CHART_CAMERA_READY"):set(ready and 1 or 0)
         -- A matching native camera is necessary, but is not pixel verification.

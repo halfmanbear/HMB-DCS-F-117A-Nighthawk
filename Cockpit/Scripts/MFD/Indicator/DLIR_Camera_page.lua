@@ -53,4 +53,9 @@ c[#c+1]={"opacity_using_parameter",#p-1}
 dim.element_params=p;dim.controllers=c
 Add(dim)
 
+-- The EFM finds this camera indicator by this element name. Keep it unique to this page.
+local marker=CreateElement "ceSimple"
+marker.name="F117_IRADS_CAMERA_SOURCE"
+Add(marker)
+
 finish_native_brightness()

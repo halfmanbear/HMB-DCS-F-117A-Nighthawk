@@ -35,6 +35,7 @@ venv/
 /tools/cockpit/layout_editor_backups/
 /tools/fm_bench/.cache/
 /tools/fm_bench/results/
+/tools/release/promote_release.ps1
 
 # Keep only the Blender sources for currently referenced models
 /blender_files/*

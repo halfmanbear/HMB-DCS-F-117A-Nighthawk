@@ -1,7 +1,8 @@
-// Private CockpitBase layouts are accepted only for the hash checked above.
+// Native renderer brightness through DCS's exported render parser functions.
 // No hooks, vtable replacement, baker activation or DCS binary modification.
 namespace {
-constexpr size_t IndicatorParserOffset=1144; // parser the indicator uses when drawing
+// Bytes of the parser compared before and after its material list is read.
+constexpr size_t ParserSnapshotBytes=0x80;
 struct BrightnessAPI {
     void* (*context)()=nullptr;
     void* (*element)(void*,const char*)=nullptr;
@@ -10,6 +11,7 @@ struct BrightnessAPI {
     void (*readState)(void*,void*)=nullptr;
     void (*changeBrightness)(void*,float)=nullptr;
     void (*shaderBrightness)(void*,float)=nullptr;
+    size_t parser=0; // position of the indicator's render parser
 };
 struct BrightnessChannel {
     const char* marker;
@@ -38,6 +40,38 @@ void pinThisModule() {
     GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,
         reinterpret_cast<LPCWSTR>(&pinThisModule),&self);
 }
+// The indicator's render parser has no accessor. Its position is read from ccIndicator::draw,
+// which hands the parser to the renderer, and used only if set_render_materials stores the
+// parser's target material at the same place.
+size_t parserOffset(HMODULE cockpit) {
+    const unsigned char* draw=functionCode(reinterpret_cast<const void*>(
+        GetProcAddress(cockpit,"?draw@ccIndicator@cockpit@@UEAAXE@Z")));
+    const unsigned char* materials=functionCode(reinterpret_cast<const void*>(
+        GetProcAddress(cockpit,"?set_render_materials@ccIndicator@cockpit@@IEAAXXZ")));
+    if (!draw || !materials) return 0;
+    std::uint32_t offset=0;
+    for (size_t i=0;i+7<=0x80;++i)  // first "lea rdx,[base+disp32]"
+        if ((draw[i]==0x48 || draw[i]==0x49) && draw[i+1]==0x8D && (draw[i+2]&0xF8)==0x90 && (draw[i+2]&7)!=4) {
+            std::memcpy(&offset,draw+i+3,4);
+            break;
+        }
+    if (!plausibleOffset(offset)) return 0;
+    for (size_t i=0;i+7<=0x400;++i)  // "mov [base+disp32],rax" at the same position
+        if ((materials[i]==0x48 || materials[i]==0x49) && materials[i+1]==0x89 && (materials[i+2]&0xF8)==0x80 &&
+            (materials[i+2]&7)!=4 && !std::memcmp(materials+i+3,&offset,4))
+            return offset;
+    return 0;
+}
+// read_from_state appends the registered materials to the parser's brightness list. The one
+// parser field that grows by the number found is that list's size; anything else is refused.
+size_t resolvedMaterials(const unsigned char* before,const unsigned char* after,size_t expected) {
+    size_t changed=0,grown=0;
+    for (size_t at=0;at+8<=ParserSnapshotBytes;at+=8) {
+        std::uint64_t a,b;std::memcpy(&a,before+at,8);std::memcpy(&b,after+at,8);
+        if (a!=b) {++changed;grown=b>a ? static_cast<size_t>(b-a) : 0;}
+    }
+    return changed==1 && grown<=expected ? grown : 0;
+}
 bool bindBrightness() {
     // The pin outlives missions, so never keep pointers into a replaced module.
     HMODULE cockpit=GetModuleHandleW(L"CockpitBase.dll");
@@ -49,8 +83,10 @@ bool bindBrightness() {
     HMODULE core=GetModuleHandleW(L"edCore.dll");
     if (!cockpit || !core) return false;
     brightnessAttempted=true;
-    if (!knownCockpitBuild(cockpit)) return false;
+    if (!bindContextLayout(cockpit)) return false;
     BrightnessAPI api;
+    api.parser=parserOffset(cockpit);
+    if (!api.parser) return false;
 #define BRIGHT_BIND(module,field,name) if (!symbol(module,name,api.field)) return false
     BRIGHT_BIND(cockpit,context,"?binding_context@cockpit@@YAPEAVccCockpitContext@1@XZ");
     BRIGHT_BIND(cockpit,element,"?get_element_on_current_page@ccIndicator@cockpit@@UEAAPEAVElement@2@PEBD@Z");
@@ -84,25 +120,15 @@ int registerBrightness(lua_State* state) {
     channel.materials=std::move(names);channel.configured=nullptr;channel.materialsReady=false;
     return result(state,true,"brightness materials registered");
 }
-bool findBrightnessSources(void* context,void* (&found)[BrightnessChannelCount],int depth=0) {
-    if (!context || depth>8) return false;
-    auto* bytes=static_cast<unsigned char*>(context);
-    const auto& indicators=*reinterpret_cast<Vector*>(bytes+0xb0);
-    size_t count=0;
-    if (!vectorCount(indicators,count)) return false;
-    for (size_t i=0;i<count;++i) {
-        void* indicator=indicators.begin[i];
-        if (!indicator) continue;
+bool findBrightnessSources(void* root,void* (&found)[BrightnessChannelCount]) {
+    auto visit=[&found](void*,void* indicator,int) {
         for (size_t j=0;j<BrightnessChannelCount;++j) if (brightnessAPI.element(indicator,brightnessChannels[j].marker)) {
             if (found[j] && found[j]!=indicator) return false;
             found[j]=indicator;
         }
-    }
-    const auto& children=*reinterpret_cast<Vector*>(bytes+0x130);
-    if (!vectorCount(children,count)) return false;
-    for (size_t i=0;i<count;++i)
-        if (children.begin[i] && !findBrightnessSources(children.begin[i],found,depth+1)) return false;
-    return true;
+        return true;
+    };
+    return walkContexts(root,visit);
 }
 // 0.5 is the native MFD shader's neutral brightness. Its negative branch has
 // gain 1+1.6*(setting-0.5), so translate the existing luminance-gain controls.
@@ -116,11 +142,11 @@ int updateBrightness(lua_State* state) {
         gains[i]=static_cast<float>(value);
     }
     std::lock_guard<std::mutex> lock(brightnessMutex);
-    if (!bindBrightness()) return result(state,false,"native brightness unavailable for this CockpitBase build");
+    if (!bindBrightness()) return result(state,false,"native brightness exports or parser position not confirmed");
     void* found[BrightnessChannelCount]={};
     auto reset=[&]() {
         for (size_t j=0;j<BrightnessChannelCount;++j) if (found[j]) {
-            auto* parser=static_cast<unsigned char*>(found[j])+IndicatorParserOffset;
+            auto* parser=static_cast<unsigned char*>(found[j])+brightnessAPI.parser;
             brightnessAPI.changeBrightness(parser,1.f);
             if (j==VideoChannel) brightnessAPI.shaderBrightness(parser,.5f);
         }
@@ -138,7 +164,7 @@ int updateBrightness(lua_State* state) {
     }
     for (size_t i=0;i<BrightnessChannelCount;++i) {
         auto& channel=brightnessChannels[i];
-        auto* parser=static_cast<unsigned char*>(found[i])+IndicatorParserOffset;
+        auto* parser=static_cast<unsigned char*>(found[i])+brightnessAPI.parser;
         if (channel.configured!=found[i]) {
             int top=lua.gettop(state);
             lua.createtable(state,0,1);
@@ -150,10 +176,11 @@ int updateBrightness(lua_State* state) {
             lua.setfield(state,-2,"brightness_sensitive_materials");
             alignas(8) unsigned char config[24]={};
             brightnessAPI.configConstruct(config,state,-1);
-            const size_t before=*reinterpret_cast<size_t*>(parser+80);
+            unsigned char before[ParserSnapshotBytes],after[ParserSnapshotBytes];
+            std::memcpy(before,parser,sizeof(before));
             brightnessAPI.readState(parser,config);
-            const size_t after=*reinterpret_cast<size_t*>(parser+80);
-            channel.resolved=after>=before ? after-before : 0;
+            std::memcpy(after,parser,sizeof(after));
+            channel.resolved=resolvedMaterials(before,after,channel.materials.size());
             channel.materialsReady=channel.resolved==channel.materials.size();
             brightnessAPI.configDestroy(config);
             lua.settop(state,top);
@@ -167,7 +194,7 @@ int updateBrightness(lua_State* state) {
         return result(state,false,status.c_str());
     }
     for (size_t i=0;i<BrightnessChannelCount;++i) {
-        auto* parser=static_cast<unsigned char*>(found[i])+IndicatorParserOffset;
+        auto* parser=static_cast<unsigned char*>(found[i])+brightnessAPI.parser;
         brightnessAPI.changeBrightness(parser,gains[i]);
         if (i==VideoChannel) brightnessAPI.shaderBrightness(parser,nativeVideoBrightness(gains[i]));
     }

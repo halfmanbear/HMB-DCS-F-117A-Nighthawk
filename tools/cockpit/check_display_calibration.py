@@ -39,7 +39,7 @@ def runtime(enabled=None):
         function SetScale(s) _scale=s end
         function GetScale() return _scale==MILLYRADIANS and 0.001 or 1 end
         indicator_types={COMMON=0,COLLIMATOR=1,HELMET=2}
-        render_purpose={GENERAL=0,HUD_ONLY_VIEW=1,BAKE=100}
+        render_purpose={GENERAL=0,HUD_ONLY_VIEW=1,SCREENSPACE_INSIDE_COCKPIT=2,BAKE=100}
         SelfWidth=1920; SelfHeight=1080
         function update_screenspace_diplacement(...) end
         -- Snapshot at Add, matching the native API's consumption of properties.

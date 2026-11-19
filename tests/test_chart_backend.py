@@ -56,7 +56,7 @@ class ChartBackendTests(unittest.TestCase):
         ''')
         backend=load(S/'Systems/ChartBackend.lua').new();backend.initialize();backend.update()
         self.assertEqual(g._parameters.F117_MAP_SOURCE_READY,0)
-        self.assertEqual(convert(g.view),[123,456,.5,50000,40000,4])
+        self.assertEqual(convert(g.view),[123,456,.5,50000,40000,4,0,1,2,100])
         g.ready=True;backend.update();self.assertEqual(g._parameters.F117_MAP_SOURCE_READY,1)
         self.assertEqual(g.loads,1);self.assertEqual(g.module_entry,'luaopen_f117_charts')
         g.fail=True;backend.update();self.assertEqual(g._parameters.F117_MAP_SOURCE_READY,0)

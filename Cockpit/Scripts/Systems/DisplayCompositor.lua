@@ -4,6 +4,7 @@ function M.new()
     local ready=get_param_handle("F117_LCD_READY")
     local native,attempts,last_message=nil,0,nil
     local config=dofile(LockOn_Options.script_path.."MFD/Indicator/render_config.lua")
+    local purpose=dofile(LockOn_Options.script_path.."Systems/RenderPurpose.lua")
     local function report(message)
         if message==last_message then return end
         last_message=message
@@ -14,12 +15,12 @@ function M.new()
         attempts=attempts+1
         local options=LockOn_Options.cockpit or {}
         local resolution=config.resolution or options.render_target_resolution or 1024
-        local called,active,message
-        if config.bake_test and not config.enabled then
-            called,active,message=pcall(native.start,resolution,1)
-        else
-            called,active,message=pcall(native.start,resolution)
+        if not purpose then
+            report("DCS render purposes unavailable; direct drawing retained");native=nil;return
         end
+        local diagnostic=config.bake_test and not config.enabled and 1 or 0
+        local called,active,message=pcall(native.start,resolution,diagnostic,
+            purpose.GENERAL,purpose.HUD_ONLY_VIEW,purpose.BAKE)
         if not called then
             report("native compositor error: "..tostring(active).."; direct drawing retained")
             native=nil

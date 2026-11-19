@@ -62,11 +62,26 @@ Use the [static centre holder test](../../docs/displays/compositor-diagnostics.m
 to isolate texture sampling and presentation from native baking. It needs no
 DLL rebuild and is disabled by default.
 
-Opaque native C++ allocation and context offsets are private APIs. The adapter
-checks the loaded CockpitBase file's SHA-256 before using them:
-`fb0a09be70627c7790dea1527cedfee43082bb8b112484d5c85be1d99d33de95`.
-A different build retains direct drawing. Native exports are resolved by name.
-The baker allocation size and context offsets are specific to this build.
+The compositor is not pinned to one CockpitBase build. Native exports are resolved
+by name, and the private details it needs are checked at run time:
+
+- **Context walk.** Child contexts come from the exported `get_plugin_by_index`.
+  DCS exports no accessor for a context's indicator list, so its position is read
+  from three exported context functions that use it (`draw`, `draw_screenspace`,
+  `reinit_indicator`). It is used only when all three agree. Markers are tested
+  only on entries whose table is DCS's exported `ccIndicator` table.
+- **Baker size.** Each baker gets a 4 KB block, about nine times the current
+  class. After construction the adapter finds the last byte the constructor set
+  and refuses the baker if it reaches past half the block.
+- **Render purposes.** The GENERAL, HUD_ONLY_VIEW and BAKE numbers come from DCS's
+  own `render_purpose` table (`devices_defs.lua`), passed in by
+  `Systems/RenderPurpose.lua`. Each source must already hold GENERAL, as its page
+  declared. After the switch each must hold BAKE and neither direct purpose; otherwise
+  the purposes are restored, the bakers destroyed and direct drawing kept.
+
+If any check fails, direct drawing is kept. Native brightness and the chart
+producer use the same context walk (see their sections below). No module is
+pinned to a CockpitBase hash.
 
 To test the compositor, set `enabled=true` in
 `Cockpit/Scripts/MFD/Indicator/render_config.lua` and fully restart DCS. While it
@@ -91,9 +106,13 @@ updates native renderer gain for the HUD, all MFDs and the DEP even while compos
 `enabled=false`. Channels, in update order: `OCIP_ROOT` (HUD), `F117_VSD_SOURCE`,
 `F117_HSD_SOURCE`, `F117_IRADS_SOURCE`, `dlir_picture` (camera) and `F117_DEP_SOURCE`.
 The DEP takes the HUD brightness control. All six pages must be found before any
-gain is applied. The module checks the same CockpitBase hash, discovers current
-indicators by page markers, and uses the parser embedded at +1144. Registration
-uses native `read_from_state`; its material count is checked before activation.
+gain is applied. The module discovers current indicators by page markers through
+the same context walk as the compositor. The indicator's render parser has no
+accessor: its position is read from `ccIndicator::draw`, which hands it to the
+renderer, and used only if `set_render_materials` stores the parser's material at
+the same place. Registration uses native `read_from_state`. The parser is compared
+before and after; exactly one field must grow, by no more than the number of
+registered materials, and that growth must equal the count before activation.
 Ordinary materials use `change_brightness`; the camera target additionally uses
 `set_mfd_shader_brightness` with a neutral value of 0.5 and gain conversion.
 
@@ -130,8 +149,11 @@ with an instrumented parameter store.
 ## Generic chart producer
 
 `NativeCharts.h` adds `luaopen_f117_charts` to the existing adapter. It updates
-only the uniquely marked, version-checked generic chart device registered by
-this mod. It is not a Hornet/F-15E device transplant. The build now also runs
+only the uniquely marked generic chart device registered by this mod. Page state
+is read through exported kneeboard functions. Fields with no accessor are located
+in the exported kneeboard functions that use them, each confirmed by a second
+function, and the written page must read back through the map view before any
+other field is set. It is not a Hornet/F-15E device transplant. The build now also runs
 `test_charts.cpp` against real DCS Lua; those checks do not render map pixels.
 See [native map investigation](../../docs/displays/native-map-rendering.md) for layouts,
 live-check requirements and rollback.

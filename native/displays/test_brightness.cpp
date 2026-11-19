@@ -2,6 +2,7 @@
 #include "F117Displays.cpp"
 #include <cstdlib>
 namespace {
+constexpr size_t IndicatorParserOffset=1144;
 void check(bool ok,const char* message) {
     if (!ok) {std::fprintf(stderr,"FAIL: %s\n",message);std::exit(1);}
 }
@@ -11,9 +12,10 @@ void* displayPointers[BrightnessChannelCount]={};
 unsigned char brightnessContext[0x148]={};
 float applied[BrightnessChannelCount]={},videoSetting=0;
 int configuredCount=0;
-bool resolveMaterials=true;
+bool resolveMaterials=true,touchOtherField=false;
 void (*getfield)(lua_State*,int,const char*)=nullptr;
 void* fakeContext(){return brightnessContext;}
+void* noChild(void*,unsigned){return nullptr;}
 void* fakeElement(void* object,const char* marker) {
     return !std::strcmp(static_cast<FakeIndicator*>(object)->marker,marker) ? object : nullptr;
 }
@@ -30,6 +32,7 @@ void fakeConfigDestroy(void*){}
 void fakeRead(void* parser,void* config) {
     ++configuredCount;
     if (resolveMaterials) *reinterpret_cast<size_t*>(static_cast<unsigned char*>(parser)+80)+=*static_cast<size_t*>(config);
+    if (touchOtherField) ++*reinterpret_cast<size_t*>(static_cast<unsigned char*>(parser)+16);
 }
 void fakeGain(void* parser,float gain) {
     for (size_t i=0;i<BrightnessChannelCount;++i) if (parser==reinterpret_cast<unsigned char*>(&displays[i])+IndicatorParserOffset) {
@@ -68,8 +71,9 @@ int main(int argc,char** argv) {
     }
     Vector view{displayPointers,displayPointers+BrightnessChannelCount,displayPointers+BrightnessChannelCount};
     std::memcpy(brightnessContext+0xb0,&view,sizeof(view));
-    brightnessAPI={fakeContext,fakeElement,fakeConfig,fakeConfigDestroy,fakeRead,fakeGain,fakeShader};
+    brightnessAPI={fakeContext,fakeElement,fakeConfig,fakeConfigDestroy,fakeRead,fakeGain,fakeShader,IndicatorParserOffset};
     brightnessBound=true;
+    contextLayout.indicators=0xb0;contextLayout.child=noChild;
     auto update=[&](double hud=.7) {
         lua.settop(state,0);lua.pushcclosure(state,updateBrightness,0);
         for (double gain:{hud,.12,.14,.16,.16,.18}) pushnumber(state,gain);
@@ -96,6 +100,9 @@ int main(int argc,char** argv) {
     int failedCount=configuredCount;
     check(!update() && configuredCount==failedCount,"unresolved registration does not leak duplicate material lists");
     resolveMaterials=true;registerPage(1);check(update(),"fresh page registration retries material resolution");
+    touchOtherField=true;registerPage(1);
+    check(!update() && applied[0]==1.f,"a parser read that changes more than its list size is refused");
+    touchOtherField=false;registerPage(1);check(update(),"clean registration recovers");
     // DCS closes each page's Lua state straight after load; registration must survive it.
     closeState(state);
     state=newState();

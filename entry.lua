@@ -9,7 +9,7 @@ declare_plugin(
         dirName = current_mod_path,
         fileMenuName = _("F-117A Nighthawk"),
         shortName = _("F-117A Nighthawk"),
-        version = "2.0.1",
+        version = "2.0.2",
         creditsFile  = "credits.txt",
         state = "installed",
         info = _(
