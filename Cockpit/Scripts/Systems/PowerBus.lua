@@ -1,5 +1,6 @@
--- Display power bus. The battery gates everything; with it on, the APU, an
--- engine-driven generator or external ground power brings the bus up. Display
+-- Display power bus. The battery gates everything; with it on, an
+-- engine-driven generator or external ground power brings the bus up. The APU
+-- supplies start air, not main electrical power. Display
 -- power only: no FCS BIT, APU caution lights or EPU are modelled.
 local M={}
 M.APU_SPOOL=8        -- seconds from APU start to rated output (approximation)
@@ -28,7 +29,7 @@ function M.new()
         return s.powered()
     end
     function s.powered()
-        return s.battery and (s.apu==M.APU_RUNNING or s.gen_online or s.ground_power)
+        return s.battery and (s.gen_online or s.ground_power)
     end
     return s
 end

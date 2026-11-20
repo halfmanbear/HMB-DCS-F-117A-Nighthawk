@@ -10,6 +10,72 @@ from layout_editor import DEFAULTS, POWER_OFF, Model, PAGES, Renderer, move_sour
 
 
 class LayoutEditorTests(unittest.TestCase):
+    def test_whole_page_scale_all_pages_and_absolute_reset(self):
+        from layout_editor import scale_page_source, layout_scale
+        for mode in PAGES:
+            with self.subTest(mode=mode):
+                original=self.load(mode)
+                source=scale_page_source(original.source,.73)
+                scaled=Model(mode,source)
+                self.assertEqual(len(original.elements),len(scaled.elements))
+                for before in original.elements:
+                    after=scaled.by_name[before['name']]
+                    # Physical masks, camera background and boot UI belong to the base page.
+                    if before['name'].startswith(('F117_COMBINER_MASK_', 'F117_CENTRE_BAKED_VIDEO_', 'F117_SD_BOOT_')):
+                        continue
+                    for field,count in [('init_pos',2),('stringdefs',3)]:
+                        for a,b in zip(before.get(field,[])[:count],after.get(field,[])[:count]):
+                            self.assertAlmostEqual(a*.73,b)
+                    for a,b in zip(before.get('vertices',[]),after.get('vertices',[])):
+                        self.assertAlmostEqual(a[0]*.73,b[0])
+                        self.assertAlmostEqual(a[1]*.73,b[1])
+                    for a,b in zip(before.get('controllers',[]),after.get('controllers',[])):
+                        if a[0] in ('move_left_right_using_parameter','move_up_down_using_parameter'):
+                            self.assertAlmostEqual(a[2]*.73,b[2])
+                reset=scale_page_source(source,1)
+                self.assertEqual(layout_scale(reset),1)
+                self.assertEqual(reset.count('-- Layout Studio page scale end'),1)
+                restored=Model(mode,reset)
+                for before in original.elements:
+                    after=restored.by_name[before['name']]
+                    self.assertEqual(before.get('vertices'),after.get('vertices'))
+                self.assertIsNotNone(scaled.lua.globals().Add)
+
+    def test_thickness_selection_deduplicates_shared_calls(self):
+        from layout_editor import thicken_selection
+        model=self.load('MFD')
+        strokes=[e for e in model.elements if e.get('thickness')]
+        chosen=strokes[:3]
+        source,skipped=thicken_selection(model.source,chosen,model,1.5)
+        changed=Model('MFD',source)
+        lines={e['_source_line'] for e in chosen}
+        for before,after in zip(model.elements,changed.elements):
+            if before.get('thickness'):
+                factor=1.5 if before['_source_line'] in lines else 1
+                self.assertAlmostEqual(before['thickness']*factor,after['thickness'])
+                self.assertEqual(before.get('vertices'),after.get('vertices'))
+        self.assertEqual(skipped,0)
+        again,_=thicken_selection(source,[e for e in changed.elements if e.get('thickness')][:3],changed,1/1.5)
+        restored=Model('MFD',again)
+        for before,after in zip(model.elements,restored.elements):
+            if before.get('thickness'):self.assertAlmostEqual(before['thickness'],after['thickness'])
+
+    def test_page_scale_rejects_invalid_values(self):
+        from layout_editor import scale_page_source
+        for value in (0,-1,float('nan'),float('inf')):
+            with self.assertRaises(ValueError):scale_page_source('',value)
+
+    def test_move_selection_after_page_scaling_uses_visible_units(self):
+        from layout_editor import scale_page_source
+        original=self.load('MFD')
+        source=scale_page_source(original.source,.8)
+        model=Model('MFD',source)
+        label=next(e for e in model.elements if e.get('_etype')=='ceStringSLine' and e.get('init_pos'))
+        changed=Model('MFD',transform_selection(source,[label],model,DEFAULTS,dx=.001))
+        before=dict((e['name'],state) for e,state in model.scene(DEFAULTS))
+        after=dict((e['name'],state) for e,state in changed.scene(DEFAULTS))
+        self.assertAlmostEqual(after[label['name']][0]-before[label['name']][0],.001)
+
     def load(self, mode):
         return Model(mode, PAGES[mode].read_text(encoding='utf-8-sig'))
 

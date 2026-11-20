@@ -10,9 +10,9 @@ local band=get_param_handle("F117_IRADS_CONTRAST_BAND")
 -- separate IR level and gain, so they show the brightness and contrast settings.
 local level=get_param_handle("F117_IRADS_LEVEL")
 local gain=get_param_handle("F117_IRADS_GAIN")
--- Defaults are dim enough for night flying; the floor stays below the night preset.
-local LOW=.04
-local b,c=.35,.80
+-- Preserve fine button adjustment across the range; axes remain continuous.
+local LOW,HIGH,STEP=.025,.20,.00625
+local b,c=.15,.80
 local function clamp(value,low,high) return math.max(low,math.min(high,value)) end
 local function finite(v) return type(v)=="number" and v==v and math.abs(v)<math.huge end
 local function daylight_fraction(seconds)
@@ -22,7 +22,7 @@ local function daylight_fraction(seconds)
     return daylight
 end
 local function default_brightness(seconds)
-    return .06+(.35-.06)*daylight_fraction(seconds)
+    return .065+(.15-.065)*daylight_fraction(seconds)
 end
 local function default_contrast(seconds)
     return .96-(.96-.80)*daylight_fraction(seconds)
@@ -39,7 +39,7 @@ local function publish()
     local native=native_active:get()==1
     draw_brightness:set(native and 1 or b)
     dim:set(native and 0 or 1-b);band:set(math.floor((c-.35)*100+.5))
-    level:set((b-LOW)/(1-LOW));gain:set((c-.35)/.65)
+    level:set((b-LOW)/(HIGH-LOW));gain:set((c-.35)/.65)
 end
 local function initialize()
     local seconds=get_absolute_model_time()
@@ -56,10 +56,10 @@ local function set_command(command,value)
     if command==commands.BRIGHTNESS_AXIS or command==commands.CONTRAST_AXIS then
         if finite(value) then
             local unit=(clamp(value,-1,1)+1)/2
-            if command==commands.BRIGHTNESS_AXIS then b=LOW+(1-LOW)*unit else c=.35+.65*unit end
+            if command==commands.BRIGHTNESS_AXIS then b=LOW+(HIGH-LOW)*unit else c=.35+.65*unit end
         end
-    elseif command==commands.BRIGHTNESS_UP then b=clamp(b+.05,LOW,1)
-    elseif command==commands.BRIGHTNESS_DOWN then b=clamp(b-.05,LOW,1)
+    elseif command==commands.BRIGHTNESS_UP then b=clamp(b+STEP,LOW,HIGH)
+    elseif command==commands.BRIGHTNESS_DOWN then b=clamp(b-STEP,LOW,HIGH)
     elseif command==commands.CONTRAST_UP then c=clamp(c+.05,.35,1)
     elseif command==commands.CONTRAST_DOWN then c=clamp(c-.05,.35,1)
     else return false end

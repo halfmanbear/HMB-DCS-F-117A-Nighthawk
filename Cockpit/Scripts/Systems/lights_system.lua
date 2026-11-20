@@ -9,6 +9,12 @@ make_default_activity(STEP)
 local device = GetSelf()
 local base_data = get_base_data()
 local flood_level = get_param_handle("FLOOD_LGT") -- cockpit flood light, mainpanel_init arg 180
+local panel_level = get_param_handle("PANEL_LGT") -- cockpit backlights, arg 196
+local beam_power = {landing=get_param_handle("F117_LIGHT_LANDING"),taxi=get_param_handle("F117_LIGHT_TAXI")}
+local irads_housing_target = get_param_handle("F117_IRADS_HOUSING_TARGET")
+local irads_housing = 0
+local light_ready = get_param_handle("F117_LIGHT_CONTROL_READY")
+local mainpower = get_param_handle("mainpower") -- engine generator or ground power
 
 -- name = {toggle command, exterior draw argument}
 local LIGHTS = {
@@ -20,12 +26,13 @@ local LIGHTS = {
     panel   = {native_commands.COCKPIT_LIGHT, 195},
 }
 
--- Lights that are on at spawn. Any light not listed starts off. An unknown spawn
+-- Switch selections at spawn; panel output still requires bus power.
+-- Any light not listed starts off. An unknown spawn
 -- type is treated as a hot start on the ground.
 local ON_AT_SPAWN = {
     GROUND_HOT  = {landing = true, nav = true, taxi = true, beacon = true, panel = true},
     AIR_HOT     = {landing = true, nav = true, beacon = true, panel = true},
-    GROUND_COLD = {},
+    GROUND_COLD = {panel = true},
 }
 
 local light_on = {}
@@ -45,6 +52,8 @@ function post_initialize()
     for name in pairs(LIGHTS) do
         light_on[name] = spawn[name] == true
     end
+    panel_level:set(0)
+    flood_level:set(0)
 end
 
 function SetCommand(command)
@@ -106,11 +115,31 @@ end
 function update()
     update_platypus_glow()
     update_turbines()
+    -- 903 is the model's single pitch/stow animation. The EFM computes its
+    -- target from the real sensor LOS; keep a finite mechanical travel rate.
+    local target = math.max(0, math.min(1, irads_housing_target:get()))
+    local travel = 60 / 129.44 * STEP -- 60 degrees per second
+    irads_housing = irads_housing + math.max(-travel, math.min(travel, target-irads_housing))
+    set_aircraft_draw_argument_value(903, irads_housing)
     beacon_phase = (beacon_phase + STEP * BEACON_RPM / 60) % 1
     for name, light in pairs(LIGHTS) do
-        set_aircraft_draw_argument_value(light[2], level(light_on[name]))
+        local powered = name ~= "panel" or mainpower:get() > 0.5
+        -- Gear-mounted beams must be dark throughout retraction and while stowed.
+        if name == "landing" or name == "taxi" then
+            local args = name == "taxi" and {0} or {3, 5}
+            for _,arg in ipairs(args) do
+                if get_aircraft_draw_argument_value(arg) < .99 then powered = false end
+            end
+        end
+        local output = level(light_on[name] and powered)
+        set_aircraft_draw_argument_value(light[2], output)
+        if beam_power[name] then beam_power[name]:set(output) end
     end
+    light_ready:set(1)
     set_aircraft_draw_argument_value(1001, light_on.beacon and beacon_phase or 0)
+    -- Keep switch selections through a power loss. Battery alone does not supply
+    -- normal AC panel lighting; Electrical.lua publishes the supplied bus.
+    panel_level:set(level(light_on.panel and mainpower:get() > 0.5))
     flood_level:set(level(light_on.flood))
 end
 

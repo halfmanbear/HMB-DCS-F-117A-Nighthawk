@@ -23,6 +23,9 @@ creators = {
     [devices.GAUGES]        = lua_device("Systems/Gauges.lua"),
     [devices.WEAPONS]       = {"avSimpleWeaponSystem", scripts .. "Systems/Weapons.lua"},
     [devices.ELECTRICAL]    = lua_device("Systems/Electrical.lua"),
+    [devices.RADIO]         = {"avDefaultLuaRadio", scripts .. "Systems/Radio.lua"},
+    [devices.INTERCOM]      = {"avIntercomWWII", scripts .. "Systems/Intercom.lua",
+        {{"VHF_Radio", devices.RADIO}}},
 }
 
 indicators = {}

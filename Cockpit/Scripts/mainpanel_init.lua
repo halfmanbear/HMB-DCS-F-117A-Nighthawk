@@ -33,6 +33,8 @@ local KT = 1852 / 3600 -- m/s
 
 CanopyPos  = gauge(181, {0, 100}, {0, 100}, "base_gauge_CanopyPos")
 FloodLight = gauge(180, {0, 100}, {0, 100}, "FLOOD_LGT")       -- lights_system.lua
+PanelLight = gauge(196, {0, 1}, {0, 1}, "PANEL_LGT")          -- model emissive brightness
+ScreenPower = gauge(197, {0, 1}, {0, 1}, "mainpower")         -- model screen surfaces
 HideStick  = gauge(153, {0, 1}, {0, 1}, "HIDE_STICK")          -- control_stick.lua
 
 -- Gauges.lua sets the PANEL_* parameters.

@@ -44,7 +44,7 @@ end
 dofile(LockOn_Options.script_path.."MFD/Indicator/MFD_indication_page.lua")
 if not F117_IRADS_OVERLAY_OPTIONS then
     dofile(LockOn_Options.script_path.."Indicator/boot_page.lua"){
-        display="SD",title="SD",name="F117_SD_BOOT",font=MFD_FONT,line_material=MFD_WHITE,
+        display="IRADS",title="IRADS",name="F117_SD_BOOT",font=MFD_FONT,line_material=MFD_WHITE,
         half_w=.0881,half_h=.0748,sd={.0011,.0011,0,0},text_scale=readability.mfd_text_scale}
 end
 if finish then F117_IRADS_REGISTERED=nil;finish() end

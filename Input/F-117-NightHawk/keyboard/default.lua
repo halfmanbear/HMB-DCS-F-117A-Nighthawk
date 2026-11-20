@@ -3,6 +3,14 @@ dofile(cockpit.."command_defs.lua")
 dofile(cockpit.."devices.lua")
 
 local res = external_profile("Config/Input/Aircrafts/base_keyboard_binding.lua")
+-- The inherited FC3 near/far/off label describes a three-state control; our
+-- landing and taxi switches are independent. Keep command IDs and saved bindings.
+for binding_index,binding in ipairs(res.keyCommands) do
+    if binding.down == iCommandPlaneHeadLightOnOff then
+        binding.name = _('Landing Light ON/OFF')
+        binding.category = _('Lighting')
+    end
+end
 join(res.keyCommands,{
 {combos = {{key = 'M', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.DATABASE, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Database PMAP / DMAP'), category = _('F-117A Displays')},
 {combos = {{key = 'F', reformers = {'LCtrl','LAlt','LShift'}}}, down = map_commands.FUNCTION, cockpit_device_id = devices.DISPLAYS, value_down = 1.0, name = _('Central Map Function Page'), category = _('F-117A Displays')},

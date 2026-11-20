@@ -125,6 +125,18 @@ return function(sensor,options)
         -- IRADS: the lock point (EFM world metres) gets the box; the cursor
         -- follows the sensor's rendered line of sight, or the lock when locked.
         local heading=sensor.getHeading()
+        -- Active destination in the same INS frame used by navigation.
+        local dx,dy
+        if get("F117_NAV_VALID")>.5 and sensor.getSelfCoordinates then
+            local ox,oy,oz=sensor.getSelfCoordinates()
+            if finite(ox) and finite(oy) and finite(oz) then
+                dx,dy=project(get("F117_NAV_DEST_X")-ox-get("F117_INS_BIAS_N"),
+                    get("F117_NAV_DEST_Y")-oy-get("F117_INS_BIAS_ALT"),
+                    get("F117_NAV_DEST_Z")-oz-get("F117_INS_BIAS_E"),heading,pitch,roll)
+            end
+        end
+        set("DEST_VALID",dx and 1 or 0)
+        set("DEST_AZ",dx or 0);set("DEST_EL",dy or 0)
         local powered=get("F117_IRADS_POWER")>.5
         local lx,ly
         if powered and get("F117_IRADS_LOCK_VALID")>.5 and sensor.getSelfCoordinates then

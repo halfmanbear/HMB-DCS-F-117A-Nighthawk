@@ -56,7 +56,9 @@ function M.parse(raw)
         local north,east=position(p)
         if not north then break end -- never bridge an unusable record
         local number=finite(p.this_point_num) and math.floor(p.this_point_num) or i-1
-        route[#route+1]={x=north,z=east,kind=kind(p),number=number,
+        local q=p.world_point or p.point or p.position or p.pos
+        local elev=p.alt or p.altitude or p.elev or (type(q)=="table" and q.z~=nil and q.y)
+        route[#route+1]={x=north,z=east,elev=finite(elev) and elev or nil,kind=kind(p),number=number,
             label=string.format("%02d",number%100)}
     end
     return route
@@ -135,6 +137,8 @@ function M.new(sensor,source)
         local function display(angle)return math.floor((math.deg(angle)-offset)%360+.5)%360 end
         local rel=(course-heading+math.pi)%(2*math.pi)-math.pi
         set("VALID",1);set("DEST",point.number);set("RANGE_NM",range/NM)
+        set("DEST_X",point.x);set("DEST_Z",point.z)
+        set("DEST_Y",point.elev or 0)
         set("BEARING",math.deg(direct)%360);set("COURSE",math.deg(course)%360);set("REL_COURSE",rel)
         set("D_TEXT","D  "..point.label)
         if speed*KNOTS>=50 then

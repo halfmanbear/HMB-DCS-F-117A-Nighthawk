@@ -25,11 +25,11 @@ class IRADSImageTests(unittest.TestCase):
         self.module.initialize()
 
     def test_day_night_twilight_and_multiday_presets(self):
-        for hour,expected in [(0,.06),(5,.06),(6,.06),(7,.205),(8,.35),(12,.35),
-                              (17,.35),(18,.205),(19,.06),(23,.06),(31,.205)]:
+        for hour,expected in [(0,.065),(5,.065),(6,.065),(7,.1075),(8,.15),(12,.15),
+                              (17,.15),(18,.1075),(19,.065),(23,.065),(31,.1075)]:
             self.assertAlmostEqual(self.module.default_brightness(hour*3600),expected)
         self.assertAlmostEqual(self.v.F117_IRADS_CONTRAST,.8)
-        self.assertAlmostEqual(self.v.F117_IRADS_DIM_OPACITY,.65)
+        self.assertAlmostEqual(self.v.F117_IRADS_DIM_OPACITY,.85)
         self.assertEqual(self.v.F117_IRADS_CONTRAST_BAND,45)
 
     def test_dep_default_is_dim_at_night(self):
@@ -51,32 +51,42 @@ class IRADSImageTests(unittest.TestCase):
 
     def test_steps_clamping_manual_persistence_and_reset(self):
         self.module.set_command(self.cmd.BRIGHTNESS_DOWN,1)
-        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.3)
+        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.14375)
         self.g.clock=0
         self.module.set_command(self.cmd.CONTRAST_DOWN,1)
-        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.3)
+        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.14375)
         self.assertAlmostEqual(self.v.F117_IRADS_CONTRAST,.75)
         for _ in range(40):
             self.module.set_command(self.cmd.BRIGHTNESS_DOWN,1)
             self.module.set_command(self.cmd.CONTRAST_DOWN,1)
-        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.04)
+        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.025)
         self.assertAlmostEqual(self.v.F117_IRADS_CONTRAST,.35)
         for _ in range(40):
             self.module.set_command(self.cmd.BRIGHTNESS_UP,1)
             self.module.set_command(self.cmd.CONTRAST_UP,1)
-        self.assertEqual(self.v.F117_IRADS_BRIGHTNESS,1)
+        self.assertEqual(self.v.F117_IRADS_BRIGHTNESS,.20)
         self.assertEqual(self.v.F117_IRADS_CONTRAST,1)
         self.module.initialize()  # a fresh sortie starts from the mission-time default
-        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.06)
+        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.065)
         self.assertAlmostEqual(self.v.F117_IRADS_CONTRAST,.96)
         self.assertFalse(self.module.set_command(87,1))
 
     def test_axes_reject_nonfinite_and_cover_endpoints(self):
-        for axis,param,low in [(self.cmd.BRIGHTNESS_AXIS,'F117_IRADS_BRIGHTNESS',.04),
-                               (self.cmd.CONTRAST_AXIS,'F117_IRADS_CONTRAST',.35)]:
+        for axis,param,low,high in [(self.cmd.BRIGHTNESS_AXIS,'F117_IRADS_BRIGHTNESS',.025,.20),
+                               (self.cmd.CONTRAST_AXIS,'F117_IRADS_CONTRAST',.35,1)]:
             self.module.set_command(axis,-1);self.assertAlmostEqual(self.v[param],low)
-            self.module.set_command(axis,1);self.assertAlmostEqual(self.v[param],1)
-            self.module.set_command(axis,float('nan'));self.assertAlmostEqual(self.v[param],1)
+            self.module.set_command(axis,1);self.assertAlmostEqual(self.v[param],high)
+            self.module.set_command(axis,float('nan'));self.assertAlmostEqual(self.v[param],high)
+
+    def test_brightness_full_travel_and_button_resolution(self):
+        for i in range(101):
+            self.module.set_command(self.cmd.BRIGHTNESS_AXIS,-1+2*i/100)
+            self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.025+.175*i/100)
+            self.assertAlmostEqual(self.v.F117_IRADS_LEVEL,i/100)
+        self.module.set_command(self.cmd.BRIGHTNESS_AXIS,-1)
+        for _ in range(28):
+            self.module.set_command(self.cmd.BRIGHTNESS_UP,1)
+        self.assertAlmostEqual(self.v.F117_IRADS_BRIGHTNESS,.20)
 
     def test_video_layers_and_symbology_use_separate_controls(self):
         lua,load=runtime();load(SCRIPTS/'MFD/Indicator/DLIR_Camera_page.lua')

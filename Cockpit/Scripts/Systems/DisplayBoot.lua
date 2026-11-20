@@ -13,8 +13,9 @@ M.TIMELINE={
     CMDI_L={on=1.0,bit=1.8,ready=7.0, fade=1.0,fade_from="on"},
     SD    ={on=2.2,bit=3.0,ready=8.5, fade=1.0,fade_from="on"},
     CMDI_R={on=3.4,bit=4.2,ready=10.0,fade=1.0,fade_from="on"},
+    IRADS ={on=0,bit=.5,ready=8.5,fade=1.0,fade_from="on"},
 }
-M.DISPLAYS={"DEP","HUD","CMDI_L","SD","CMDI_R"}
+M.DISPLAYS={"DEP","HUD","CMDI_L","SD","CMDI_R","IRADS"}
 
 local function clamp01(x) return x<0 and 0 or x>1 and 1 or x end
 

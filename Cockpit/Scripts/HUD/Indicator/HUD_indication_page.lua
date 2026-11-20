@@ -1,3 +1,5 @@
+local F117_layout_restore = dofile(LockOn_Options.script_path.."Indicator/layout_adjust.lua").begin_page(0.8) -- Layout Studio page scale
+local F117_weight_restore = dofile(LockOn_Options.script_path.."Indicator/layout_adjust.lua").begin_weight(2) -- Uniform double stroke thickness
 local finish_native_brightness=dofile(LockOn_Options.script_path.."Indicator/native_brightness_page.lua")("OCIP_ROOT")
 -- F-117 OCIP basic HUD, manual Figure 4-4, PDF p21 (printed 4-8).
 -- No illustration border, numbered callouts, or leader lines are drawn.
@@ -63,9 +65,41 @@ local function stencil(x,y,w,h,relation,level)
     e.h_clip_relation=relation;e.level=level;e.isvisible=false
     Add(e)
 end
--- Readout occlusion zones prevent pitch symbology passing through the boxes.
-local zones={{-103,4,35,17},{103,4,42,17},{0,85,104,37},
-    {0,-64,48,22},{-76,-91,64,36},{83,-100,58,16}}
+-- Readout masks must follow the edited artwork, not its original positions.
+-- Include clearance around double-width strokes; these invisible stencil
+-- regions suppress moving symbols without painting black onto the outside view.
+local zones={ -- Layout Studio: generated from fixed artwork; do not position separately
+    {0,86.3914726,5.969230769,12.96923077},
+    {0,116.8914725,36.6,20.6},
+    {0,116.8914725,25.9918,12.42},
+    {-83,121.8914725,38.4328,11.76},
+    {72.5,127.8914726,14.6,5.6},
+    {70.5,117.8914726,10.6,5.6},
+    {72.5,107.8914726,14.6,5.6},
+    {70.5,97.8914726,10.6,5.6},
+    {72.5,87.8914726,14.6,5.6},
+    {70.5,77.8914726,10.6,5.6},
+    {72.5,67.8914726,14.6,5.6},
+    {100,107.8914725,28.8232,11.76},
+    {-103,21.89147254,38.6,20.6},
+    {-103,21.89147254,26.6496,12.64},
+    {-103,37.8914725,23.3606,11.54},
+    {103,21.89147254,45.6,20.6},
+    {103,21.89147254,30.482,12.2},
+    {-16.25,-45.25435303,8.1,9.930127019},
+    {-11.11565466,-47.64853758,7.310100717,10.2984631},
+    {-5.643565774,-49.11477938,6.468240888,10.52403877},
+    {-2.745405897,-48.48866039,5.861467228,8.588584094},
+    {0,-49.6085274,5.6,10.6},
+    {2.745405897,-48.48866039,5.861467228,8.588584094},
+    {5.643565774,-49.11477938,6.468240888,10.52403877},
+    {11.11565466,-47.64853758,7.310100717,10.2984631},
+    {16.25,-45.25435303,8.1,9.930127019},
+    {-89.4875,-61.1085275,30.625,11.1},
+    {-83.0525,-72.1085275,43.495,11.1},
+    {-83.0525,-83.1085275,43.495,11.1},
+    {83,-82.1085275,43.495,11.1},
+}
 for _,z in ipairs(zones) do stencil(z[1],z[2],z[3],z[4],h_clip_relations.INCREASE_IF_LEVEL,2) end
 
 -- Conformal symbols reference the connector optical axis, not the fitted layout
@@ -198,3 +232,5 @@ box(0,0,10,10,lock)
 for _,z in ipairs(zones) do stencil(z[1],z[2],z[3],z[4],h_clip_relations.DECREASE_IF_LEVEL,3) end
 
 finish_native_brightness()
+F117_weight_restore()
+F117_layout_restore() -- Layout Studio page scale end

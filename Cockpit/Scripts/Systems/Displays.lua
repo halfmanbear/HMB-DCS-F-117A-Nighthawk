@@ -2,6 +2,16 @@ dofile(LockOn_Options.script_path.."command_defs.lua")
 local update_time_step = 0.05 
 make_default_activity(update_time_step)
 local dev = GetSelf()
+-- Subscribe to stock HOTAS buttons as well as the device's own commands.
+-- In particular, TDC depress must reach the Designate Select router before it
+-- can issue the EFM's terrain-designation command (10114).
+for _, command in ipairs({
+    native_commands.TDC_DEPRESS_ON, native_commands.TDC_DEPRESS_OFF,
+    native_commands.SELECTER_UP, native_commands.SELECTER_DOWN,
+    native_commands.SELECTER_LEFT, native_commands.SELECTER_RIGHT, native_commands.SELECTER_STOP,
+    native_commands.DSS_OFF, native_commands.DSS_UP, native_commands.DSS_LEFT,
+    native_commands.DSS_DOWN, native_commands.DSS_RIGHT, native_commands.SENSOR_RESET,
+}) do dev:listen_command(command) end
 local irads_image = dofile(LockOn_Options.script_path.."Systems/IRADS_ImageControls.lua")
 local irads_readouts = dofile(LockOn_Options.script_path.."Systems/IRADS_Readouts.lua")
 local irads_terrain = dofile(LockOn_Options.script_path.."Systems/IRADS_Terrain.lua")

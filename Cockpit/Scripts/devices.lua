@@ -15,4 +15,6 @@ devices = {
     WEAPONS       = 11,
     MAP_CHARTS    = 12,
     ELECTRICAL    = 13,
+    RADIO         = 14,
+    INTERCOM      = 15,
 }

@@ -35,6 +35,7 @@ class CockpitSystemsTests(unittest.TestCase):
             function dispatch_action()end
             function get_absolute_model_time()return 43200 end
             function set_aircraft_draw_argument_value(a,v)args[a]=v end
+            function get_aircraft_draw_argument_value(a)return args[a] or 0 end
             function create_sound_host()return {create_sound=function()
                 return {play_once=function()end}end}end
             LockOn_Options={init_conditions={birth_place='AIR_HOT'}}
@@ -46,6 +47,54 @@ class CockpitSystemsTests(unittest.TestCase):
 
         lua.globals().dofile = load
         return lua, load
+
+    def test_gear_lights_extinguish_during_retraction(self):
+        lua,load=self.runtime();g=lua.globals()
+        g.LockOn_Options.init_conditions.birth_place='GROUND_HOT'
+        load(SCRIPTS/'Systems/lights_system.lua');g.post_initialize()
+        for arg in (0,3,5):g.args[arg]=1
+        g.update();self.assertEqual((g.args[190],g.args[192]),(1,1))
+        self.assertEqual((g['values'].F117_LIGHT_LANDING,g['values'].F117_LIGHT_TAXI),(1,1))
+        g.args[0]=.9;g.update()
+        self.assertEqual(g['values'].F117_LIGHT_TAXI,0)
+        self.assertEqual((g.args[190],g.args[192]),(1,0))
+        g.args[3]=.9;g.update();self.assertEqual(g.args[190],0)
+        for arg in (0,3,5):g.args[arg]=0
+        g.SetCommand(g.native_commands.TAXI_LIGHT,1)
+        g.SetCommand(g.native_commands.TAXI_LIGHT,1)
+        g.update();self.assertEqual((g.args[190],g.args[192]),(0,0))
+        for arg in (0,3,5):g.args[arg]=1
+        g.update();self.assertEqual((g.args[190],g.args[192]),(1,1))
+        self.assertEqual((g['values'].F117_LIGHT_LANDING,g['values'].F117_LIGHT_TAXI),(1,1))
+
+    def test_irads_housing_tracks_native_target_at_limited_rate(self):
+        lua,load=self.runtime();g=lua.globals()
+        load(SCRIPTS/'Systems/lights_system.lua');g.post_initialize()
+        g['values'].F117_IRADS_HOUSING_TARGET=.34
+        g.update();self.assertGreater(g.args[903],0);self.assertLess(g.args[903],.34)
+        for _ in range(40):g.update()
+        self.assertAlmostEqual(g.args[903],.34)
+        g['values'].F117_IRADS_HOUSING_TARGET=.69
+        g.update();self.assertGreater(g.args[903],.34);self.assertLess(g.args[903],.69)
+        g['values'].F117_IRADS_HOUSING_TARGET=0
+        for _ in range(80):g.update()
+        self.assertEqual(g.args[903],0)
+
+    def test_head_and_irads_network_sync_fit_limit_and_taxi_beam_is_focused(self):
+        text=(ROOT/'F-117-NightHawk.lua').read_text()
+        net=text.split('net_animation =',1)[1].split('}',1)[0]
+        args=[int(row.split(',')[0]) for row in net.splitlines() if row.strip()[:1].isdigit()]
+        self.assertIn(39,args);self.assertIn(903,args)
+        self.assertEqual(len(args),len(set(args)));self.assertLessEqual(len(args),32)
+        lua=LuaRuntime(unpack_returned_tuples=True)
+        lua.execute('lamp_prototypes={LFS_R_27_250={},LFS_P_27_450={}};function platypus_glow_lights()return {}end')
+        data=text.split('    lights_data =',1)[1].split('    wing_tip_pos',1)[0]
+        taxi=lua.execute('return {lights_data='+data+'}').lights_data.lights[6].lights[1]
+        self.assertEqual(taxi.direction.azimuth,0)
+        self.assertAlmostEqual(taxi.direction.elevation,math.radians(-1.5))
+        self.assertLessEqual(taxi.angle_max,math.radians(12))
+        self.assertLess(taxi.angle_min,taxi.angle_max)
+        self.assertEqual(taxi.angle_change_rate,0)
 
     def test_real_altitude_selector_drives_baro_and_radar_readouts(self):
         lua, load = self.runtime()

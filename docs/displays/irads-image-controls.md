@@ -1,6 +1,10 @@
 # IRADS brightness and contrast
 
-IRADS now starts at 45% display brightness by day (08:00â€“17:00) and 11% at
+Brightness spans 2.5–20%, with twenty-eight button steps of 0.625 percentage points.
+Axes use their full travel continuously, and the L bar spans the full range.
+Verify visual levels in DCS.
+
+IRADS now starts at 15% display brightness by day (08:00â€“17:00) and 6.5% at
 night (19:00â€“06:00), with linear transitions from 06:00â€“08:00 and 17:00â€“19:00.
 This uses local mission clock time, not calculated solar elevation. Contrast
 starts at 80% by day and 96% at night, with the same twilight transitions. These are initial tuning values for in-game review.
@@ -17,8 +21,8 @@ green 90 of 255 on top of that control. Symbols and the left EO repeater are una
 
 These use the stock I-251 brightness and contrast commands, listed in Controls under
 Throttle Grip / HOTAS / **F-117A IRADS** as IR Level and IR Gain, with matching axes.
-There is no reset command. Brightness steps by 5 percentage points within 8â€“100%; contrast steps
-by 5 points within 35â€“100%. Axis inputs map their full travel to these ranges.
+There is no reset command. Brightness steps by 0.625 percentage points within 2.5–20%; contrast steps
+by 5 points within 35–100%. Axis inputs map their full travel to these ranges.
 Manual settings remain until mission reload; changing sensor power,
 page or mission clock does not override them.
 

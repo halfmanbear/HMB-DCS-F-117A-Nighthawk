@@ -1,5 +1,5 @@
 -- Display power, staggered display boot and display data alignment.
--- Battery (stock Electric Power Switch) gates everything; the APU, an engine
+-- Battery (stock Electric Power Switch) gates everything; an engine
 -- generator or external ground power then powers the bus. Pages gate on the
 -- numeric params published here. Also the ground crew's power and air carts.
 dofile(LockOn_Options.script_path.."command_defs.lua")
@@ -17,6 +17,11 @@ local powered_time=nil -- seconds since bus power-up; nil while unpowered
 local aligned=false    -- hot/air start: aligned and operational from spawn
 local HOT_GRACE=2      -- seconds a hot start holds the generators online before RPM is trusted
 local hot_grace=0
+local irads_selected=false
+local irads_qualified=false -- both engines completed startup in this powered session
+local irads_time=nil
+local irads_aligned=false
+local IRADS_POWER_COMMAND=87 -- stock iCommandPlaneEOSOnOff, also seen by the EFM
 
 local mainpower=get_param_handle("mainpower")
 local battery_param=get_param_handle("F117_BATTERY")
@@ -50,6 +55,7 @@ for _,name in ipairs(DisplayBoot.DISPLAYS) do
 end
 
 dev:listen_command(Keys.PowerOnOff)
+dev:listen_command(IRADS_POWER_COMMAND)
 dev:listen_command(native_commands.APU_START)
 dev:listen_command(native_commands.APU_OFF)
 dev:listen_command(Keys.GroundPowerToggle)
@@ -123,7 +129,12 @@ local function publish()
     ground_power_param:set(ground.power and 1 or 0)
     ground_air_param:set(ground.air and 1 or 0)
     for name,p in pairs(displays) do
-        local v=aligned and powered and DisplayBoot.operational() or DisplayBoot.evaluate(name,powered_time)
+        local v
+        if name=="IRADS" then
+            v=irads_aligned and irads_time~=nil and DisplayBoot.operational() or DisplayBoot.evaluate(name,irads_time)
+        else
+            v=aligned and powered and DisplayBoot.operational() or DisplayBoot.evaluate(name,powered_time)
+        end
         p.state:set(v.state);p.on:set(v.state==DisplayBoot.OPERATIONAL and 1 or 0)
         p.stage:set(v.stage);p.progress:set(v.progress);p.fade:set(v.fade)
     end
@@ -138,6 +149,10 @@ function post_initialize()
     local hot=birth=="GROUND_HOT" or birth=="AIR_HOT"
     bus.set_battery(hot)
     aligned=hot
+    irads_selected=hot
+    irads_qualified=hot
+    irads_aligned=hot
+    irads_time=hot and 0 or nil
     bus.update(0,rpm())
     -- A hot start's engines are already at idle; hold the bus up in case
     -- engine RPM is not reported on the first frames.
@@ -150,7 +165,10 @@ function post_initialize()
 end
 
 function SetCommand(command,value)
-    if command==Keys.PowerOnOff then
+    if command==IRADS_POWER_COMMAND then
+        irads_selected=not irads_selected
+        if not irads_selected then irads_time=nil end
+    elseif command==Keys.PowerOnOff then
         bus.toggle_battery()
         message(bus.battery and "BATTERY ON" or "BATTERY OFF")
     elseif command==native_commands.APU_START or command==native_commands.APU_OFF then
@@ -186,6 +204,24 @@ function update()
     else
         powered_time=nil
         aligned=false
+    end
+    local l,r=rpm()
+    local starting=false
+    for _,side in ipairs({"L","R"}) do
+        local phase=start_phase[side]:get()
+        if phase>=1 and phase<=3 then starting=true end
+    end
+    local both_running=(start_phase.L:get()==4 and start_phase.R:get()==4)
+        or (l>=60 and r>=60)
+    if not now then irads_qualified=false
+    elseif both_running and not starting then irads_qualified=true end
+    local available=now and irads_selected and irads_qualified and not starting
+    if available then
+        irads_time=irads_time and irads_time+update_time_step or 0
+        if irads_time>=DisplayBoot.TIMELINE.IRADS.ready then irads_aligned=true end
+    else
+        irads_time=nil
+        if not now then irads_aligned=false end
     end
     publish()
     report_engine_start()

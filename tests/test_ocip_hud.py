@@ -130,6 +130,22 @@ class OcipHudTests(unittest.TestCase):
         update=factory(lua.globals().sensor,lua.table_from(options or {}))
         return lua,update
 
+    def test_waypoint_box_projects_destination_and_clears_when_route_invalid(self):
+        lua,update=self.motion_runtime();g=lua.globals()
+        lua.execute('sensor.getSelfCoordinates=function()return 0,1000,0 end')
+        g.inputs.F117_NAV_VALID=1
+        g.inputs.F117_NAV_DEST_X=10000;g.inputs.F117_NAV_DEST_Y=1000;g.inputs.F117_NAV_DEST_Z=100
+        update(.05)
+        self.assertEqual(g.output.F117_OCIP_DEST_VALID,1)
+        self.assertAlmostEqual(g.output.F117_OCIP_DEST_AZ,.01)
+        self.assertAlmostEqual(g.output.F117_OCIP_DEST_EL,0)
+        g.inputs.F117_INS_BIAS_E=100;update(.05)
+        self.assertAlmostEqual(g.output.F117_OCIP_DEST_AZ,0)
+        g['values'].yaw=-math.pi/2;update(.05)
+        self.assertLess(g.output.F117_OCIP_DEST_AZ,0)
+        g.inputs.F117_NAV_VALID=0;update(.05)
+        self.assertEqual(g.output.F117_OCIP_DEST_VALID,0)
+
     def test_native_move_gains_use_metres_and_match_descent_angle(self):
         from check_display_calibration import runtime
         from layout_editor import convert

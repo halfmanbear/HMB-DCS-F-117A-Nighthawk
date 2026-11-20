@@ -441,7 +441,7 @@ def move_source(source, element, dx, dy):
         edits.append((a, b, new))
     for a, b, new in reversed(edits):
         source = source[:a] + new + source[b:]
-    return source
+    return sync_hud_masks(source)
 
 
 def _expression(value, factor=1, offset=0):
@@ -527,6 +527,108 @@ def recolor_selection(source, elements, model, hex_color):
     return source
 
 
+PAGE_SCALE_PATTERN = re.compile(r'(?m)^local F117_layout_restore = dofile\(LockOn_Options.script_path\.\."Indicator/layout_adjust.lua"\).begin_page\(([0-9.eE+\-]+)\) -- Layout Studio page scale$')
+
+
+def layout_scale(source):
+    match=PAGE_SCALE_PATTERN.search(source)
+    return float(match[1]) if match else 1.0
+
+
+def scale_page_source(source, factor):
+    if not math.isfinite(factor) or factor<=0:
+        raise ValueError('Page scale must be a positive finite percentage.')
+    line=('local F117_layout_restore = dofile(LockOn_Options.script_path.."Indicator/layout_adjust.lua")'
+          f'.begin_page({factor:.12g}) -- Layout Studio page scale')
+    if PAGE_SCALE_PATTERN.search(source):return sync_hud_masks(PAGE_SCALE_PATTERN.sub(lambda _:line,source))
+    return sync_hud_masks(line+'\n'+source.rstrip()+'\nF117_layout_restore() -- Layout Studio page scale end\n')
+
+
+def sync_hud_masks(source):
+    """Rebuild HUD readout exclusion zones from the edited fixed artwork.
+
+    Store rectangles in unscaled helper coordinates: begin_page then applies
+    the same page scale to artwork and masks once. Moving/conformal groups
+    and stencil meshes are deliberately excluded from fixed readout masks.
+    """
+    pattern=r'(?ms)^local zones=\{.*?\}\s*\n(?=for _,z in ipairs\(zones\))'
+    if 'OCIP_ROOT' not in source or not re.search(pattern,source):return source
+    model=Model('HUD',source)
+    unit=float(model.lua.globals().OCIP_U)*layout_scale(source)
+    states={e['name']:state for e,state in model.scene(DEFAULTS)}
+    zones=[]
+    for e in model.elements:
+        if e.get('parent_element')!='OCIP_ROOT' or e.get('isvisible') is False:continue
+        kind=e.get('_etype')
+        if kind not in ('ceSMultiLine','ceStringSLine','ceStringPoly'):continue
+        x,y=(e.get('init_pos') or [0,0])[:2]
+        if kind in ('ceStringSLine','ceStringPoly'):
+            sd=e.get('stringdefs') or []
+            if len(sd)<2:continue
+            text=states[e['name']][5] or e.get('value') or ''
+            # Reserve the full numeric field, independent of current preview
+            # values (CAS/ALT leading zeros, signed VVI, four-digit GS).
+            lengths=[]
+            for fmt in e.get('formats') or []:
+                expanded=re.sub(r'%[+\- 0#]*(\d*)(?:\.\d+)?[dfgiouxXeE]',
+                    lambda m:'8'*max(int(m[1] or 0),5 if '+' in m[0] else 4),fmt)
+                lengths.append(len(expanded))
+            count=max([len(text),*lengths,1])
+            w=count*sd[1]+max(0,count-1)*(sd[2] if len(sd)>2 else 0)
+            h=sd[0]
+            alignment=e.get('alignment','CenterCenter')
+            ax=0 if alignment.startswith('Left') else 1 if alignment.startswith('Right') else .5
+            ay=1 if alignment.endswith('Top') else 0 if alignment.endswith('Bottom') else .5
+            points=[(-ax*w,-ay*h),((1-ax)*w,(1-ay)*h)]
+        else:points=e.get('vertices') or []
+        if not points:continue
+        angle=math.radians(component(e.get('init_rot'),0))
+        ca,sa=math.cos(angle),math.sin(angle)
+        corners=([(a,b) for a in (points[0][0],points[1][0]) for b in (points[0][1],points[1][1])]
+                 if kind.startswith('ceString') else points)
+        xs=[(x+p[0]*ca-p[1]*sa)/unit for p in corners]
+        ys=[(y+p[0]*sa+p[1]*ca)/unit for p in corners]
+        pad=2+float(e.get('thickness') or 0)*.5
+        zones.append(((min(xs)+max(xs))/2,(min(ys)+max(ys))/2,
+                      max(xs)-min(xs)+2*pad,max(ys)-min(ys)+2*pad))
+    if not zones:raise ValueError('HUD readout masks have no fixed artwork to follow.')
+    replacement='local zones={ -- Layout Studio: generated from fixed artwork; do not position separately\n'
+    replacement+=''.join('    {'+','.join(f'{v:.10g}' for v in z)+'},\n' for z in zones)+'}\n'
+    return re.sub(pattern,lambda _:replacement,source,count=1)
+
+
+def thicken_selection(source, elements, model, factor):
+    if not math.isfinite(factor) or factor<=0:raise ValueError('Thickness factor must be positive.')
+    chosen={e['name'] for e in elements}
+    edits={};unsupported=0
+    ts=tokens(source)
+    for e in model.elements:
+        parent=e.get('parent_element');seen=set()
+        while parent in model.by_name and parent not in seen and parent not in chosen:
+            seen.add(parent);parent=model.by_name[parent].get('parent_element')
+        if e['name'] not in chosen and parent not in chosen:continue
+        if not (e.get('thickness') or e.get('width')):
+            if e.get('material'):unsupported+=1
+            continue
+        word,args=source_call(source,e)
+        if not word or not args:raise ValueError('Select a drawing helper or edit thickness in Lua.')
+        opening=next(i for i,t in enumerate(ts) if t[1]==args[0][0])-1
+        depth=0;end=None
+        for token,_,stop in ts[opening:]:
+            if token=='(':depth+=1
+            elif token==')':
+                depth-=1
+                if depth==0:end=stop;break
+        start=ts[opening-1][1]
+        edits[start,end]=(f'dofile(LockOn_Options.script_path.."Indicator/layout_adjust.lua").weight('
+                          f'function() return {source[start:end]} end, {factor:.12g})')
+    if not edits:raise ValueError('Selection has no stroke text or lines with editable thickness.')
+    ordered=sorted(edits)
+    if any(a[1]>b[0] for a,b in zip(ordered,ordered[1:])):raise ValueError('Selected helper calls overlap.')
+    for (a,b),value in sorted(edits.items(),reverse=True):source=source[:a]+value+source[b:]
+    return sync_hud_masks(source),unsupported
+
+
 def transform_selection(source, elements, model, params, dx=0, dy=0, factor=1, pivot=(0,0)):
     """One atomic source edit, deduplicating loops and selected parent/children.
 
@@ -535,6 +637,11 @@ def transform_selection(source, elements, model, params, dx=0, dy=0, factor=1, p
     """
     if not math.isfinite(factor) or factor<=0: raise ValueError('Scale must be positive.')
     states={e['name']:state for e,state in model.scene(params)}
+    k=layout_scale(source)
+    if k!=1:
+        states={name:(state[0]/k,state[1]/k,*state[2:]) for name,state in states.items()}
+        dx,dy=dx/k,dy/k
+        pivot=(pivot[0]/k,pivot[1]/k)
     chosen={e['name']:e for e in elements}
     def ancestors(e):
         seen=set()
@@ -609,7 +716,7 @@ def transform_selection(source, elements, model, params, dx=0, dy=0, factor=1, p
     for a,b in zip(ordered,ordered[1:]):
         if a[1]>b[0]:raise ValueError('Selected source expressions overlap. Select their parent instead.')
     for (a,b),value in sorted(edits.items(),reverse=True):source=source[:a]+value+source[b:]
-    return source
+    return sync_hud_masks(source)
 
 
 @dataclass
@@ -954,6 +1061,18 @@ class Editor:
         color_entry.bind('<Return>',lambda _:self.apply_color())
         ttk.Button(color_row,text='Apply to selected',command=self.apply_color).pack(side='left')
         ttk.Button(right,text='Select all symbols',command=self.select_all_symbols).pack(fill='x')
+        weight_row=ttk.Frame(right);weight_row.pack(fill='x',pady=5)
+        ttk.Label(weight_row,text='Selection thickness').pack(side='left')
+        ttk.Button(weight_row,text='Thinner /1.1',command=lambda:self.apply_weight(1/1.1)).pack(side='left')
+        ttk.Button(weight_row,text='Thicker +10%',command=lambda:self.apply_weight(1.1)).pack(side='left')
+        scale_row=ttk.Frame(right);scale_row.pack(fill='x',pady=5)
+        ttk.Label(scale_row,text='Whole page scale %').pack(side='left')
+        self.page_percent=tk.StringVar(value='100')
+        page_entry=ttk.Entry(scale_row,textvariable=self.page_percent,width=9)
+        page_entry.pack(side='left',padx=5)
+        page_entry.bind('<Return>',lambda _:self.apply_page_scale())
+        ttk.Button(scale_row,text='Apply',command=self.apply_page_scale).pack(side='left')
+        ttk.Label(right,text='Uniform scale about page origin; 100% restores original size.',wraplength=400).pack(anchor='w')
 
         ttk.Label(right,text='LUA SOURCE  |  Ctrl+Enter previews, Ctrl+S saves').pack(anchor='w',pady=(12,5))
         self.code=tk.Text(right,wrap='none',undo=True,font=('Consolas',10),tabs=('4c',))
@@ -1009,10 +1128,14 @@ class Editor:
 
     def compile(self):
         try:
-            model=Model(self.current,self.text(),self.screen.get())
+            source=sync_hud_masks(self.text()) if self.current=='HUD' else self.text()
+            model=Model(self.current,source,self.screen.get())
         except Exception as exc:
             self.message('Lua error - last successful preview retained: '+str(exc));return False
+        if source!=self.text():
+            self.code.delete('1.0','end');self.code.insert('1.0',source)
         self.models[self.current]=model;self.sources[self.current]=self.text()
+        self.page_percent.set(f'{layout_scale(self.text())*100:.10g}')
         self.fill_params();self.redraw()
         return True
 
@@ -1200,6 +1323,34 @@ class Editor:
     def select_all_symbols(self):
         self.selection=self.selectable_hits()
         self.selection_box()
+
+    def apply_adjustment(self, action):
+        if self.text()!=self.sources.get(self.current):
+            self.message('Preview source edits before adjusting the layout.');return
+        old=self.text()
+        try:
+            new,note=action(old)
+            Model(self.current,new,self.screen.get())
+        except Exception as exc:
+            self.message('Layout unchanged: '+str(exc));return
+        if new==old:return
+        self.undo_stack.append((self.current,old))
+        self.code.delete('1.0','end');self.code.insert('1.0',new);self.code.edit_reset()
+        self.compile();self.message(note+' Use Save Lua to apply in DCS.')
+
+    def apply_page_scale(self):
+        self.apply_adjustment(lambda source:(scale_page_source(source,float(self.page_percent.get())/100),
+            'Whole page scaled uniformly, including hidden elements.'))
+
+    def apply_weight(self,factor):
+        if not self.selection:
+            self.message('Select one or more elements first (Shift+click or box drag).');return
+        if self.current in PREVIEW_ONLY:
+            self.message('Edit EO symbol thickness on the Central Sensor Display IRADS page.');return
+        def action(source):
+            new,skipped=thicken_selection(source,[h.element for h in self.selection],self.models[self.current],factor)
+            return new,f'Thickness changed. {skipped} elements without stroke thickness skipped; shared source calls change together.'
+        self.apply_adjustment(action)
 
     def apply_color(self):
         if not self.selection:

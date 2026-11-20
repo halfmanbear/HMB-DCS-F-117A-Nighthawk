@@ -28,6 +28,14 @@ function M.new(deps)
     local held = {up = false, down = false, left = false, right = false}
     local axis_h, axis_v = 0, 0
     local pressed, designates = false, 0
+    local depress_logs=0
+    local function report_depress(edge)
+        if log and log.write and depress_logs<24 then
+            depress_logs=depress_logs+1
+            local owner=state==M.IRADS and "IRADS" or state==M.HUD and "HUD" or state==M.MAP and "MAP" or "NONE"
+            log.write("F117_DESIGNATE",log.INFO,"TDC "..edge.." owner="..owner)
+        end
+    end
 
     local EFM_DIRECTION = {
         up = hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_UP,
@@ -97,12 +105,14 @@ function M.new(deps)
             return true
         end
         if command == native_commands.TDC_DEPRESS_ON then
+            report_depress("press")
             if state == M.IRADS then
                 dispatch(nil, hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS, 1.0)
             elseif state ~= M.NONE then pressed = true end
             return true
         end
         if command == native_commands.TDC_DEPRESS_OFF then
+            report_depress("release")
             if state == M.IRADS then
                 dispatch(nil, hotas_commands.THROTTLE_DESIGNATOR_CONTROLLER_DEPRESS, 0.0)
             elseif pressed and state ~= M.NONE then

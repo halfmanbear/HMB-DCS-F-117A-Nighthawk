@@ -31,7 +31,7 @@
 -- a flat sheet of hot gas instead of one round plume. Slot centreline taken from the model.
 local PLATYPUS_SLOT = {inboard = {-5.29, -0.155, 0.66}, outboard = {-3.19, -0.155, 2.48}}
 local PLATYPUS_SEGMENTS = 1 -- nozzles per slot; each one adds a heat-blur emitter, so more means a denser haze
-local PLATYPUS_SPLAY = math.rad(30) -- exhaust flow turns this far outboard of straight aft
+local PLATYPUS_SPLAY = math.rad(20) -- exhaust flow turns this far outboard of straight aft
 
 -- Point on a slot centreline: t = 0 inboard end, 1 outboard end; side -1 left, +1 right;
 -- aft moves the point behind the slot face, in metres.
@@ -62,22 +62,22 @@ end
 -- Faint heat glow off the hot slot and lower lip at night. Two dim orange lights per slot,
 -- just behind the slot face. Brightness follows draw arguments 1002 (left) and 1003 (right),
 -- which Cockpit/Scripts/Systems/lights_system.lua drives from engine rpm.
-local function platypus_glow_lights(diag_color)
-    local lights = {}
-    for engine, side in ipairs({-1, 1}) do
-        for _, t in ipairs({0.3, 0.7}) do
-            lights[#lights + 1] = {
-                typename = "omnilight",
-                position = platypus_point(t, side, 0.15),
-                argument = (not diag_color) and (1001 + engine) or nil, -- TEMP TEST: diag lights have no argument
-                color = diag_color or {1.0, 0.30, 0.08, 0.65}, -- TEMP TEST was 0.12; dull orange; fourth value is brightness
-                range = 4.0, -- TEMP TEST was 1.8; m: lights the slot lip and aft deck, not the ground
-                movable = false,
-            }
-        end
-    end
-    return {typename = "collection", lights = lights}
-end
+--local function platypus_glow_lights(diag_color)
+--    local lights = {}
+--    for engine, side in ipairs({-1, 1}) do
+--        for _, t in ipairs({0.3, 0.7}) do
+--            lights[#lights + 1] = {
+--                typename = "omnilight",
+--                position = platypus_point(t, side, 0.15),
+--                argument = (not diag_color) and (1001 + engine) or nil, -- TEMP TEST: diag lights have no argument
+--                color = diag_color or {1.0, 0.30, 0.08, 0.65}, -- TEMP TEST was 0.12; dull orange; fourth value is brightness
+--                range = 4.0, -- TEMP TEST was 1.8; m: lights the slot lip and aft deck, not the ground
+--                movable = false,
+--            }
+--        end
+--    end
+--    return {typename = "collection", lights = lights}
+--end
 
 F_117_NightHawk = {
     ---------------------------------------------------------------------------
@@ -138,6 +138,14 @@ F_117_NightHawk = {
     ---------------------------------------------------------------------------
     HumanCockpit = true, -- Makes the aircraft flyable by players in the ME
     HumanCockpitPath = current_mod_path .. "/Cockpit/Scripts", -- Cockpit script folder
+    -- Generic player radio belongs to the aircraft descriptor (read before comm.lua).
+    HumanRadio = {
+        frequency = 251.000,
+        editable = true,
+        maxFrequency = 399.975,
+        minFrequency = 30.000,
+        modulation = MODULATION_AM,
+    },
     HumanCommPanelPath = current_mod_path .. "/comm.lua", -- Radio menu script for this aircraft
     Waypoint_Custom_Panel = true, -- Shows the custom waypoint properties panel in the ME
     --_MAC_compatible = true, -- FC3 profile inheritance, not used with the EFM
@@ -194,8 +202,8 @@ F_117_NightHawk = {
         4,  -- Right gear strut
         5,  -- Left gear
         6,  -- Left gear strut
-        9,  -- (Coupled) right rudder and elevon
-        10, -- (Coupled) left rudder and elevon
+        --9, -- Legacy coupled control, not driven by the current EFM
+        --10, -- Legacy coupled control, not driven by the current EFM
         11, -- Right elevon
         12, -- Left elevon
         15, -- Right elevon (mixed)
@@ -208,19 +216,20 @@ F_117_NightHawk = {
         28, -- Right bay door and trapeze
         35, -- Drag chute
         38, -- Canopy
+        39, -- DCS player head yaw (mouse look, head tracking and VR)
         --50, -- Pilot remove
         101,-- Nose wheel rotate
         102,-- Left wheel rotate
         103,-- Right wheel rotate
         --114,-- Remove entire cockpit
-        190,-- Taxi light
+        190,-- Main-gear landing lights
         191,-- Wing lights
-        192,-- Landing lights
+        192,-- Nose-gear taxi light
         193,-- Beacon light
         --224,-- Left wing damage
         --247,-- Left rudder damage
         --248,-- Right rudder damage
-        --903,-- IRADS rotate
+        903,-- IRADS housing elevation/stow, driven from the native sensor LOS
         324, -- Left inlet fan rotate
         325, -- Right inlet fan rotate
         1001,-- Beacon rotate
@@ -238,13 +247,32 @@ F_117_NightHawk = {
     lights_data = {
         typename = "collection",
         lights = {
-            [WOLALIGHT_CABIN_WORK or 14] = {typename = "collection", lights = {
-                platypus_glow_lights(),
-                platypus_glow_lights({1.0, 1.0, 0.0, 0.65}), -- TEMP TEST yellow, group 14, no argument
+            -- Nose-wheel taxi beam: aircraft axes +X forward, +Y up, +Z right.
+            -- A real projector is required; the EDM light nodes contain only placeholders.
+            [WOLALIGHT_LANDING_LIGHTS or 2] = {typename="collection", lights={
+                {typename="spotlight", position={-.2,-1.65,-2.1},
+                 direction={azimuth=0,elevation=math.rad(-3)}, argument=190,
+                 proto=lamp_prototypes.LFS_P_27_450, range=600,
+                 angle_min=math.rad(6),angle_max=math.rad(18),exposure={{0,.9,1}}},
+                {typename="spotlight", position={-.2,-1.65,2.1},
+                 direction={azimuth=0,elevation=math.rad(-3)}, argument=190,
+                 proto=lamp_prototypes.LFS_P_27_450, range=600,
+                 angle_min=math.rad(6),angle_max=math.rad(18),exposure={{0,.9,1}}},
             }},
-            [12] = platypus_glow_lights({0.0, 1.0, 0.0, 0.65}), -- TEMP TEST green, group 12, no argument
-            [3] = platypus_glow_lights({0.0, 0.3, 1.0, 0.65}), -- TEMP TEST blue, group 3, no argument
-            [9] = platypus_glow_lights({1.0, 0.0, 1.0, 0.65}), -- TEMP TEST magenta, group 9, no argument
+            [WOLALIGHT_TAXI_LIGHTS or 6] = {typename="collection", lights={
+                {typename="spotlight", position={5.18,-1.65,0},
+                 direction={azimuth=0,elevation=math.rad(-1.5)}, argument=192,
+                 proto=lamp_prototypes.LFS_R_27_250, range=450,
+                 angle_min=math.rad(5), angle_max=math.rad(12), angle_change_rate=0,
+                 exposure={{0,0.9,1.0}}},
+            }},
+            --[WOLALIGHT_CABIN_WORK or 14] = {typename = "collection", lights = {
+            --    platypus_glow_lights(),
+            --    platypus_glow_lights({1.0, 1.0, 0.0, 0.65}), -- TEMP TEST yellow, group 14, no argument
+            --}},
+            --[12] = platypus_glow_lights({0.0, 1.0, 0.0, 0.65}), -- TEMP TEST green, group 12, no argument
+            --[3] = platypus_glow_lights({0.0, 0.3, 1.0, 0.65}), -- TEMP TEST blue, group 3, no argument
+            --[9] = platypus_glow_lights({1.0, 0.0, 1.0, 0.65}), -- TEMP TEST magenta, group 9, no argument
         },
     },
     wing_tip_pos = {-6.627, -0.265, 6.6}, -- Wingtip position for visual effects

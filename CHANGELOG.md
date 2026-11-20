@@ -5,6 +5,17 @@ matching EFM build.
 
 ## Check in DCS
 
+- Exterior animations: check IRADS housing 903 follows sensor elevation/stows off,
+  and native pilot head yaw 39 follows player head movement locally and over the network.
+- Gear lights: check the focused 12-degree nose taxi beam and landing beam placement at night,
+  then retract with switches on and confirm the cockpit and bomb bay stay dark.
+- **EFM** IRADS scan return now holds the aircraft forward axis until slew/designate.
+  Check gradual return, heading/pitch/roll changes, then first TDC slew without a jump.
+  Native gimbal motors and the slew cache now reset at home; the v27 EFM also powers
+  the native gear projector groups from the Lua gear interlocks.
+- Check the active-waypoint HUD box, IRADS off/on without repeated BIT, and the
+  communications quick menu with the generic radio declared on the aircraft.
+
 - HUD: the OCIP conformal correction, and the IRADS cursor and 10 mrad lock box,
   have not been seen in DCS (`docs/displays/hud-ocip-design.md`).
 - Moving map: the chart backend on the centre screen needs an in-DCS check. The

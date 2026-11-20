@@ -60,6 +60,7 @@ class InsAlignmentTests(unittest.TestCase):
         self.assertEqual(v.F117_ALIGN_INS_DONE, 0)
         g.SetCommand(keys.PowerOnOff, 1)
         g.SetCommand(g.native_commands.APU_START, 1)
+        g.rpm_r = .60  # main electrical power comes from the first engine generator
         run(g, 20)
         self.assertEqual(v.mainpower, 1)
         self.assertEqual(v.F117_ALIGN_INS_DONE, 0)  # heading still aligning (5 time constants = 50 s)
@@ -91,7 +92,7 @@ class PowerTests(unittest.TestCase):
         run(g, 7.5)
         self.assertEqual((v.mainpower, v.F117_APU_STATE), (0, 1))
         run(g, 1)
-        self.assertEqual((v.mainpower, v.F117_APU_STATE), (1, 2))
+        self.assertEqual((v.mainpower, v.F117_APU_STATE), (0, 2))
         g.SetCommand(keys.PowerOnOff, 1)  # battery off drops the APU too
         g.update()
         self.assertEqual((v.mainpower, v.F117_APU_STATE), (0, 0))
@@ -323,7 +324,7 @@ class BootPageTests(unittest.TestCase):
     def test_bit_screen_replaces_formats_until_operational(self):
         for entry, display, prefix in (('MFD/Indicator/Left/Left_base_page.lua', 'CMDI_L', 'F117_left_BOOT'),
                                        ('MFD/Indicator/Right/Right_base_page.lua', 'CMDI_R', 'F117_right_BOOT'),
-                                       ('MFD/Indicator/MFD_base_page.lua', 'SD', 'F117_SD_BOOT'),
+                                       ('MFD/Indicator/MFD_base_page.lua', 'IRADS', 'F117_SD_BOOT'),
                                        ('DEP/Indicator/DEP_base_page.lua', 'DEP', 'F117_DEP_BOOT')):
             with self.subTest(display=display):
                 model = self.composite(entry)
@@ -333,6 +334,9 @@ class BootPageTests(unittest.TestCase):
                                                'F117_ON_' + display: 1 if state == 3 else 0,
                                                'F117_BOOT_STAGE_' + display: stage,
                                                'F117_BOOT_PROGRESS_' + display: 40})
+                    if display == 'IRADS':
+                        # The EFM publishes effective sensor power only after its BIT.
+                        params['F117_IRADS_POWER'] = 1 if state == 3 else 0
                     return [e for e, s in model.scene(params) if s[3] and e['_etype'] != 'ceSimple']
                 operational = scene(3)
                 self.assertTrue(operational)
