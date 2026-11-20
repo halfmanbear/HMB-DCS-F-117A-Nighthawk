@@ -14,7 +14,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  release_push:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.release_push.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Skip branch builds included in a stable release push
+        id: release_push
+        shell: bash
+        run: |
+          set -euo pipefail
+          skip=false
+          if [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF_TYPE" == branch ]]; then
+            version=$(python -c 'import re; from pathlib import Path; print(re.search(r"(?m)^\s*version\s*=\s*[\x22\x27](\d+\.\d+\.\d+)[\x22\x27]", Path("entry.lua").read_text()).group(1))')
+            tag_commit=$(git rev-parse --verify "refs/tags/v${version}^{commit}" 2>/dev/null || true)
+            main_commit=$(git rev-parse refs/remotes/origin/main)
+            if [[ "$tag_commit" == "$GITHUB_SHA" && "$main_commit" == "$GITHUB_SHA" ]]; then
+              skip=true
+            fi
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+
   package:
+    needs: release_push
+    if: needs.release_push.outputs.skip != 'true'
     runs-on: windows-2022
     timeout-minutes: 45
     outputs:
@@ -140,6 +167,7 @@ jobs:
               --notes 'Development build. Matching dev EFM source was built as Release x64. See the packaged build-manifest.json for both commits and DLL checksum.'
           else
             gh release create "$GITHUB_REF_NAME" dist/* --verify-tag \
+              --latest \
               --title "F-117A ${VERSION}" \
               --notes 'Runtime package with the matching main EFM source built as Release x64. See the packaged build-manifest.json for both commits and DLL checksum.'
           fi

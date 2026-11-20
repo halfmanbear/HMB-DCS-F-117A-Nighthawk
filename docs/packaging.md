@@ -68,6 +68,28 @@ promise to remove arbitrary metadata embedded in third-party assets.
 
 ## Enable and use
 
+For the local stable-release shortcut, run the script kept outside this repository
+from the mod folder, after committing all changes on `dev`:
+
+```powershell
+pwsh ../promote_release.ps1 -DryRun
+pwsh ../promote_release.ps1
+```
+
+The script reads the committed `entry.lua` version and rejects existing local or
+remote tags/releases named either `X.Y.Z` or `vX.Y.Z`. It requires remote `main`
+and `dev`, and local `main`, to be ancestors of local `dev`. It first fast-forwards
+the EFM repository's `main` to its `dev`, then atomically pushes the mod's `dev`,
+`main`, and new `vX.Y.Z` tag. Both mod branches end at the same commit without a
+merge commit or force push. Direct pushes to `main` must be permitted.
+
+The workflow skips the branch builds when that same commit is on `main` and has
+the matching stable tag; only the tag build packages and publishes the stable
+release. Ordinary dev pushes still create prereleases. The script does not disable
+the workflow. EFM promotion and the mod push are separate operations: if the mod
+push fails, EFM `main` may already have advanced. If the tag build fails, fix or
+rerun that build rather than running the promotion script again with the same tag.
+
 Commit and push the workflow, packager, targets, and tests along with all intended
 runtime changes. In particular, commit both `IRADS_Terrain.lua` and
 `IRADS_Diagnostics.lua` if `Displays.lua` loads them; the packager rejects missing
