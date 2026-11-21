@@ -63,6 +63,22 @@ paired opening; missing individual bay information cannot be recovered from 26.
 AI likewise opens both bays through DCS's standard channel, without cockpit Lua.
 The model and EFM DLL must be updated together for independent player motion.
 
+Player delivery replay is a separate path from bay animation. In the 2026-11-21
+15:43 flight / 15:47 replay (`dcs.log.old`), the live final designation was
+(-206487.887, 1955.333, -212372.295), while replay used
+(-205809.047, 2012.411, -211939.542). The EFM's native log records a successful
+live launch, but replay leaves READY (9) for OUT OF ZONE (8) with consent held
+and never attempts launch. Live requests used the rendered optical ray; external
+replay used the raw sensor platform ray, which omits native optical extrapolation.
+The EFM now samples `avTVSensor::get_camera_position` every simulation frame and
+uses that optical ray for designation regardless of render freshness. Release
+gates are unchanged. `tests/replay_designate_regression.py` in the EFM repository
+executes the production sampler and checks view-independent ray selection,
+duplicate replay presses, invalid data and power inhibition. Release x64 builds
+and these offline checks pass; a new DCS flight/replay is still required to
+validate native optical timing and weapon release in game. Existing tracks may
+retain divergence from their original render-dependent designation.
+
 The 2026-11-21 DCS bay-shot flight and its `.trk` replay both passed all six
 states (closed, both open, right only, both open again, left only, closed).
 Replay used `bay_shots.py --replay <track>` with no flight or bay commands.
