@@ -212,8 +212,9 @@ F_117_NightHawk = {
         22, -- Refuel bay
         --25, -- Hook; the main .edm doesn't have this integrated yet
         26, -- Bomb bay: either bay open; DCS draws the stores only while it is
-        27, -- Left bay door and trapeze
-        28, -- Right bay door and trapeze
+        904, -- Left bay door and trapeze (custom argument)
+        905, -- Right bay door and trapeze (custom argument)
+        906, -- Cancels shared arg-26 motion when independent bay positions are supplied
         35, -- Drag chute
         38, -- Canopy
         39, -- DCS player head yaw (mouse look, head tracking and VR)
@@ -230,7 +231,7 @@ F_117_NightHawk = {
         --247,-- Left rudder damage
         --248,-- Right rudder damage
         903,-- IRADS housing elevation/stow, driven from the native sensor LOS
-        324, -- Left inlet fan rotate
+        --324, -- Left inlet fan rotate; slot used by independent-bay fallback cancellation
         325, -- Right inlet fan rotate
         1001,-- Beacon rotate
         1002,-- Left platypus heat glow

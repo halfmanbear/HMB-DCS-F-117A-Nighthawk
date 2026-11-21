@@ -38,14 +38,45 @@ isn't in `docs/reference`.
 
 | Layer | Behaviour |
 |---|---|
-| Model | Left bay on arg 27, right bay on arg 28. Each opens its door over 0 to 0.7 and lowers its trapeze over 0.6 to 1. `Pylon1` is under 27 and `Pylon2` under 28. The lights in the bay switch on at 0.4. Nothing is animated by arg 26. Bay size is under [Bay size and store fit](#bay-size-and-store-fit). |
-| EFM | One servo per bay, two seconds for the full travel. Draw args 27 and 28, and arg 26 reads the larger of the two. DCS draws the stores only while the standard bay arg 26 is open, so without it the store of an open bay vanished whenever the other bay was shut (seen in DCS on 2026-11-08). Positions are published as `F117_BAY_L` and `F117_BAY_R`. `net_animation` carries 26, 27 and 28. |
+| Model | Left bay on arg 904, right bay on arg 905. Each opens its door over 0 to 0.7 and lowers its trapeze over 0.6 to 1. Both also animate from standard arg 26, with inverse motion on 906. When the EFM supplies 906 = 26, the shared motion cancels and only the individual positions apply. With only 26 supplied, both doors and trapezes move together, including the pylon connectors. Interior lamps follow 26 and switch on at 0.4. Bay size is under [Bay size and store fit](#bay-size-and-store-fit). |
+| EFM | One servo per bay, two seconds for the full travel. Draw args 904 and 905, with 26 and 906 both reading the larger of the two. DCS draws the stores only while standard arg 26 is open. Positions are published as `F117_BAY_L` and `F117_BAY_R`. `net_animation` carries 26, 904, 905 and 906; the left fan's network slot was reassigned to stay within 32 entries. |
 | Pickle | Opens the bay of the selected store only. The store is released when that bay is fully open. The bay then closes one second after release. After a release `Weapons.lua` steps to the next loaded station, so the next pickle opens the other bay, and the first bay's close timer keeps running. |
 | Manual | A bay opened by hand is never closed by a pickle. Any manual bay command, a change of Master Arm and a session restart end an automatic sequence: the doors the pickle opened close. |
 | Drag and yaw | Bay drag is shared between the bays and totals 0.015 with both open, as before. A bay open more than the other adds a yaw term sized for one degree of sideslip, toward the open side. The size is from the manual, and the sign is a choice (the extra drag on that side). |
 | Lights | `Systems/bomb_bay.lua` turns each bay position into `F117_BAY_L_DOOR`, `F117_BAY_L_TRAP`, `F117_BAY_R_DOOR` and `F117_BAY_R_TRAP`: 0 off, 1 in transit (flashing), 2 steady. No cockpit model uses them yet. |
 
 ## Bay size and store fit
+
+### Replay and AI fallback (2026-11-21)
+
+The previous model used 27/28 only, so an AI or replay driving only DCS's standard
+bay argument 26 could release stores through closed doors. The replacement uses
+904/905/906, absent from both the local `dcs-opensource-modding-guide` reserved
+argument list and the [older animation list](https://dcs-modding-guideline.fandom.com/wiki/Animation_Arguments_for_Aircraft).
+The latter lists 27 as country and 28 as right afterburner, but warns its entries
+are unverified; a DCS overwrite of those arguments has not been established here.
+
+`tools/models/weapon_bay_replay.py` applies the animation-only conversion after
+the bay split/enlargement export. It checks 441 asymmetric EFM positions and 101
+arg-26-only positions per transform. Old tracks that contain only 26 can show
+paired opening; missing individual bay information cannot be recovered from 26.
+AI likewise opens both bays through DCS's standard channel, without cockpit Lua.
+The model and EFM DLL must be updated together for independent player motion.
+
+The 2026-11-21 DCS bay-shot flight and its `.trk` replay both passed all six
+states (closed, both open, right only, both open again, left only, closed).
+Replay used `bay_shots.py --replay <track>` with no flight or bay commands.
+Screenshots and logs are in `tools/missions/results/bays/` and `bays_replay/`.
+The AI Mk-82 check (`tools/missions/ai_bay_test.py`) also opened arg 26 to 1,
+released `Mk_82` with arg 26 = 1, then closed it. Its custom args 904/905/906
+stayed at zero throughout, verifying the standard-channel fallback. Results are
+in `tools/missions/results/bays_ai/ai.log`.
+
+The focused bay/damage suite passes (16 tests). The wider weapon-delivery script
+passes its release-gate checks but its separate native-cockpit contract stub
+does not compile (`Cc_cockpit_context_layout` missing). The Lua-copy audit also
+reports pre-existing differences in device_init, MFD_indication_page, Electrical,
+and lights_system; the bay Lua copy matches. Those files were not changed here.
 
 Manual Figure 2-5 (ground clearance) marks the bay from FS 348 to FS 531, 4.65 m. Its leader lines run
 to the inner side of the zigzags at the bay ends, so these are the bay's inside ends. The model's gear
@@ -142,7 +173,7 @@ exist in the EFM for tools and future panels.
   plane, that the skin is open exactly over them and that nothing inside the bay shows with the doors
   shut.
   `tools/models/check_edm_export.py` then checks the exported model against the previous one, and
-  that `Pylon1` and the left door are on 27 only and `Pylon2` and the right door on 28 only.
+  that `Pylon1` and the left door use 26/904/906 and `Pylon2` and the right door use 26/905/906.
 - `python tools/missions/bay_shots.py` flies a level test in DCS with a store on each pylon, steps
   through both bays open, each bay closed in turn and both closed, and saves screenshots and the
   arg values to `tools/missions/results/bays/`. `--store <name>` loads any bay store instead of GBU-27

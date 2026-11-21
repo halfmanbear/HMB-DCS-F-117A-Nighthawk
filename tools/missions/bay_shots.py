@@ -14,6 +14,7 @@ DCS log lines go to tools/missions/results/bays/ (bays_<store>/ for another stor
 two minutes.
 """
 import argparse
+import csv
 import math
 import subprocess
 import sys
@@ -52,6 +53,7 @@ SHOTS = """{
 HOOK = r"""-- Temporary hook written by tools/missions/bay_shots.py. Safe to delete.
 local logs = lfs.writedir() .. 'Logs\\'
 local SPEED, ALT = __SPEED__, __ALT__
+local REPLAY = __REPLAY__
 local STATES = __STATES__
 local SHOTS = __SHOTS__
 local SETTLE = 4.0 -- the bays need 2 s to move
@@ -119,8 +121,8 @@ local function shot_taken()
 end
 
 local function args()
-    return Export.LoGetAircraftDrawArgumentValue(26) or -1, Export.LoGetAircraftDrawArgumentValue(27) or -1,
-           Export.LoGetAircraftDrawArgumentValue(28) or -1
+    return Export.LoGetAircraftDrawArgumentValue(26) or -1, Export.LoGetAircraftDrawArgumentValue(904) or -1,
+           Export.LoGetAircraftDrawArgumentValue(905) or -1
 end
 
 function hook.onSimulationFrame()
@@ -132,7 +134,7 @@ function hook.onSimulationFrame()
         if now < 3 or not me then return end
         startTime = now
         handle = io.open(logs .. 'F117_vortex_shots.csv', 'w')
-        handle:write('t,state,arg26_any,arg27_left,arg28_right,alt,tas\n')
+        handle:write('t,state,arg26_any,arg904_left,arg905_right,alt,tas\n')
         local ok, Input = pcall(require, 'Input')
         if ok and Input and Input.getEnvTable then Actions = Input.getEnvTable().Actions end
         if Actions and Actions.iCommandViewFree then Export.LoSetCommand(Actions.iCommandViewFree) end
@@ -147,16 +149,18 @@ function hook.onSimulationFrame()
     local tas = Export.LoGetTrueAirSpeed() or 0
     local vy = (Export.LoGetVectorVelocity() or {y = 0}).y
     local climb = clamp((ALT - me.LatLongAlt.Alt) * 0.08, -15, 15)
-    Export.LoSetCommand(2001, clamp(0.02 * (climb - vy) - 0.6 * me.Pitch, -0.4, 0.4))
-    Export.LoSetCommand(2002, clamp(1.5 * (0 - me.Bank), -0.5, 0.5))
-    Export.LoSetCommand(2003, 0)
-    Export.LoSetCommand(2004, clamp(0.08 * (tas - SPEED), -1, 1))
+    if not REPLAY then
+        Export.LoSetCommand(2001, clamp(0.02 * (climb - vy) - 0.6 * me.Pitch, -0.4, 0.4))
+        Export.LoSetCommand(2002, clamp(1.5 * (0 - me.Bank), -0.5, 0.5))
+        Export.LoSetCommand(2003, 0)
+        Export.LoSetCommand(2004, clamp(0.08 * (tas - SPEED), -1, 1))
+    end
 
     if state == 0 then
         -- Settle the flight before the first state; the bays are closed.
         if now - stateTime > 8 then
             state, shot, stateTime = 1, 1, now
-            for _, id in ipairs(STATES[1][2]) do Export.LoSetCommand(id) end
+            if not REPLAY then for _, id in ipairs(STATES[1][2]) do Export.LoSetCommand(id) end end
         end
         return
     end
@@ -164,10 +168,10 @@ function hook.onSimulationFrame()
     place_camera(me, SHOTS[shot])
     if not waitingFile then
         if now - stateTime > SETTLE and now - shotTime > 0.6 then
-            local a26, a27, a28 = args()
+            local a26, a904, a905 = args()
             request_shot(current[1] .. '_' .. SHOTS[shot][1])
-            handle:write(string.format('%.2f,%s,%.3f,%.3f,%.3f,%.0f,%.1f\n', t, current[1], a26, a27, a28, me.LatLongAlt.Alt, tas))
-            log.write('F117BAYS', log.INFO, string.format('shot %s_%s any %.3f left %.3f right %.3f', current[1], SHOTS[shot][1], a26, a27, a28))
+            handle:write(string.format('%.2f,%s,%.3f,%.3f,%.3f,%.0f,%.1f\n', t, current[1], a26, a904, a905, me.LatLongAlt.Alt, tas))
+            log.write('F117BAYS', log.INFO, string.format('shot %s_%s any %.3f left %.3f right %.3f', current[1], SHOTS[shot][1], a26, a904, a905))
         end
     elseif shot_taken() then
         waitingFile = nil
@@ -176,7 +180,7 @@ function hook.onSimulationFrame()
         if shot > #SHOTS then
             state, shot, stateTime = state + 1, 1, now
             if state > #STATES then return finish('done') end
-            for _, id in ipairs(STATES[state][2]) do Export.LoSetCommand(id) end
+            if not REPLAY then for _, id in ipairs(STATES[state][2]) do Export.LoSetCommand(id) end end
         end
     end
 end
@@ -223,16 +227,28 @@ def build_mission(target, clsid=GBU_27, right=None):
     miz.save(target)
 
 
-def run(mission):
+def acknowledge_shot(path):
+    # The hook briefly opens this file each frame while checking acknowledgement.
+    for attempt in range(100):
+        try:
+            path.unlink(missing_ok=True)
+            return
+        except PermissionError:
+            if attempt == 99:
+                raise
+            time.sleep(0.01)
+
+
+def run(mission, replay=False):
     if 'DCS.exe' in subprocess.run(['tasklist', '/FI', 'IMAGENAME eq DCS.exe'], capture_output=True, text=True).stdout:
         raise SystemExit('Close DCS first.')
     request, done, flight = LOGS / 'F117_vortex_shot.req', LOGS / 'F117_vortex_shots.done', LOGS / 'F117_vortex_shots.csv'
     for old in (request, done, flight):
         old.unlink(missing_ok=True)
     hook = HOOK.replace('__SPEED__', str(base.SPEED)).replace('__ALT__', str(base.ALT)) \
-               .replace('__STATES__', STATES).replace('__SHOTS__', SHOTS)
+               .replace('__STATES__', STATES).replace('__SHOTS__', SHOTS).replace('__REPLAY__', 'true' if replay else 'false')
     HOOK_PATH.write_text(hook, encoding='utf-8')
-    process = subprocess.Popen([str(base.DCS_EXE), '--mission', str(mission)])
+    process = subprocess.Popen([str(base.DCS_EXE), '--track' if replay else '--mission', str(mission)])
     base.RESULTS = RESULTS
     before = base.screenshots()
     try:
@@ -250,7 +266,7 @@ def run(mission):
                 path = base.capture(name, before)
                 before = base.screenshots()
                 print('captured', path.name if path else f'nothing for {name}', flush=True)
-                request.unlink()
+                acknowledge_shot(request)
             time.sleep(0.05)
     finally:
         try:
@@ -259,9 +275,14 @@ def run(mission):
             process.terminate()
             process.wait(60)
         HOOK_PATH.unlink(missing_ok=True)
-        request.unlink(missing_ok=True)
+        acknowledge_shot(request)
     if flight.exists():
         (RESULTS / 'bays.csv').write_bytes(flight.read_bytes())
+        expected = {'closed': (0, 0, 0), 'both_open': (1, 1, 1), 'left_closed': (1, 0, 1),
+                    'both_open_again': (1, 1, 1), 'right_closed': (1, 1, 0), 'both_closed': (0, 0, 0)}
+        rows = list(csv.reader(line for line in flight.read_text().splitlines() if not line.startswith('#')))
+        latest = {row[1]: tuple(float(value) for value in row[2:5]) for row in rows[1:]}
+        assert latest == expected, f'bay state mismatch: {latest}'
     log = LOGS / 'dcs.log'
     if log.exists():
         lines = [line for line in log.read_text(encoding='utf-8', errors='replace').splitlines()
@@ -276,8 +297,14 @@ def main():
     parser.add_argument('--build-only', action='store_true', help='write the mission without starting DCS')
     parser.add_argument('--store', choices=sorted(STORES), default='gbu-27', help='store on both pylons')
     parser.add_argument('--right', choices=sorted(STORES), help='a different store on the right pylon')
+    parser.add_argument('--replay', type=Path, help='observe a recorded bay test without sending flight or bay commands')
     args = parser.parse_args()
     global RESULTS
+    if args.replay:
+        RESULTS = HERE / 'results/bays_replay'
+        RESULTS.mkdir(parents=True, exist_ok=True)
+        run(args.replay.resolve(), replay=True)
+        return
     if args.store != 'gbu-27' or args.right:
         RESULTS = HERE / ('results/bays_' + args.store + (f'_{args.right}' if args.right else ''))
     RESULTS.mkdir(parents=True, exist_ok=True)

@@ -22,6 +22,16 @@ def lua_commands():
 
 
 class WeaponBayTests(unittest.TestCase):
+    def test_network_bay_arguments_and_budget(self):
+        text = (ROOT / 'F-117-NightHawk.lua').read_text(encoding='utf-8')
+        block = text.split('net_animation =', 1)[1].split('}', 1)[0]
+        block = re.sub(r'--[^\n]*', '', block)
+        args = [int(n) for n in re.findall(r'\b\d+\b', block)]
+        self.assertLessEqual(len(args), 32)
+        self.assertEqual(len(args), len(set(args)))
+        self.assertTrue({26, 904, 905, 906}.issubset(args))
+        self.assertTrue({27, 28}.isdisjoint(args))
+
     def test_commands_are_unique_and_as_expected(self):
         commands = lua_commands()
         for name, value in COMMANDS.items():
@@ -70,8 +80,10 @@ class WeaponBayTests(unittest.TestCase):
                                ('BOMB_BAY_LEFT_TOGGLE', 'bombay_left'), ('BOMB_BAY_RIGHT_TOGGLE', 'bombay_right')):
             self.assertRegex(inputs, rf'constexpr int {efm_name} = {COMMANDS[name]};')
         source = (EFM_ROOT / 'F_117_NightHawk.cpp').read_text(encoding='utf-8-sig')
-        self.assertIn('weapon_bay_args[F117::weapon_bay_count] = {27, 28}', source)
+        self.assertIn('weapon_bay_args[F117::weapon_bay_count] = {904, 905}', source)
         self.assertIn('weapon_bay_any_arg = 26', source)
+        self.assertIn('weapon_bay_cancel_arg = 906', source)
+        self.assertIn('drawargs[weapon_bay_cancel_arg] = any_open', source)
         self.assertIn('"F117_BAY_L", "F117_BAY_R"', (EFM_ROOT / 'Weapons/ReleaseSequence.cpp').read_text(encoding='utf-8-sig'))
 
 

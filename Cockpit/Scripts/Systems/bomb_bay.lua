@@ -4,7 +4,7 @@
 -- This device only reports the two weapon bays, as the amber door and green trapeze lights
 -- of the armament control panel do (TO 1F-117A-1, Weapons Bay Door Open and Trapeze Down
 -- Lights). The EFM publishes each bay as one 0-1 position, the same value as its draw
--- argument (26 left, 27 right): the door opens over the first 0.7 and the trapeze
+-- argument (904 left, 905 right): the door opens over the first 0.7 and the trapeze
 -- lowers from 0.6 to 1. Each light is 0 off, 1 in transit (flashing) or 2 steady.
 make_default_activity(0.1)
 

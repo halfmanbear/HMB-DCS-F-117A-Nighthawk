@@ -12,6 +12,8 @@ with status 1. The damage cells, the gear contacts and the Lua connector names d
 The left weapon bay is animated by argument 27 and the right by 28 (older models used 26 for both),
 so the comparison reads 27 and 28 as 26. A model that uses 27 or 28 must also pass the bay check:
 Pylon1 and the left door on 27 only, Pylon2 and the right door on 28 only, and nothing on 26.
+Replay-compatible models instead use 26/904/906 for the left and 26/905/906 for
+the right: 906 cancels shared motion when individual EFM positions are present.
 Visual differences are reported, but don't fail the check, because changing the visuals is the
 point of an edit. Triangles with no area are ignored: the exporter drops them.
 """
@@ -30,7 +32,7 @@ MODEL = 'Shapes/f-117-nighthawk.edm'
 FRAMES = (0, 25, 50, 75, 100, 110, 125, 150, 175, 200)
 POSE_TOLERANCE_M = 0.006  # The nose wheel contact is resampled by up to 5 mm mid-travel.
 AREA_TOLERANCE_M2 = 0.002
-BAY_ARG_ALIASES = {27: 26, 28: 26}  # the left and right weapon bays; see the module docstring
+BAY_ARG_ALIASES = {27: 26, 28: 26, 904: 26, 905: 26, 906: 26}
 
 addon_utils.enable('iEDM_10')
 from iEDM_10.edm_format import EDMFile  # noqa: E402  (needs the add-on enabled first)
@@ -68,6 +70,13 @@ def bay_report(path):
 
 def check_bays(path):
     pylons, doors = bay_report(path)
+    if any(906 in args for args in pylons.values()):
+        left_ok = pylons.get('Pylon1') == (26, 904, 906)
+        right_ok = pylons.get('Pylon2') == (26, 905, 906)
+        door_ok = sum(doors.values()) == 2 and set(doors) == {(26, 904, 906), (26, 905, 906)}
+        print(f'{"PASS" if left_ok and right_ok and door_ok else "FAIL"} replay-compatible bays: '
+              f'Pylon1 {pylons.get("Pylon1")}, Pylon2 {pylons.get("Pylon2")}, doors {dict(doors)}')
+        return left_ok and right_ok and door_ok
     uses_split = any(set(args) & {27, 28} for args in list(pylons.values()) + list(doors))
     if not uses_split:
         print('INFO bays: one argument (26) drives both bays; the model predates the split')

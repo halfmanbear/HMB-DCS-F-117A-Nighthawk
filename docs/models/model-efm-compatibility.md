@@ -8,17 +8,17 @@ Where the model's shape differs from the published dimensions is in
 
 ## Current state
 
-Model/source identities updated 2026-11-07. The EFM and damage-table records
-below are retained from the 2026-11-04 audit; this glass/material update did not
-change those interfaces or independently re-audit the EFM build.
+Exterior and EFM identities updated 2026-11-21 for bay replay/AI compatibility.
+The damage-table record is retained from the earlier audit; bay animation changes
+do not change the damage-cell mapping.
 
 | Part | Location | Identity |
 |---|---|---|
-| Exterior model | `Shapes/f-117-nighthawk.edm`, original materials and livery names, left bay on arg 27 and right bay on arg 28 (2026-11-11), bays lengthened and deepened 0.18 m with the pylons (2026-11-13), six sawtooth teeth at each end of each door, end walls at FS 348 and FS 531 so the interior is 4.65 m (2026-11-14; previous model `edf87311`) | `6ee51b021e8e1f812d71fa1a5cf5fe26867556bbd8d46bbddca12d8ae2f2a102` |
+| Exterior model | `Shapes/f-117-nighthawk.edm`, original materials and livery names, left bay on 904 and right bay on 905, with 26/906 shared-motion fallback (2026-11-21), bays lengthened and deepened 0.18 m with the pylons (2026-11-13), six sawtooth teeth at each end of each door, end walls at FS 348 and FS 531 so the interior is 4.65 m (2026-11-14; previous model `edf87311`) | `aad43ce45cf09ccd4b587e4cc1b894a514bb5960b29463708c16b4c08641d2b3` |
 | Cockpit model | `Cockpit/Shape/Cockpit_F-117.edm`, corrected glass and 18 restored emissive objects | `340590d438e433b667c24cb54802078ee40a98cfcf0360726946ea1598c84f36` |
 | Damage table | `F-117-NightHawk.lua` | 25 cells, `00a6e68c8947` |
-| EFM source | `EFM Source Code/F_117_NightHawk.cpp` in the EFM repository | `d241a56` plus uncommitted changes, `b09f58c2f0cf` |
-| EFM binary | Build output, loaded through the local proxy | `32d64e264d8a`, built 2026-11-03 16:10 |
+| EFM source | `EFM Source Code/F_117_NightHawk.cpp` in the EFM repository | `41977cf` plus bay changes, `2dfea6c294aa` |
+| EFM binary | Build output, loaded through the local proxy | `94bdae02e7b6`, built 2026-11-21, Release x64 |
 | Store profiles | `Cockpit/Scripts/Systems/Weapons.lua` `classify()` and the EFM `kCcrpStoreModels` | 14 profiles in the same order; `tests/test_store_profiles.py` checks both |
 | Exterior Blender source | `blender_files/f-117-nighthawk-exterior.blend`, put through `tools/models/split_weapon_bays.py`, the exporter's material update and the bay enlargement script, which is kept outside the repository (see [Building the installed exterior](#building-the-installed-exterior)) | The installed model has the original materials, so it comes from this blend, not the painted candidate. Rebuilt with split and material update only, it reproduces `edf87311` exactly |
 | Painted exterior candidate | `blender_files/uv_work/f117-exterior-painted-candidate.blend`, with the bay split in `f117-exterior-painted-candidate.baysplit.blend` | Packed new atlases on retained geometry; refreshed after the clear-glass DDS change. Exports the `f117paint_*` materials; not installed. Run the split and the bay enlargement on it before exporting it |
@@ -43,16 +43,14 @@ the dusk appearance requires DCS retesting. Missing engraving remains artwork wo
 
 ## Weapon bay arguments
 
-The left bay moves on arg 27 and the right bay on arg 28. Each argument opens that bay's door over 0
-to 0.7 and lowers its trapeze over 0.6 to 1, and `Pylon1` (station 1) is under 27 and `Pylon2` under 28.
-Nothing in the model is animated by arg 26, but the EFM writes it as "either bay open": DCS draws the
-stores only while arg 26 is open (checked in DCS with `tools/missions/bay_shots.py`). The model used to
-drive both bays from 26, so this model needs the per-bay EFM (`Inputs.h` commands 10130 to 10132, servos
-writing 27 and 28). With an older EFM the bays stay shut and the stores hidden. An older model works
-with the new EFM, but both bays then move together on arg 26.
-`tools/models/split_weapon_bays.py` makes the change in a Blender scene, starting from a scene with
-the bays on 26, and checks it; `tools/models/check_edm_export.py` reads 27 and 28 as 26 when it compares
-against an older model, and checks the assignment of the pylons and doors. See [../systems/weapon-bays.md](../systems/weapon-bays.md).
+As of 2026-11-21, the left bay uses 904, the right uses 905, and 906 cancels the
+shared motion on standard arg 26. The EFM writes 26 = 906 = max(left, right).
+AI and old tracks supplying only 26 animate both bays together. Neither 27 nor 28
+drives any part of the installed model. Update the model and EFM together.
+`tools/models/split_weapon_bays.py` still creates the intermediate 27/28 export;
+run `weapon_bay_replay.py` on that export as the final build step. The installed
+exterior SHA-256 is `aad43ce45cf09ccd4b587e4cc1b894a514bb5960b29463708c16b4c08641d2b3`.
+The conversion changes animation data only. See [weapon bays](../systems/weapon-bays.md).
 
 ## Blender projects
 
@@ -143,6 +141,8 @@ exporting to `Shapes/f-117-nighthawk.edm`. The script is kept outside the reposi
 3. Runs the exporter's material update ("Update EDM materials"). Without it the export is cancelled
    with "Material ... has old version".
 4. Exports.
+5. Run Blender with `--python tools/models/weapon_bay_replay.py -- intermediate.edm Shapes/f-117-nighthawk.edm`
+   to add replay/AI fallback and move independent motion to 904/905/906.
 
 Then run `tools/models/check_edm_export.py`. It compares against git HEAD, so until the new model is
 committed it lists the bay changes as failures: the `FUSELAGE_BOTTOM` door cells' vertex counts and

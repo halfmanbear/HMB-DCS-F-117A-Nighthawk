@@ -11,6 +11,11 @@ for _, command in ipairs({
     native_commands.SELECTER_LEFT, native_commands.SELECTER_RIGHT, native_commands.SELECTER_STOP,
     native_commands.DSS_OFF, native_commands.DSS_UP, native_commands.DSS_LEFT,
     native_commands.DSS_DOWN, native_commands.DSS_RIGHT, native_commands.SENSOR_RESET,
+    -- Stock IDs below 3000 require a subscription even in device-targeted profiles.
+    native_commands.I251_BRIGHTNESS_UP, native_commands.I251_BRIGHTNESS_DOWN,
+    native_commands.I251_CONTRAST_UP, native_commands.I251_CONTRAST_DOWN,
+    native_commands.ZOOM_IN, native_commands.ZOOM_OUT,
+    native_commands.NWS_ON, native_commands.NWS_OFF,
 }) do dev:listen_command(command) end
 local irads_image = dofile(LockOn_Options.script_path.."Systems/IRADS_ImageControls.lua")
 local irads_readouts = dofile(LockOn_Options.script_path.."Systems/IRADS_Readouts.lua")
