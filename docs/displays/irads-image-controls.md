@@ -1,5 +1,10 @@
 # IRADS brightness and contrast
 
+The upstream DCS FLIR image has scene-dependent exposure before these controls
+are applied. See [the auto-exposure investigation](irads-auto-exposure.md) for
+the behavior notes and aircraft-specific compatibility requirements. No exposure
+override is installed by the mod.
+
 Brightness spans 2.5–20%, with twenty-eight button steps of 0.625 percentage points.
 Axes use their full travel continuously, and the L bar spans the full range.
 Verify visual levels in DCS.
