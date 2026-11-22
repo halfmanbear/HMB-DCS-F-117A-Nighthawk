@@ -174,6 +174,67 @@ class NavigationTests(unittest.TestCase):
         self.assertEqual(self.p.F117_NAV_TTG_TEXT,'TTG --:--')
         self.assertEqual(self.p.F117_NAV_VALID,1)
 
+    def test_reselect_passed_waypoint_activates_stable_direct_to_then_resumes_route(self):
+        self.g.x=20*NM;self.g.z=-5*NM;self.nav.update()
+        self.nav.set_command(self.g.nav_commands.WP_NEXT,1)  # destination 02
+        self.g.z=9.5*NM;self.nav.update()  # capture -> destination 03
+        self.assertEqual(self.nav.active_point().number,3)
+        self.g.z=10.5*NM;self.nav.update()
+        self.nav.set_command(self.g.nav_commands.WP_PREV,1)
+        self.assertEqual(self.nav.active_point().number,2)
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,270)
+        self.assertAlmostEqual(self.p.F117_NAV_BEARING,270)
+        self.assertAlmostEqual(self.p.F117_NAV_RANGE_NM,.5)
+        self.assertEqual((self.p.F117_NAV_DEST_X,self.p.F117_NAV_DEST_Z),(20*NM,10*NM))
+        self.g.heading=-math.pi/2;self.g._parameters.HEADING_HUD=84
+        self.nav.update()
+        self.assertAlmostEqual(self.p.F117_NAV_REL_COURSE,-math.pi)
+        self.assertEqual(self.p.F117_NAV_CRS_TEXT,'CRS 264')
+        # Remain inside capture radius: no immediate sequence, even across the
+        # original leg's endpoint plane. Course stays fixed; bearing still moves.
+        self.g.x=19.5*NM;self.g.z=9.5*NM;self.nav.update()
+        self.assertEqual(self.nav.active_point().number,2)
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,270)
+        self.assertAlmostEqual(self.p.F117_NAV_BEARING,45)
+        self.g.x=20*NM;self.g.z=12*NM;self.nav.update()  # arm from outside
+        self.g.z=10.5*NM;self.nav.update()  # return -> planned 02 -> 03 south
+        self.assertEqual(self.nav.active_point().number,3)
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,180)
+
+    def test_manual_selection_before_waypoint_also_uses_direct_to(self):
+        self.g.x=18*NM;self.g.z=0;self.nav.update()
+        self.nav.set_command(self.g.nav_commands.WP_NEXT,1)
+        expected=math.degrees(math.atan2(10,2))
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,expected)
+        self.g.x=17*NM;self.nav.update()
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,expected)
+        self.assertNotAlmostEqual(self.p.F117_NAV_BEARING,expected)
+        # Initialization must discard the manually activated course.
+        self.nav.initialize();self.nav.update()
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,0)
+
+    def test_direct_to_waits_for_valid_position_and_ignores_clamped_steps(self):
+        self.nav.update()
+        self.g.x=float('nan')
+        self.nav.set_command(self.g.nav_commands.WP_NEXT,1)
+        self.assertEqual(self.p.F117_NAV_VALID,0)
+        self.g.x=20*NM;self.g.z=12*NM;self.nav.update()
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,270)
+        self.nav.set_command(self.g.nav_commands.WP_NEXT,1)  # final route point
+        course=self.p.F117_NAV_COURSE
+        self.g.x=18*NM;self.nav.update()
+        self.nav.set_command(self.g.nav_commands.WP_NEXT,1)  # clamped
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,course)
+
+    def test_manual_selection_at_waypoint_keeps_inbound_course(self):
+        self.nav.update()
+        self.g.x=20*NM;self.g.z=10*NM
+        self.nav.set_command(self.g.nav_commands.WP_NEXT,1)
+        self.assertEqual(self.nav.active_point().number,2)
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,90)
+        self.g.z=10*NM+.1;self.nav.update()
+        self.assertAlmostEqual(self.p.F117_NAV_COURSE,90)
+
     def test_bad_records_end_the_route(self):
         self.lua.execute('''function get_mission_route()return {
             {x=0,y=0},{x=1000,y=0},{x="bad"},{x=3000,y=0}}end''')

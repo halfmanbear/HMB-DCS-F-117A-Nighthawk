@@ -71,6 +71,9 @@ function M.new(sensor,source)
     local ground_marks=0    -- MARK activations used up on the ground after power-up
     local bias_dp={n=0,e=0,alt=0} -- DP 99
     local active,attempts,countdown,armed=1,0,0,false
+    -- Manual destination selection activates a fixed direct-to course from
+    -- ownship, rather than reusing the destination's original inbound leg.
+    local manual_course,manual_pending=nil,false
     local handles={}
     local function set(name,value)
         if not handles[name] then handles[name]=get_param_handle("F117_NAV_"..name) end
@@ -87,6 +90,7 @@ function M.new(sensor,source)
         local parsed=ok and M.parse(raw) or {}
         if #parsed>0 then
             route=parsed;active=first_leg();armed=false
+            manual_course,manual_pending=nil,false
             report(string.format("route: %d points, fields: %s",#parsed,fields(point_list(raw)[1])))
         elseif attempts==MAX_ATTEMPTS then
             report(not ok and "route unavailable: "..tostring(raw)
@@ -122,12 +126,20 @@ function M.new(sensor,source)
         if range>=CAPTURE_NM*NM then armed=true
         elseif armed and active<#route then
             active=active+1;armed=false;point=point_at(active)
+            manual_course,manual_pending=nil,false -- resume the next planned leg
             range=math.sqrt((point.x-x)^2+(point.z-z)^2)
         end
         local direct=bearing(x,z,point.x,point.z)
         local previous=route[active-1]
         if active>#route then previous=nil end -- a mark is steered to directly
         local course=previous and previous.kind~="takeoff" and bearing(previous.x,previous.z,point.x,point.z) or direct
+        if manual_pending then
+            -- At the point itself the bearing is undefined: retain the planned
+            -- course within one metre instead of latching atan2(0,0).
+            manual_course=range>=1 and direct or course
+            manual_pending=false
+        end
+        if manual_course~=nil then course=manual_course end
         local vn,ve
         if sensor.getSelfVelocity then local _;vn,_,ve=sensor.getSelfVelocity() end
         local speed=finite(vn) and finite(ve) and math.sqrt(vn*vn+ve*ve) or 0
@@ -150,7 +162,11 @@ function M.new(sensor,source)
     end
     local function step(delta)
         if total()==0 then return end
-        active=math.max(1,math.min(total(),active+delta));armed=false;update()
+        local selected=math.max(1,math.min(total(),active+delta))
+        if selected==active then return end -- a clamped press is not a new leg
+        active=selected;armed=false
+        manual_course,manual_pending=nil,true
+        update()
     end
     -- Store a mark (INS-frame coordinates). Returns the destination number, or nil when none are left.
     local function add_mark(x,z,elev)
@@ -183,6 +199,7 @@ function M.new(sensor,source)
     end
     local function initialize()
         route,active,attempts,countdown,armed={},1,0,0,false
+        manual_course,manual_pending=nil,false
         marks,ground_marks,bias_dp={},0,{n=0,e=0,alt=0}
         dashes()
         set("MARK_REMAINING",remaining())

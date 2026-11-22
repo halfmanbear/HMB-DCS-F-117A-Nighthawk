@@ -142,7 +142,11 @@ The active waypoint starts at the first point after takeoff. It steps on
 automatically after approaching within 1 NM, a mod choice rather than a verified
 OCIP value. Stepping back to a point the aircraft is already inside does not skip
 it again. **Navigation Next / Previous Waypoint** (Ctrl+Alt+Shift+. / ,) step it
-by hand. The route feeds:
+by hand. A changed manual selection activates a fixed direct-to course from the
+current INS position to that destination, so a reselected passed point has an
+appropriate return course. Automatic sequencing restores the next planned leg.
+This is a mod convention, not a verified OCIP function; see the
+[HSD notes](../displays/right-hsd-design.md) for edge cases. The route feeds:
 
 - MAP: route legs and symbols, plus a steering leg from the aircraft symbol to
   the active waypoint, as in the track-up video frames. Tactical declutter TDC2

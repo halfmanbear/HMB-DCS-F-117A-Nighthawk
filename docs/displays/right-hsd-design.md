@@ -21,7 +21,17 @@ outside the ring turn together to the desired course to the active waypoint
 (`F117_NAV_REL_COURSE`, from `Systems/Navigation.lua`; see
 [ocip-cockpit-research.md](../systems/ocip-cockpit-research.md#mission-route)). The desired
 course is the planned leg into the active waypoint, or the direct bearing on the
-first leg. Without a mission route they point up at the lubber. `CRS`, destination
+first leg. Manual waypoint selection activates a direct-to course from the INS
+position at selection, including when returning to a passed waypoint. That course
+stays fixed while bearing and range continue to follow the destination; automatic
+sequencing resumes the next planned leg. This avoids changing a course pointer
+into a bearing pointer as the aircraft crosses the old leg's endpoint plane.
+Selection within one metre of the destination retains its inbound course because
+the direct bearing there is undefined. A press clamped at the first or last
+destination does not reactivate the course. This direct-to convention is a mod
+choice, not verified F-117 behavior; it follows the fixed course established on
+activation described in [Garmin's direct-to navigation guide](https://static.garmin.com/pumac/190-00356-00_K.pdf).
+Without a mission route they point up at the lubber. `CRS`, destination
 (`D`), `TTG` and `RNG` come from the same source and show dashes without a route;
 `CRS` follows the card reference (true or magnetic). The four deviation dots are
 fixed: no deviation bar is drawn yet. CRS SEL, mark number and DME stay dashes or
