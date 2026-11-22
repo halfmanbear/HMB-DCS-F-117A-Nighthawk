@@ -49,7 +49,19 @@ local function fields(p)
     table.sort(names)
     return table.concat(names,",")
 end
-function M.parse(raw)
+-- Ground height at (north,east), or nil when the terrain API is unavailable.
+local terrain_api
+local function terrain_height(x,z)
+    if terrain_api==nil then
+        local ok,api=pcall(require,"terrain")
+        terrain_api=(ok and type(api)=="table" and type(api.GetHeight)=="function") and api or false
+    end
+    if not terrain_api then return nil end
+    local ok,h=pcall(terrain_api.GetHeight,x,z)
+    if ok and finite(h) then return h end
+end
+function M.parse(raw,height)
+    height=height or terrain_height
     local route={}
     for i,p in ipairs(point_list(raw)) do
         if type(p)~="table" then break end
@@ -58,7 +70,13 @@ function M.parse(raw)
         local number=finite(p.this_point_num) and math.floor(p.this_point_num) or i-1
         local q=p.world_point or p.point or p.position or p.pos
         local elev=p.alt or p.altitude or p.elev or (type(q)=="table" and q.z~=nil and q.y)
-        route[#route+1]={x=north,z=east,elev=finite(elev) and elev or nil,kind=kind(p),number=number,
+        elev=finite(elev) and elev or nil
+        -- Mission "RADIO" altitude is above ground, not MSL: add the ground height.
+        if elev and tostring(p.alt_type or ""):upper()=="RADIO" then
+            local ground=height(north,east)
+            elev=ground and ground+elev or nil
+        end
+        route[#route+1]={x=north,z=east,elev=elev,kind=kind(p),number=number,
             label=string.format("%02d",number%100)}
     end
     return route
@@ -80,9 +98,10 @@ function M.new(sensor,source)
         handles[name]:set(value)
     end
     local heading_card=get_param_handle("HEADING_HUD")
+    -- Route entry 1 is where the aircraft starts (takeoff or air start): never a destination.
     local function first_leg()
-        for i,p in ipairs(route) do if p.kind~="takeoff" then return i end end
-        return 1
+        for i,p in ipairs(route) do if i>1 and p.kind~="takeoff" then return i end end
+        return #route>1 and 2 or 1
     end
     local function load()
         attempts=attempts+1
@@ -92,6 +111,12 @@ function M.new(sensor,source)
             route=parsed;active=first_leg();armed=false
             manual_course,manual_pending=nil,false
             report(string.format("route: %d points, fields: %s",#parsed,fields(point_list(raw)[1])))
+            for i,q in ipairs(point_list(raw)) do
+                if parsed[i] then
+                    report(string.format("point %d: alt_type %s, alt %s, elev %s m",parsed[i].number,
+                        tostring(q.alt_type),tostring(q.alt),tostring(parsed[i].elev)))
+                end
+            end
         elseif attempts==MAX_ATTEMPTS then
             report(not ok and "route unavailable: "..tostring(raw)
                 or type(raw)=="table" and "route unusable, fields: "..fields(point_list(raw)[1] or raw)
@@ -162,7 +187,7 @@ function M.new(sensor,source)
     end
     local function step(delta)
         if total()==0 then return end
-        local selected=math.max(1,math.min(total(),active+delta))
+        local selected=math.max(#route>1 and 2 or 1,math.min(total(),active+delta))
         if selected==active then return end -- a clamped press is not a new leg
         active=selected;armed=false
         manual_course,manual_pending=nil,true

@@ -167,7 +167,7 @@ class LeftEOTests(unittest.TestCase):
             # The bands and gray scale reach the glass edge; the EO aperture clips them.
             if '_BAND_' in e['name'] or '_GRAY_' in e['name']:continue
             self.assertEqual(e['level'],1)
-            self.assertIn('ONE',e['element_params'])
+            self.assertIn('F117_LEFT_EO_SYMBOL_LEVEL',e['element_params'])
             for x,y in e.get('vertices',[]):
                 self.assertLess(abs(x),.05);self.assertLess(abs(y),.046)
             if 'init_pos' in e:

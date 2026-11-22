@@ -37,6 +37,31 @@ class NavigationTests(unittest.TestCase):
     def load_route(self):
         for _ in range(200):self.nav.update()  # the route loads on the first retry tick
 
+    def test_air_start_point_is_never_a_destination(self):
+        self.lua.execute('''
+            function get_mission_route()return {
+                {x=0,y=0,type="Turning Point"},
+                {x=20*1852,y=0,type="Turning Point"},
+                {x=20*1852,y=10*1852,type="Turning Point"}}end
+        ''')
+        nav=self.load(S/'Systems/Navigation.lua').new();nav.initialize()
+        for _ in range(200):nav.update()
+        self.assertEqual(nav.active_point().number,1)
+        nav.set_command(self.g.nav_commands.WP_PREV,1)
+        self.assertEqual(nav.active_point().number,1)
+
+    def test_radio_altitude_is_above_ground_and_baro_is_msl(self):
+        self.lua.execute('''
+            function require()return {GetHeight=function(x,z)return 300 end}end
+            function get_mission_route()return {
+                {x=0,y=0,alt=0,alt_type="RADIO"},
+                {x=1,y=1,alt=50,alt_type="RADIO"},
+                {x=2,y=2,alt=500,alt_type="BARO"}}end
+        ''')
+        nav=self.load(S/'Systems/Navigation.lua')
+        route=nav.parse(self.g.get_mission_route())
+        self.assertEqual([route[i].elev for i in (1,2,3)],[300,350,500])
+
     def test_marks_take_destination_numbers_94_to_98_in_order_then_run_out(self):
         self.load_route()
         self.assertEqual(self.nav.remaining(),5)
@@ -115,7 +140,8 @@ class NavigationTests(unittest.TestCase):
     def test_route_parsed_from_map_points_and_first_leg_selected(self):
         self.g.vn=200
         self.nav.update()
-        self.assertEqual(self.logged(),['F117_NAV: route: 4 points, fields: type,x,y'])
+        self.assertEqual(self.logged()[0],'F117_NAV: route: 4 points, fields: type,x,y')
+        self.assertEqual(len(self.logged()),5)
         route=self.nav.route()
         self.assertEqual([route[i].label for i in range(1,5)],['00','01','02','03'])
         self.assertEqual(route[1].kind,'takeoff');self.assertEqual(route[2].kind,'navigation')

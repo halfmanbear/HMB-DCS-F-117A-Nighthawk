@@ -4,17 +4,26 @@ local brightness=get_param_handle("F117_IRADS_BRIGHTNESS")
 local contrast=get_param_handle("F117_IRADS_CONTRAST")
 local native_active=get_param_handle("F117_NATIVE_BRIGHTNESS_ACTIVE")
 local draw_brightness=get_param_handle("F117_IRADS_DRAW_BRIGHTNESS")
+local video_draw=get_param_handle("F117_IRADS_VIDEO_DRAW_BRIGHTNESS")
+local centre=get_param_handle("CDBrightness")
 local dim=get_param_handle("F117_IRADS_DIM_OPACITY")
 local band=get_param_handle("F117_IRADS_CONTRAST_BAND")
--- The sensor display's L (level) and G (gain) bars, 0 to 1. The sim has no
--- separate IR level and gain, so they show the brightness and contrast settings.
+-- L reports control travel, not the nonlinear internal video multiplier.
+-- This is a DCS presentation mapping, not a calibrated thermal level model.
 local level=get_param_handle("F117_IRADS_LEVEL")
 local gain=get_param_handle("F117_IRADS_GAIN")
--- Preserve fine button adjustment across the range; axes remain continuous.
-local LOW,HIGH,STEP=.025,.20,.00625
-local b,c=.15,.80
+-- Forty equal control steps: fine low-light adjustment, wider daytime coverage.
+local LOW,HIGH,STEP=.025,.80,.025
+local b,c=.80,.80
 local function clamp(value,low,high) return math.max(low,math.min(high,value)) end
 local function finite(v) return type(v)=="number" and v==v and math.abs(v)<math.huge end
+-- Installed only while the screenshot harness owns a DCS session.
+if LockOn_Options and LockOn_Options.script_path then
+    local ok,enabled=pcall(dofile,LockOn_Options.script_path.."Systems/IRADS_LevelCalibration.local.lua")
+    if ok and enabled==true then LOW,HIGH=0,1 end
+end
+local function brightness_for_level(u) return LOW+(HIGH-LOW)*u*u end
+local function level_for_brightness(v) return math.sqrt(clamp((v-LOW)/(HIGH-LOW),0,1)) end
 local function daylight_fraction(seconds)
     local hour=(finite(seconds) and seconds or 43200)%86400/3600
     -- Local mission clock, with two-hour dawn/dusk ramps; not a solar model.
@@ -22,7 +31,7 @@ local function daylight_fraction(seconds)
     return daylight
 end
 local function default_brightness(seconds)
-    return .065+(.15-.065)*daylight_fraction(seconds)
+    return .065+(.80-.065)*daylight_fraction(seconds)
 end
 local function default_contrast(seconds)
     return .96-(.96-.80)*daylight_fraction(seconds)
@@ -37,9 +46,10 @@ end
 local function publish()
     brightness:set(b);contrast:set(c)
     local native=native_active:get()==1
-    draw_brightness:set(native and 1 or b)
-    dim:set(native and 0 or 1-b);band:set(math.floor((c-.35)*100+.5))
-    level:set((b-LOW)/(HIGH-LOW));gain:set((c-.35)/.65)
+    draw_brightness:set(native and 1 or (1-clamp(centre:get(),0,1))*math.min(1,b*3))
+    video_draw:set(1)
+    dim:set(1-b);band:set(math.floor((c-.35)*100+.5))
+    level:set(level_for_brightness(b));gain:set((c-.35)/.65)
 end
 local function initialize()
     local seconds=get_absolute_model_time()
@@ -56,10 +66,10 @@ local function set_command(command,value)
     if command==commands.BRIGHTNESS_AXIS or command==commands.CONTRAST_AXIS then
         if finite(value) then
             local unit=(clamp(value,-1,1)+1)/2
-            if command==commands.BRIGHTNESS_AXIS then b=LOW+(HIGH-LOW)*unit else c=.35+.65*unit end
+            if command==commands.BRIGHTNESS_AXIS then b=brightness_for_level(unit) else c=.35+.65*unit end
         end
-    elseif command==commands.BRIGHTNESS_UP then b=clamp(b+STEP,LOW,HIGH)
-    elseif command==commands.BRIGHTNESS_DOWN then b=clamp(b-STEP,LOW,HIGH)
+    elseif command==commands.BRIGHTNESS_UP then b=brightness_for_level(clamp(level_for_brightness(b)+STEP,0,1))
+    elseif command==commands.BRIGHTNESS_DOWN then b=brightness_for_level(clamp(level_for_brightness(b)-STEP,0,1))
     elseif command==commands.CONTRAST_UP then c=clamp(c+.05,.35,1)
     elseif command==commands.CONTRAST_DOWN then c=clamp(c-.05,.35,1)
     else return false end

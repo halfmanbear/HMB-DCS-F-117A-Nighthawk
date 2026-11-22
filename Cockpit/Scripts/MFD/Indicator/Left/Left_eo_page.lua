@@ -57,11 +57,20 @@ for band=0,65 do
         {"set_contrast_raw",(.35+band*.01)/.80}}
     add(e,nil,true,content.name)
 end
+local video_dim=CreateElement "ceMeshPoly"
+video_dim.name="F117_LEFT_EO_VIDEO_DIM_LAYER"
+video_dim.primitivetype="triangles"
+video_dim.vertices={{-VIDEO_HALF_W,VIDEO_HALF_H},{VIDEO_HALF_W,VIDEO_HALF_H},
+    {VIDEO_HALF_W,-VIDEO_HALF_H},{-VIDEO_HALF_W,-VIDEO_HALF_H}}
+video_dim.indices={0,1,2,0,2,3};video_dim.material=MakeMaterial(nil,{0,0,0,255})
+video_dim.element_params={"F117_LEFT_EO_VIDEO_DIM_OPACITY"}
+video_dim.controllers={{"opacity_using_parameter",0}}
+add(video_dim,nil,false,content.name)
 -- Reuse the centre targeting symbols and telemetry, fitted to the smaller glass.
--- ONE avoids applying centre brightness: native left brightness or its final
--- black fallback layer dims the complete EO picture and symbols together.
+-- Markings follow Level at 3x the picture (capped); native left brightness
+-- or the final fallback layer supplies CMDI brightness and power fade.
 F117_IRADS_OVERLAY_OPTIONS={repeater=true,root_name="F117_LEFT_EO_SYMBOLOGY",
-    parent=content.name,scale=EO_SCALE,level=1,brightness_parameter="ONE",
+    parent=content.name,scale=EO_SCALE,level=1,brightness_parameter="F117_LEFT_EO_SYMBOL_LEVEL",
     -- The rounded aperture, not the video, sets the visible width here.
     edge_half_width=.050/EO_SCALE}
 dofile(LockOn_Options.script_path.."MFD/Indicator/MFD_base_page.lua")

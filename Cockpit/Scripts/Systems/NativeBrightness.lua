@@ -1,5 +1,7 @@
 -- Native renderer brightness, independent of the optional MFD compositor.
 local M={}
+-- Symbols are drawn at this multiple of the picture Level (capped at 1).
+local SYMBOL_BOOST=3
 function M.new()
     local native,last_message
     local active=get_param_handle("F117_NATIVE_BRIGHTNESS_ACTIVE")
@@ -8,7 +10,6 @@ function M.new()
     local right=get_param_handle("RDBrightness")
     local irads=get_param_handle("F117_IRADS_BRIGHTNESS")
     local centre=get_param_handle("CDBrightness")
-    local eo=get_param_handle("F117_LEFT_EO")
     local eo_dim=get_param_handle("F117_LEFT_EO_DIM_OPACITY")
     local map_dim=get_param_handle("F117_MAP_DIM_OPACITY")
     local hud_draw=get_param_handle("F117_HUD_DRAW_BRIGHTNESS")
@@ -17,6 +18,10 @@ function M.new()
     local dep=get_param_handle("F117_DEP_BRIGHTNESS")
     local dep_draw=get_param_handle("F117_DEP_DRAW_BRIGHTNESS")
     local irads_draw=get_param_handle("F117_IRADS_DRAW_BRIGHTNESS")
+    local video_draw=get_param_handle("F117_IRADS_VIDEO_DRAW_BRIGHTNESS")
+    local eo_video=get_param_handle("F117_LEFT_EO_VIDEO_LEVEL")
+    local eo_symbols=get_param_handle("F117_LEFT_EO_SYMBOL_LEVEL")
+    local eo_video_dim=get_param_handle("F117_LEFT_EO_VIDEO_DIM_OPACITY")
     local left_dim=get_param_handle("F117_LEFT_DIM_OPACITY")
     local right_dim=get_param_handle("F117_RIGHT_DIM_OPACITY")
     local video_dim=get_param_handle("F117_IRADS_DIM_OPACITY")
@@ -34,23 +39,32 @@ function M.new()
         local fl,fr,fs=f("CMDI_L"),f("CMDI_R"),f("SD")
         local hud_gain,dep_gain=hud:get()*f("HUD"),hud:get()*dep:get()*f("DEP")
         local left_gain=1-left:get()
-        if eo:get()==1 then left_gain=math.min(left_gain,irads:get()) end
+        -- Match repeater image and markings to the lower of CMDI brightness and L.
+        eo_video:set(left_gain>0 and math.min(left_gain,irads:get())/left_gain or 0)
+        eo_symbols:set(left_gain>0 and math.min(left_gain,math.min(1,irads:get()*SYMBOL_BOOST))/left_gain or 0)
         left_gain=left_gain*fl
         local right_gain=(1-right:get())*fr
         local irads_gain=irads:get()*fs
+        -- Markings follow Level but are boosted so they stay brighter than the picture.
+        local symbol_level=math.min(1,irads:get()*SYMBOL_BOOST)
+        local symbols_gain=(1-centre:get())*symbol_level*fs
         if native then
             -- Channel order: HUD, CMDI-L, CMDI-R, SD symbology, SD video, DEP.
-            local ok,ready,message=pcall(native.update,hud_gain,left_gain,right_gain,irads_gain,irads_gain,dep_gain)
+            -- Keep the camera material/shader neutral. Its image-only black
+            -- layers implement Level consistently for raw mfd0 copies as well.
+            local ok,ready,message=pcall(native.update,hud_gain,left_gain,right_gain,symbols_gain,1,dep_gain)
             enabled=ok and ready==true
             report(ok and tostring(message) or "native brightness error: "..tostring(ready))
         end
         active:set(enabled and 1 or 0)
         hud_draw:set(enabled and 1 or hud_gain)
         dep_draw:set(enabled and 1 or dep_gain)
-        irads_draw:set(enabled and 1 or irads_gain)
+        irads_draw:set(enabled and 1 or symbols_gain)
+        video_draw:set(1)
+        eo_video_dim:set(1-eo_video:get())
         left_dim:set(enabled and 0 or 1-(1-left:get())*fl)
         right_dim:set(enabled and 0 or 1-right_gain)
-        video_dim:set(enabled and 0 or 1-irads_gain)
+        video_dim:set(1-irads_gain)
         eo_dim:set(enabled and 0 or 1-left_gain)
         map_dim:set(enabled and 0 or 1-right_gain)
     end

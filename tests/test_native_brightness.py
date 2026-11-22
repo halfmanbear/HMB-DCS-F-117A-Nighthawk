@@ -31,7 +31,7 @@ class NativeBrightnessTests(unittest.TestCase):
         ''')
         module=lua.execute((SCRIPTS/'Systems/NativeBrightness.lua').read_text()).new()
         module.initialize()
-        for actual,expected in zip(g.gains.values(),[.35,0,.035,0,0,.35]):
+        for actual,expected in zip(g.gains.values(),[.35,0,.035,0,1,.35]):
             self.assertAlmostEqual(actual,expected)
         g.ready=False;module.update();v=g['values']
         self.assertAlmostEqual(v.F117_HUD_DRAW_BRIGHTNESS,.35)
@@ -60,15 +60,17 @@ class NativeBrightnessTests(unittest.TestCase):
         self.assertEqual(v.F117_HUD_DRAW_BRIGHTNESS,1)
         self.assertEqual(v.F117_IRADS_DRAW_BRIGHTNESS,1)
         self.assertEqual(v.F117_DEP_DRAW_BRIGHTNESS,1)
-        for param in ['F117_LEFT_DIM_OPACITY','F117_RIGHT_DIM_OPACITY','F117_IRADS_DIM_OPACITY']:
+        for param in ['F117_LEFT_DIM_OPACITY','F117_RIGHT_DIM_OPACITY']:
             self.assertEqual(v[param],0)
+        self.assertAlmostEqual(v.F117_IRADS_DIM_OPACITY,.84)
         # The sixth gain is the DEP: HUD brightness times its time-of-day default.
         self.assertEqual(len(g.gains),6)
-        for actual,expected in zip(g.gains.values(),[.7,.12,.14,.16,.16,.35]):
+        for actual,expected in zip(g.gains.values(),[.7,.12,.14,.048,1,.35]):
             self.assertAlmostEqual(actual,expected)
         g.ready=False;module.update()
         self.assertEqual(v.F117_NATIVE_BRIGHTNESS_ACTIVE,0)
-        self.assertAlmostEqual(v.F117_IRADS_DRAW_BRIGHTNESS,.16)
+        self.assertAlmostEqual(v.F117_IRADS_DRAW_BRIGHTNESS,.048)
+        self.assertAlmostEqual(v.F117_IRADS_VIDEO_DRAW_BRIGHTNESS,1)
         self.assertAlmostEqual(v.F117_LEFT_DIM_OPACITY,.88)
         self.assertAlmostEqual(v.F117_DEP_DRAW_BRIGHTNESS,.35)
 
@@ -82,19 +84,21 @@ class NativeBrightnessTests(unittest.TestCase):
         ''')
         module=lua.execute((SCRIPTS/'Systems/NativeBrightness.lua').read_text()).new()
         module.initialize();v=g['values']
-        self.assertAlmostEqual(v.F117_LEFT_EO_DIM_OPACITY,.84)
+        self.assertAlmostEqual(v.F117_LEFT_EO_DIM_OPACITY,.2)
+        self.assertAlmostEqual(v.F117_LEFT_EO_VIDEO_LEVEL,.2)
         self.assertAlmostEqual(v.F117_MAP_DIM_OPACITY,.86)
         v.F117_IRADS_BRIGHTNESS=.4;module.update()
-        self.assertAlmostEqual(v.F117_LEFT_EO_DIM_OPACITY,.6)
+        self.assertAlmostEqual(v.F117_LEFT_EO_DIM_OPACITY,.2)
+        self.assertAlmostEqual(v.F117_LEFT_EO_VIDEO_LEVEL,.5)
         self.assertAlmostEqual(v.F117_MAP_DIM_OPACITY,.86)
         g.ready=True;module.update()
         self.assertEqual(v.F117_LEFT_EO_DIM_OPACITY,0)
         self.assertEqual(v.F117_MAP_DIM_OPACITY,0)
-        self.assertAlmostEqual(g.gains[2],.4)
-        self.assertAlmostEqual(g.gains[4],.4)
+        self.assertAlmostEqual(g.gains[2],.8)
+        self.assertAlmostEqual(g.gains[4],.1)
         v.F117_LEFT_EO=0;module.update()
         self.assertAlmostEqual(g.gains[2],.8)
-        self.assertAlmostEqual(g.gains[4],.4)
+        self.assertAlmostEqual(g.gains[4],.1)
 
     def test_missing_loader_preserves_existing_controls(self):
         lua=self.runtime();lua.execute('package=nil')
@@ -103,6 +107,25 @@ class NativeBrightnessTests(unittest.TestCase):
         v=lua.globals()['values']
         self.assertEqual(v.F117_NATIVE_BRIGHTNESS_ACTIVE,0)
         self.assertAlmostEqual(v.F117_RIGHT_DIM_OPACITY,.86)
+
+    def test_level_scales_symbols_and_video_in_native_and_fallback_modes(self):
+        lua=self.runtime();g=lua.globals()
+        lua.execute('''
+            ready=true
+            package={loadlib=function()return function()return {
+                update=function(...)gains={...};return ready,'status' end}end end}
+        ''')
+        module=lua.execute((SCRIPTS/'Systems/NativeBrightness.lua').read_text()).new()
+        module.initialize();v=g['values']
+        for native in (True,False):
+            g.ready=native
+            for level in (.025,.065,.6,.8):
+                v.F117_IRADS_BRIGHTNESS=level;module.update()
+                self.assertAlmostEqual(g.gains[4],.1*min(1,3*level))
+                self.assertAlmostEqual(g.gains[5],1)
+                self.assertAlmostEqual(v.F117_IRADS_DIM_OPACITY,1-level)
+                self.assertAlmostEqual(v.F117_IRADS_DRAW_BRIGHTNESS,1 if native else .1*min(1,3*level))
+                self.assertAlmostEqual(v.F117_IRADS_VIDEO_DRAW_BRIGHTNESS,1)
 
     def test_material_capture_restores_add_and_retains_page_token(self):
         lua=self.runtime();g=lua.globals();g.token=object()
@@ -130,8 +153,9 @@ class NativeBrightnessTests(unittest.TestCase):
         image=lua.execute((SCRIPTS/'Systems/IRADS_ImageControls.lua').read_text())
         image.initialize();image.set_command(lua.globals().irads_image_commands.BRIGHTNESS_UP,1)
         v=lua.globals()['values']
-        self.assertAlmostEqual(v.F117_IRADS_BRIGHTNESS,.11)
+        self.assertGreater(v.F117_IRADS_BRIGHTNESS,.065)
+        self.assertLess(v.F117_IRADS_BRIGHTNESS,.08)
         self.assertEqual(v.F117_IRADS_DRAW_BRIGHTNESS,1)
-        self.assertEqual(v.F117_IRADS_DIM_OPACITY,0)
+        self.assertAlmostEqual(v.F117_IRADS_DIM_OPACITY,1-v.F117_IRADS_BRIGHTNESS)
 
 if __name__=='__main__':unittest.main()
